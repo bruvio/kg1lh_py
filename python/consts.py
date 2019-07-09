@@ -162,6 +162,11 @@ class Consts:
         
         correction = config["mode"]
         self.mode = correction.get("mode", self.mode)
+
+
+        efit = config['efit']
+        self.efit = efit.get("rmag")
+        self.efit_fast = efit.get("rmag_fast")
         #self.kg1v_mode = self._get_node_channumber_dict(config, "mode")
     # ------------------------
     def _get_node_channumber_dict(self, config, section):
