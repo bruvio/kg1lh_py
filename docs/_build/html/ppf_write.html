@@ -1,0 +1,196 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>ppf_write &mdash; CORMAT_py 0.0.13 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.0.13',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="CORMAT_py 0.0.13 documentation" href="index.html" />
+    <link rel="up" title="Modules" href="modules.html" />
+    <link rel="next" title="status_flag module" href="status_flag.html" />
+    <link rel="prev" title="library module" href="library.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="module-ppf_write">
+<span id="ppf-write"></span><h1>ppf_write<a class="headerlink" href="#module-ppf_write" title="Permalink to this headline">¶</a></h1>
+<p>Wrapper for opening, writing &amp; closing a PPF.</p>
+<dl class="docutils">
+<dt>TO DO: Implement Time-Dependent Status Flags. I don&#8217;t seem to be able to set tdsf&#8217;s AND specify an itref in order</dt>
+<dd>to use a previous dtype&#8217;s time-vector.</dd>
+</dl>
+<p>added
+output file with log
+shot,user,date,seq</p>
+<dl class="function">
+<dt id="ppf_write.check_uid">
+<code class="descclassname">ppf_write.</code><code class="descname">check_uid</code><span class="sig-paren">(</span><em>shot_no</em>, <em>write_uid</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppf_write.html#check_uid"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ppf_write.check_uid" title="Permalink to this definition">¶</a></dt>
+<dd><p>Open PPF to check if UID is valid, then abort</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>shot_no</strong> &#8211; shot number</li>
+<li><strong>write_uid</strong> &#8211; write_uid</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">1 if UID is invalid, 0 otherwise</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="ppf_write.open_ppf">
+<code class="descclassname">ppf_write.</code><code class="descname">open_ppf</code><span class="sig-paren">(</span><em>shot_no</em>, <em>write_uid</em>, <em>comment='CORRECTED KG1 DATA FROM KG1C AND KG1R   '</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppf_write.html#open_ppf"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ppf_write.open_ppf" title="Permalink to this definition">¶</a></dt>
+<dd><p>Open PPF for writing</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>shot_no</strong> &#8211; shot number</li>
+<li><strong>write_uid</strong> &#8211; write UID</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">error code from PPF system. It will be 0 if there is no error.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="ppf_write.write_ppf">
+<code class="descclassname">ppf_write.</code><code class="descname">write_ppf</code><span class="sig-paren">(</span><em>shot_no</em>, <em>dda</em>, <em>dtype</em>, <em>data</em>, <em>time=None</em>, <em>comment=None</em>, <em>unitd=None</em>, <em>unitt=None</em>, <em>itref=-1</em>, <em>nt=None</em>, <em>global_status=None</em>, <em>status=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppf_write.html#write_ppf"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ppf_write.write_ppf" title="Permalink to this definition">¶</a></dt>
+<dd><p>Write PPF DDA/DTYPE</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>shot_no</strong> &#8211; shot number</li>
+<li><strong>dda</strong> &#8211; DDA</li>
+<li><strong>dtype</strong> &#8211; DTYPE</li>
+<li><strong>data</strong> &#8211; numpy array of data</li>
+<li><strong>time</strong> &#8211; numpy array of time</li>
+<li><strong>comment</strong> &#8211; comment</li>
+<li><strong>unitd</strong> &#8211; units for data</li>
+<li><strong>unitt</strong> &#8211; units for time</li>
+<li><strong>itref</strong> &#8211; reference for timebase</li>
+<li><strong>nt</strong> &#8211; size of the time vector</li>
+<li><strong>global_status</strong> &#8211; status for the DTYPE</li>
+<li><strong>status</strong> &#8211; time-dependent status</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">error code (0 if everything is OK), itref for timebase written</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="ppf_write.close_ppf">
+<code class="descclassname">ppf_write.</code><code class="descname">close_ppf</code><span class="sig-paren">(</span><em>shot_no</em>, <em>write_uid</em>, <em>version</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppf_write.html#close_ppf"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ppf_write.close_ppf" title="Permalink to this definition">¶</a></dt>
+<dd><p>Close PPF</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>shot_no</strong> &#8211; shot number</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">error code, 0 if everything is OK</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  <li><a href="modules.html">Modules</a><ul>
+      <li>Previous: <a href="library.html" title="previous chapter">library module</a></li>
+      <li>Next: <a href="status_flag.html" title="next chapter">status_flag module</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/ppf_write.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019, Bruno Viola.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.4.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.7</a>
+      
+      |
+      <a href="_sources/ppf_write.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

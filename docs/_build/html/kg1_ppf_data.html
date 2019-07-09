@@ -1,0 +1,163 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Kg1PPFData &mdash; CORMAT_py 0.0.13 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.0.13',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="CORMAT_py 0.0.13 documentation" href="index.html" />
+    <link rel="up" title="Classes" href="classes.html" />
+    <link rel="next" title="ElmsData" href="elms_data.html" />
+    <link rel="prev" title="Signalkg1" href="signal_kg1.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="module-kg1_ppf_data">
+<span id="kg1ppfdata"></span><h1>Kg1PPFData<a class="headerlink" href="#module-kg1_ppf_data" title="Permalink to this headline">¶</a></h1>
+<p>Class to read and store KG1 PPF data for one channel.
+Reads in LIDX, FCX, MIRX, JXBX, TYPX</p>
+<dl class="class">
+<dt id="kg1_ppf_data.Kg1PPFData">
+<em class="property">class </em><code class="descclassname">kg1_ppf_data.</code><code class="descname">Kg1PPFData</code><span class="sig-paren">(</span><em>constants</em>, <em>pulse</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/kg1_ppf_data.html#Kg1PPFData"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#kg1_ppf_data.Kg1PPFData" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="signal_base.html#signal_base.SignalBase" title="signal_base.SignalBase"><code class="xref py py-class docutils literal"><span class="pre">signal_base.SignalBase</span></code></a></p>
+<dl class="method">
+<dt id="kg1_ppf_data.Kg1PPFData.read_data">
+<code class="descname">read_data</code><span class="sig-paren">(</span><em>shot_no</em>, <em>read_uid='JETPPF'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/kg1_ppf_data.html#Kg1PPFData.read_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#kg1_ppf_data.Kg1PPFData.read_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read in PPF data for KG1V for a given channel
+:param shot_no: shot number
+:param chan: channel
+:param read_uid: read UID
+:return: True if data was read in successfully, False otherwise</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="kg1_ppf_data.Kg1PPFData.set_status">
+<code class="descname">set_status</code><span class="sig-paren">(</span><em>lid</em>, <em>new_status</em>, <em>time=None</em>, <em>index=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/kg1_ppf_data.html#Kg1PPFData.set_status"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#kg1_ppf_data.Kg1PPFData.set_status" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set time-dependent status flags for lid.
+If neither time or index are given, set status flags for all time points
+:param lid: LID number to set status for
+:param new_status: status to be set
+:param time: time, or time range in which to set status.
+:param index: index, or index range in which to set status.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="kg1_ppf_data.Kg1PPFData.get_coord">
+<code class="descname">get_coord</code><span class="sig-paren">(</span><em>shot_no</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/kg1_ppf_data.html#Kg1PPFData.get_coord"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#kg1_ppf_data.Kg1PPFData.get_coord" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get vacuum vessel temperature &amp; extract spatial coordinates of KG4 chords from text file.
+Function copied from A. Boboc&#8217;s kg4r_py code.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>shot_no</strong> &#8211; shot number</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="kg1_ppf_data.Kg1PPFData.get_jpf_point">
+<code class="descname">get_jpf_point</code><span class="sig-paren">(</span><em>shot_no</em>, <em>node</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/kg1_ppf_data.html#Kg1PPFData.get_jpf_point"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#kg1_ppf_data.Kg1PPFData.get_jpf_point" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a single value from the JPF
+ie. Convert Nord data to real number
+Function copied from A. Boboc&#8217;s kg4r_py code.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>shot_no</strong> &#8211; shot number</li>
+<li><strong>node</strong> &#8211; JPF node</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  <li><a href="classes.html">Classes</a><ul>
+      <li>Previous: <a href="signal_kg1.html" title="previous chapter">Signalkg1</a></li>
+      <li>Next: <a href="elms_data.html" title="next chapter">ElmsData</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/kg1_ppf_data.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019, Bruno Viola.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.4.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.7</a>
+      
+      |
+      <a href="_sources/kg1_ppf_data.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

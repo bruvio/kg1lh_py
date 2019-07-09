@@ -1,0 +1,308 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>elms_data &mdash; CORMAT_py 0.0.13 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.0.13',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="top" title="CORMAT_py 0.0.13 documentation" href="../index.html" />
+    <link rel="up" title="Module code" href="index.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for elms_data</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Class to read Be-II signals, and detect ELMs.</span>
+
+<span class="sd">The disruption time can be specified, in which case only ELMs before this time will be detected</span>
+
+<span class="sd">Method used for ELM detection:</span>
+
+<span class="sd">  -  Only use the Be-II signal up until the disruption time, if there is a disruption.</span>
+<span class="sd">     This ensures that the filtering doesn&#39;t give us extra unwanted oscillations due</span>
+<span class="sd">     to the large signal at the time of the disruption.</span>
+<span class="sd">  -  Find the background using wavelet filtering (module wv_get_background).</span>
+<span class="sd">  -  Find ELMs by studying the first derivative of the Be-II signal. We are looking for a positive derivative, followed by a negative derivative. Different thresholds can be set for the positive &amp; negative derivative to account for the shape of the ELM signals (sharp rise, followed by shallower fall off).</span>
+
+<span class="sd">Future improvements:</span>
+<span class="sd">  - Finding the background using wavelets is a bit slow: try a moving average</span>
+<span class="sd">  - a variable threshold. Sometimes the threshold is too low/high, resulting in incorrectly detected ELMs or missing ELMs.</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">collections</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">signal_base</span> <span class="kn">import</span> <span class="n">SignalBase</span>
+<span class="kn">from</span> <span class="nn">wv_denoise</span> <span class="kn">import</span> <span class="n">wv_denoise</span>
+<span class="kn">from</span> <span class="nn">wv_get_background</span> <span class="kn">import</span> <span class="n">wv_get_background</span>
+<span class="kn">from</span> <span class="nn">make_plots</span> <span class="kn">import</span> <span class="n">make_plot</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="n">__name__</span><span class="p">)</span>
+
+<span class="c1"># ----------------------------</span>
+<span class="n">__author__</span> <span class="o">=</span> <span class="s2">&quot;L. Kogan&quot;</span>
+
+
+<span class="c1"># ----------------------------</span>
+
+
+<div class="viewcode-block" id="ElmsData"><a class="viewcode-back" href="../elms_data.html#elms_data.ElmsData">[docs]</a><span class="k">class</span> <span class="nc">ElmsData</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Class to read Be-II signals, and detect ELMs.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Constants for filtering data</span>
+    <span class="n">WV_FAMILY</span> <span class="o">=</span> <span class="s1">&#39;db15&#39;</span>
+    <span class="n">WV_PERC</span> <span class="o">=</span> <span class="mf">99.0</span>
+    <span class="n">START_TIME</span> <span class="o">=</span> <span class="mf">40.0</span>  <span class="c1"># This is used when finding the background</span>
+    <span class="n">END_TIME</span> <span class="o">=</span> <span class="mf">65.0</span>  <span class="c1"># This is used when finding the background</span>
+
+    <span class="c1"># Thresholds on the first derivative for ELM finding</span>
+    <span class="n">UP_THRESH</span> <span class="o">=</span> <span class="mf">0.5</span>
+    <span class="n">DOWN_THRESH</span> <span class="o">=</span> <span class="o">-</span><span class="mf">0.3</span>
+
+    <span class="c1"># The maximum width permitted for an ELM, above this it won&#39;t be counted</span>
+    <span class="n">ELM_WIDTH_MAX</span> <span class="o">=</span> <span class="mf">0.1</span>
+
+    <span class="c1"># This is used to get rid of the large spike at the beginning of the Be-II</span>
+    <span class="c1"># JPF signals, after this the data should be valid</span>
+    <span class="n">BE_START_TIME</span> <span class="o">=</span> <span class="mf">35.0</span>
+
+    <span class="c1"># ------------------------</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">constants</span><span class="p">,</span> <span class="n">shot_no</span><span class="p">,</span> <span class="n">dis_time</span><span class="o">=</span><span class="mf">0.0</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Init function</span>
+
+<span class="sd">        :param constants: instance of Kg1Consts class</span>
+<span class="sd">        :param shot_no: shot number</span>
+<span class="sd">        :param dis_time: Time of disruption, set to zero for no disruption.</span>
+<span class="sd">                         Elms are only detected before dis_time.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">constants</span> <span class="o">=</span> <span class="n">constants</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_elms</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">time_elms</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">elms_signal</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data_filt</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">elm_times</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">first_deriv</span> <span class="o">=</span> <span class="bp">None</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_find_elms</span><span class="p">(</span><span class="n">shot_no</span><span class="p">,</span> <span class="n">dis_time</span><span class="p">)</span>
+
+    <span class="c1"># ------------------------</span>
+<div class="viewcode-block" id="ElmsData._find_elms"><a class="viewcode-back" href="../elms_data.html#elms_data.ElmsData._find_elms">[docs]</a>    <span class="k">def</span> <span class="nf">_find_elms</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">shot_no</span><span class="p">,</span> <span class="n">dis_time</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Read in ELMs signal and find elms</span>
+
+<span class="sd">        :param shot_no: shot number</span>
+<span class="sd">        :param dis_time: Disruption time. Set to zero for no disruption. ELMs will only be detected before this time.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Sort the python dict according to the keys</span>
+        <span class="c1"># This means the signals are in the order listed in the config file.</span>
+        <span class="n">node_names</span> <span class="o">=</span> <span class="n">collections</span><span class="o">.</span><span class="n">OrderedDict</span><span class="p">(</span>
+            <span class="nb">sorted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">constants</span><span class="o">.</span><span class="n">elms</span><span class="o">.</span><span class="n">items</span><span class="p">()))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">elms_signal</span> <span class="o">=</span> <span class="n">SignalBase</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">constants</span><span class="p">)</span>
+
+        <span class="c1"># Read in the first valid JPF signal</span>
+        <span class="k">for</span> <span class="n">node_name</span> <span class="ow">in</span> <span class="n">node_names</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">elms_signal</span><span class="o">.</span><span class="n">read_data_jpf</span><span class="p">(</span><span class="n">node_name</span><span class="p">,</span> <span class="n">shot_no</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">elms_signal</span><span class="o">.</span><span class="n">data</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span> <span class="s2">&quot;Using {} for finding ELMs.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">node_name</span><span class="p">))</span>
+                <span class="k">break</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">elms_signal</span><span class="o">.</span><span class="n">data</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="s2">&quot;No signal was found for ELM finding.&quot;</span><span class="p">)</span>
+            <span class="k">return</span>
+
+        <span class="c1"># If there is a disruption, only use signal up until dis_time</span>
+        <span class="k">if</span> <span class="n">dis_time</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">ind_analyse</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">elms_signal</span><span class="o">.</span><span class="n">time</span> <span class="o">&lt;</span> <span class="n">dis_time</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="n">ind_analyse</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">elms_signal</span><span class="o">.</span><span class="n">time</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">elms_signal</span><span class="o">.</span><span class="n">time</span><span class="p">[</span><span class="n">ind_analyse</span><span class="p">]</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">elms_signal</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">elms_signal</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">ind_analyse</span><span class="p">]</span>
+
+        <span class="c1"># Get rid of the large spike you get at the beginning of the JPF Be-II signals</span>
+        <span class="n">ind_analyse</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">elms_signal</span><span class="o">.</span><span class="n">time</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">BE_START_TIME</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="n">ind_analyse</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">elms_signal</span><span class="o">.</span><span class="n">time</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">elms_signal</span><span class="o">.</span><span class="n">time</span><span class="p">[</span><span class="n">ind_analyse</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">elms_signal</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">elms_signal</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">ind_analyse</span><span class="p">]</span>
+
+        <span class="c1"># Subtract the background. The background is found using wavelet filtering.</span>
+        <span class="n">background</span> <span class="o">=</span> <span class="n">wv_get_background</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">elms_signal</span><span class="o">.</span><span class="n">time</span><span class="p">,</span>
+                                       <span class="bp">self</span><span class="o">.</span><span class="n">elms_signal</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">START_TIME</span><span class="p">,</span>
+                                       <span class="bp">self</span><span class="o">.</span><span class="n">END_TIME</span><span class="p">)</span>
+        <span class="n">data_sub_back</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">elms_signal</span><span class="o">.</span><span class="n">data</span> <span class="o">-</span> <span class="n">background</span>
+
+        <span class="c1"># Filter the data</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data_filt</span> <span class="o">=</span> <span class="n">wv_denoise</span><span class="p">(</span><span class="n">data_sub_back</span><span class="p">,</span> <span class="n">family</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">WV_FAMILY</span><span class="p">,</span>
+                                    <span class="n">percent</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">WV_PERC</span><span class="p">)</span>
+
+        <span class="c1"># Calculate the first derivative</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">first_deriv</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_filt</span><span class="p">[</span><span class="mi">10</span><span class="p">:]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_filt</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="o">-</span><span class="mi">10</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">constants</span><span class="o">.</span><span class="n">plot_type</span> <span class="o">==</span> <span class="s2">&quot;dpi&quot;</span> <span class="ow">and</span> <span class="s2">&quot;elms_data&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">constants</span><span class="o">.</span><span class="n">make_plots</span><span class="p">:</span>
+            <span class="n">make_plot</span><span class="p">([[</span><span class="bp">self</span><span class="o">.</span><span class="n">elms_signal</span><span class="o">.</span><span class="n">time</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">elms_signal</span><span class="o">.</span><span class="n">data</span><span class="p">],</span>
+                       <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">elms_signal</span><span class="o">.</span><span class="n">time</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_filt</span><span class="p">],</span>
+                       <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">elms_signal</span><span class="o">.</span><span class="n">time</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="o">-</span><span class="mi">10</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">first_deriv</span><span class="p">]],</span>
+                      <span class="n">labels</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;be-II&quot;</span><span class="p">,</span> <span class="s2">&quot;filt&quot;</span><span class="p">,</span> <span class="s2">&quot;1st deriv&quot;</span><span class="p">],</span>
+                      <span class="n">colours</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;blue&quot;</span><span class="p">,</span> <span class="s2">&quot;green&quot;</span><span class="p">,</span> <span class="s2">&quot;green&quot;</span><span class="p">],</span>
+                      <span class="n">pformat</span><span class="o">=</span><span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>
+                      <span class="n">show</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
+                      <span class="n">horz_lines</span><span class="o">=</span><span class="p">[[],</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">UP_THRESH</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">DOWN_THRESH</span><span class="p">]],</span>
+                      <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Be-II signal for ELM finding, and 1st derivative of Be-II signal&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Find ELMs</span>
+
+        <span class="c1"># Look for start and end of ELMs, by placing cuts on the first derivative</span>
+        <span class="n">pass_up_thresh</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_filt</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+        <span class="n">ind_up</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">first_deriv</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">UP_THRESH</span><span class="p">)</span>
+        <span class="n">pass_up_thresh</span><span class="p">[</span><span class="n">ind_up</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="n">pass_up_diff</span> <span class="o">=</span> <span class="n">pass_up_thresh</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span> <span class="o">-</span> <span class="n">pass_up_thresh</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+        <span class="n">pass_down_thresh</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_filt</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+        <span class="n">ind_down</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">first_deriv</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">DOWN_THRESH</span><span class="p">)</span>
+        <span class="n">pass_down_thresh</span><span class="p">[</span><span class="n">ind_down</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="n">pass_down_diff</span> <span class="o">=</span> <span class="n">pass_down_thresh</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span> <span class="o">-</span> <span class="n">pass_down_thresh</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">ind_start</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">pass_up_diff</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ind_end</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">pass_down_diff</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="c1"># Loop over possible ELMs</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">elm_times</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+        <span class="n">skip_next</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ind_start</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ind_end</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;No ELMs were found.&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">n_elms</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">time_elms</span> <span class="o">=</span> <span class="bp">None</span>
+            <span class="k">return</span>
+
+        <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">poss_start</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ind_start</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">skip_next</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">skip_next</span> <span class="o">-=</span> <span class="mi">1</span>
+                <span class="k">continue</span>
+
+            <span class="c1"># Find the next downwards derivative</span>
+            <span class="n">ind_after</span><span class="p">,</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ind_end</span> <span class="o">&gt;</span> <span class="n">poss_start</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="n">ind_after</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">continue</span>
+
+            <span class="n">index_end</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">ind_after</span><span class="p">)</span>
+            <span class="n">poss_end</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ind_end</span><span class="p">[</span><span class="n">index_end</span><span class="p">]</span>
+
+            <span class="c1"># Impose a maximum ELM width</span>
+            <span class="n">time_diff</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">elms_signal</span><span class="o">.</span><span class="n">time</span><span class="p">[</span><span class="n">poss_end</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">elms_signal</span><span class="o">.</span><span class="n">time</span><span class="p">[</span>
+                <span class="n">poss_start</span><span class="p">]</span>
+
+            <span class="k">if</span> <span class="n">time_diff</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">ELM_WIDTH_MAX</span><span class="p">:</span>
+                <span class="k">continue</span>
+
+            <span class="c1"># Make sure we don&#39;t count any more between poss_start and poss_end</span>
+            <span class="n">ind_skip</span><span class="p">,</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span>
+                <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ind_start</span> <span class="o">&gt;</span> <span class="n">poss_start</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ind_start</span> <span class="o">&lt;</span> <span class="n">poss_end</span><span class="p">))</span>
+
+            <span class="n">skip_next</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="n">ind_skip</span><span class="p">)</span>
+
+            <span class="c1"># Add ELM time to list of elm times</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">elm_times</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">elm_times</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">elms_signal</span><span class="o">.</span><span class="n">time</span><span class="p">[</span><span class="n">poss_start</span><span class="p">])</span>
+
+        <span class="c1"># Store the number and times of the elms.</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">elm_times</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">time_elms</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">elm_times</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">n_elms</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">elm_times</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;{} ELMs were found.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_elms</span><span class="p">))</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">constants</span><span class="o">.</span><span class="n">plot_type</span> <span class="o">==</span> <span class="s2">&quot;dpi&quot;</span> <span class="ow">and</span> <span class="s2">&quot;elms_data&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">constants</span><span class="o">.</span><span class="n">make_plots</span><span class="p">:</span>
+                <span class="n">make_plot</span><span class="p">([[</span><span class="bp">self</span><span class="o">.</span><span class="n">elms_signal</span><span class="o">.</span><span class="n">time</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">elms_signal</span><span class="o">.</span><span class="n">data</span><span class="p">],</span>
+                           <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">elms_signal</span><span class="o">.</span><span class="n">time</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_filt</span><span class="p">],</span>
+                           <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">elms_signal</span><span class="o">.</span><span class="n">time</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="o">-</span><span class="mi">10</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">first_deriv</span><span class="p">],</span>
+                           <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">elms_signal</span><span class="o">.</span><span class="n">time</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">elms_signal</span><span class="o">.</span><span class="n">data</span><span class="p">],</span>
+                           <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">elms_signal</span><span class="o">.</span><span class="n">time</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">elms_signal</span><span class="o">.</span><span class="n">data</span><span class="p">]],</span>
+                          <span class="n">labels</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;Be-II&quot;</span><span class="p">,</span> <span class="s2">&quot;filt&quot;</span><span class="p">,</span> <span class="s2">&quot;1st deriv&quot;</span><span class="p">,</span> <span class="s2">&quot;starts&quot;</span><span class="p">,</span>
+                                  <span class="s2">&quot;ends&quot;</span><span class="p">],</span>
+                          <span class="n">colours</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;blue&quot;</span><span class="p">,</span> <span class="s2">&quot;green&quot;</span><span class="p">,</span> <span class="s2">&quot;green&quot;</span><span class="p">,</span> <span class="s2">&quot;blue&quot;</span><span class="p">,</span> <span class="s2">&quot;blue&quot;</span><span class="p">],</span>
+                          <span class="n">pformat</span><span class="o">=</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>
+                          <span class="n">show</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
+                          <span class="n">vert_lines</span><span class="o">=</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">elm_times</span><span class="p">,</span> <span class="p">[],</span>
+                                      <span class="bp">self</span><span class="o">.</span><span class="n">elms_signal</span><span class="o">.</span><span class="n">time</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">ind_start</span><span class="p">],</span>
+                                      <span class="bp">self</span><span class="o">.</span><span class="n">elms_signal</span><span class="o">.</span><span class="n">time</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">ind_end</span><span class="p">]],</span>
+                          <span class="n">horz_lines</span><span class="o">=</span><span class="p">[[],</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">UP_THRESH</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">DOWN_THRESH</span><span class="p">],</span>
+                                      <span class="p">[],</span> <span class="p">[]],</span>
+                          <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Be-II signal &amp; 1st derivative used for ELM finding, detected elm times shown.&quot;</span><span class="p">)</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019, Bruno Viola.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.4.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.7</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

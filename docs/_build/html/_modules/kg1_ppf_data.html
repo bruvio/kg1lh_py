@@ -1,0 +1,582 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>kg1_ppf_data &mdash; CORMAT_py 0.0.13 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.0.13',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="top" title="CORMAT_py 0.0.13 documentation" href="../index.html" />
+    <link rel="up" title="Module code" href="index.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for kg1_ppf_data</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Class to read and store KG1 PPF data for one channel.</span>
+<span class="sd">Reads in LIDX, FCX, MIRX, JXBX, TYPX</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">getdat</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">ppf_write</span> <span class="kn">import</span> <span class="n">write_ppf</span>
+<span class="kn">from</span> <span class="nn">signal_kg1</span> <span class="kn">import</span> <span class="n">SignalKg1</span>
+<span class="kn">from</span> <span class="nn">signal_base</span> <span class="kn">import</span> <span class="n">SignalBase</span>
+<span class="kn">from</span> <span class="nn">pdb</span> <span class="kn">import</span> <span class="n">set_trace</span> <span class="k">as</span> <span class="n">bp</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="n">__name__</span><span class="p">)</span>
+
+<span class="c1"># ----------------------------</span>
+<span class="n">__author__</span> <span class="o">=</span> <span class="s2">&quot;B. Viola&quot;</span>
+<span class="c1"># ----------------------------</span>
+
+
+<div class="viewcode-block" id="Kg1PPFData"><a class="viewcode-back" href="../kg1_ppf_data.html#kg1_ppf_data.Kg1PPFData">[docs]</a><span class="k">class</span> <span class="nc">Kg1PPFData</span><span class="p">(</span><span class="n">SignalBase</span><span class="p">):</span>
+
+    <span class="c1"># ------------------------</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">constants</span><span class="p">,</span><span class="n">pulse</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Init function</span>
+<span class="sd">        :param constants: instance of Kg1Consts class</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># self.signal_type = &quot;&quot;  # kg1r, kg1c, kg1v</span>
+        <span class="c1"># self.dcn_or_met = &quot;&quot; # dcn, met</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">constants</span> <span class="o">=</span> <span class="n">constants</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pulse</span> <span class="o">=</span> <span class="n">pulse</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dda</span> <span class="o">=</span> <span class="s2">&quot;KG1V&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">density</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">vibration</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fj_dcn</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fj_met</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">jxb</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="c1"># Time dependent status flags</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">global_status</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">kg1rt</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">type</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+
+        <span class="c1"># PPF data: If a KG1 PPF has already been written,</span>
+        <span class="c1"># and the status flag of the data is 1,2 or 3</span>
+        <span class="c1"># (ie. it has already been validated), then</span>
+        <span class="c1"># this data is just copied over to the output file,</span>
+        <span class="c1"># no further corrections are made.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ppf</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">dfr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">constants</span><span class="o">.</span><span class="n">DFR_DCN</span>
+
+    <span class="c1"># ------------------------</span>
+<div class="viewcode-block" id="Kg1PPFData.read_data"><a class="viewcode-back" href="../kg1_ppf_data.html#kg1_ppf_data.Kg1PPFData.read_data">[docs]</a>    <span class="k">def</span> <span class="nf">read_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">shot_no</span><span class="p">,</span> <span class="n">read_uid</span><span class="o">=</span><span class="s2">&quot;JETPPF&quot;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Read in PPF data for KG1V for a given channel</span>
+<span class="sd">        :param shot_no: shot number</span>
+<span class="sd">        :param chan: channel</span>
+<span class="sd">        :param read_uid: read UID</span>
+<span class="sd">        :return: True if data was read in successfully, False otherwise</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">chan</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">constants</span><span class="o">.</span><span class="n">kg1v</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="n">nodename</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">constants</span><span class="o">.</span><span class="n">kg1v</span><span class="p">[</span><span class="n">chan</span><span class="p">]</span>
+            <span class="n">density</span> <span class="o">=</span> <span class="n">SignalKg1</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">constants</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">pulse</span><span class="p">)</span>
+            <span class="c1"># corrections = SignalBase(self.constants)</span>
+            <span class="n">dda</span> <span class="o">=</span> <span class="n">nodename</span><span class="p">[:</span><span class="n">nodename</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">)]</span>
+            <span class="n">dtype</span> <span class="o">=</span> <span class="n">nodename</span><span class="p">[</span><span class="n">nodename</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">)</span><span class="o">+</span><span class="mi">1</span><span class="p">:]</span>
+            <span class="n">status</span> <span class="o">=</span> <span class="n">density</span><span class="o">.</span><span class="n">read_data_ppf</span><span class="p">(</span><span class="n">dda</span><span class="p">,</span> <span class="n">dtype</span><span class="p">,</span> <span class="n">shot_no</span><span class="p">,</span> <span class="n">read_bad</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">read_uid</span><span class="o">=</span><span class="n">read_uid</span><span class="p">)</span>
+
+            <span class="c1"># We are only interested in keeping the data if it has already been validated</span>
+            <span class="c1"># if density.data is not None and (0 &lt; status &lt; 4) and not all_status:</span>
+            <span class="c1">#     logger.debug( &quot;PPF data chan {}&quot;.format(status))</span>
+            <span class="k">if</span> <span class="n">density</span><span class="o">.</span><span class="n">data</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">density</span><span class="p">[</span><span class="n">chan</span><span class="p">]</span> <span class="o">=</span> <span class="n">density</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">status</span><span class="p">[</span><span class="n">chan</span><span class="p">]</span> <span class="o">=</span> <span class="n">SignalBase</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">constants</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">status</span><span class="p">[</span><span class="n">chan</span><span class="p">]</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span>
+                        <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">density</span><span class="p">[</span><span class="n">chan</span><span class="p">]</span><span class="o">.</span><span class="n">time</span><span class="p">))</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">status</span><span class="p">[</span><span class="n">chan</span><span class="p">]</span><span class="o">.</span><span class="n">time</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">density</span><span class="p">[</span><span class="n">chan</span><span class="p">]</span><span class="o">.</span><span class="n">time</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">global_status</span><span class="p">[</span><span class="n">chan</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+                <span class="c1"># self.density[chan].corrections = SignalBase(self.constants)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">density</span><span class="p">[</span><span class="n">chan</span><span class="p">]</span><span class="o">.</span><span class="n">signal_type</span> <span class="o">=</span> <span class="s1">&#39;vert&#39;</span>
+                <span class="k">if</span> <span class="n">chan</span> <span class="o">&gt;</span><span class="mi">4</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">density</span><span class="p">[</span><span class="n">chan</span><span class="p">]</span><span class="o">.</span><span class="n">signal_type</span> <span class="o">=</span> <span class="s1">&#39;lat&#39;</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">density</span><span class="p">[</span><span class="n">chan</span><span class="p">]</span><span class="o">.</span><span class="n">correction_dcn</span> <span class="o">=</span> <span class="n">SignalBase</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">constants</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">density</span><span class="p">[</span><span class="n">chan</span><span class="p">]</span><span class="o">.</span><span class="n">correction_met</span> <span class="o">=</span> <span class="n">SignalBase</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">constants</span><span class="p">)</span>
+
+            <span class="c1"># else:</span>
+            <span class="c1">#     return False</span>
+            <span class="c1"># else:</span>
+            <span class="c1">#     return False</span>
+
+        <span class="k">for</span> <span class="n">chan</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">constants</span><span class="o">.</span><span class="n">kg1rt</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="n">node_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">constants</span><span class="o">.</span><span class="n">kg1rt</span><span class="p">[</span><span class="n">chan</span><span class="p">]</span>
+            <span class="n">kg1rt_signal</span> <span class="o">=</span> <span class="n">SignalBase</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">constants</span><span class="p">)</span>
+            <span class="n">kg1rt_signal</span><span class="o">.</span><span class="n">read_data_jpf</span><span class="p">(</span><span class="n">node_name</span><span class="p">,</span> <span class="n">shot_no</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">kg1rt_signal</span><span class="o">.</span><span class="n">data</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">kg1rt</span><span class="p">[</span><span class="n">chan</span><span class="p">]</span> <span class="o">=</span> <span class="n">kg1rt_signal</span>
+
+
+
+        <span class="k">for</span> <span class="n">chan</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">constants</span><span class="o">.</span><span class="n">kg1r_ppf_vib</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="n">nodename</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">constants</span><span class="o">.</span><span class="n">kg1r_ppf_vib</span><span class="p">[</span><span class="n">chan</span><span class="p">]</span>
+            <span class="n">vibration</span> <span class="o">=</span> <span class="n">SignalKg1</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">constants</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">pulse</span><span class="p">)</span>
+            <span class="n">dda</span> <span class="o">=</span> <span class="n">nodename</span><span class="p">[:</span><span class="n">nodename</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">)]</span>
+            <span class="n">dtype</span> <span class="o">=</span> <span class="n">nodename</span><span class="p">[</span><span class="n">nodename</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">)</span><span class="o">+</span><span class="mi">1</span><span class="p">:]</span>
+            <span class="n">status</span> <span class="o">=</span> <span class="n">vibration</span><span class="o">.</span><span class="n">read_data_ppf</span><span class="p">(</span><span class="n">dda</span><span class="p">,</span> <span class="n">dtype</span><span class="p">,</span> <span class="n">shot_no</span><span class="p">,</span> <span class="n">read_bad</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">read_uid</span><span class="o">=</span><span class="n">read_uid</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">vibration</span><span class="o">.</span><span class="n">data</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">vibration</span><span class="p">[</span><span class="n">chan</span><span class="p">]</span> <span class="o">=</span> <span class="n">vibration</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">vibration</span><span class="p">[</span><span class="n">chan</span><span class="p">]</span><span class="o">.</span><span class="n">signal_type</span> <span class="o">=</span> <span class="s1">&#39;lat&#39;</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">status</span><span class="p">[</span><span class="n">chan</span><span class="p">]</span> <span class="o">=</span> <span class="n">SignalBase</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">constants</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">status</span><span class="p">[</span><span class="n">chan</span><span class="p">]</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span>
+                        <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">density</span><span class="p">[</span><span class="n">chan</span><span class="p">]</span><span class="o">.</span><span class="n">time</span><span class="p">))</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">status</span><span class="p">[</span><span class="n">chan</span><span class="p">]</span><span class="o">.</span><span class="n">time</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">density</span><span class="p">[</span><span class="n">chan</span><span class="p">]</span><span class="o">.</span><span class="n">time</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">global_status</span><span class="p">[</span><span class="n">chan</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">vibration</span><span class="p">[</span><span class="n">chan</span><span class="p">]</span><span class="o">.</span><span class="n">corrections</span> <span class="o">=</span> <span class="n">SignalBase</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">constants</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">chan</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">constants</span><span class="o">.</span><span class="n">kg1r_ppf_fj_dcn</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="n">nodename</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">constants</span><span class="o">.</span><span class="n">kg1r_ppf_fj_dcn</span><span class="p">[</span><span class="n">chan</span><span class="p">]</span>
+            <span class="n">fj</span> <span class="o">=</span> <span class="n">SignalBase</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">constants</span><span class="p">)</span>
+
+            <span class="n">dda</span> <span class="o">=</span> <span class="n">nodename</span><span class="p">[:</span><span class="n">nodename</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">)]</span>
+            <span class="n">dtype</span> <span class="o">=</span> <span class="n">nodename</span><span class="p">[</span><span class="n">nodename</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">)</span><span class="o">+</span><span class="mi">1</span><span class="p">:]</span>
+            <span class="n">status</span> <span class="o">=</span> <span class="n">fj</span><span class="o">.</span><span class="n">read_data_ppf</span><span class="p">(</span><span class="n">dda</span><span class="p">,</span> <span class="n">dtype</span><span class="p">,</span> <span class="n">shot_no</span><span class="p">,</span> <span class="n">read_bad</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">read_uid</span><span class="o">=</span><span class="n">read_uid</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">fj</span><span class="o">.</span><span class="n">data</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">fj_dcn</span><span class="p">[</span><span class="n">chan</span><span class="p">]</span> <span class="o">=</span> <span class="n">fj</span>
+
+        <span class="k">for</span> <span class="n">chan</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">constants</span><span class="o">.</span><span class="n">kg1r_ppf_fj_met</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="n">nodename</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">constants</span><span class="o">.</span><span class="n">kg1r_ppf_fj_met</span><span class="p">[</span><span class="n">chan</span><span class="p">]</span>
+            <span class="n">fj</span> <span class="o">=</span> <span class="n">SignalBase</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">constants</span><span class="p">)</span>
+
+            <span class="n">dda</span> <span class="o">=</span> <span class="n">nodename</span><span class="p">[:</span><span class="n">nodename</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">)]</span>
+            <span class="n">dtype</span> <span class="o">=</span> <span class="n">nodename</span><span class="p">[</span><span class="n">nodename</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">)</span><span class="o">+</span><span class="mi">1</span><span class="p">:]</span>
+            <span class="n">status</span> <span class="o">=</span> <span class="n">fj</span><span class="o">.</span><span class="n">read_data_ppf</span><span class="p">(</span><span class="n">dda</span><span class="p">,</span> <span class="n">dtype</span><span class="p">,</span> <span class="n">shot_no</span><span class="p">,</span> <span class="n">read_bad</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">read_uid</span><span class="o">=</span><span class="n">read_uid</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">fj</span><span class="o">.</span><span class="n">data</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">fj_met</span><span class="p">[</span><span class="n">chan</span><span class="p">]</span> <span class="o">=</span> <span class="n">fj</span>
+
+        <span class="k">for</span> <span class="n">chan</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">constants</span><span class="o">.</span><span class="n">kg1r_ppf_bp_dcn</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="n">nodename</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">constants</span><span class="o">.</span><span class="n">kg1r_ppf_bp_dcn</span><span class="p">[</span><span class="n">chan</span><span class="p">]</span>
+            <span class="n">bp</span> <span class="o">=</span> <span class="n">SignalBase</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">constants</span><span class="p">)</span>
+
+            <span class="n">dda</span> <span class="o">=</span> <span class="n">nodename</span><span class="p">[:</span><span class="n">nodename</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">)]</span>
+            <span class="n">dtype</span> <span class="o">=</span> <span class="n">nodename</span><span class="p">[</span><span class="n">nodename</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">)</span><span class="o">+</span><span class="mi">1</span><span class="p">:]</span>
+            <span class="n">status</span> <span class="o">=</span> <span class="n">bp</span><span class="o">.</span><span class="n">read_data_ppf</span><span class="p">(</span><span class="n">dda</span><span class="p">,</span> <span class="n">dtype</span><span class="p">,</span> <span class="n">shot_no</span><span class="p">,</span> <span class="n">read_bad</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">read_uid</span><span class="o">=</span><span class="n">read_uid</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">bp</span><span class="o">.</span><span class="n">data</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">bp_dcn</span><span class="p">[</span><span class="n">chan</span><span class="p">]</span> <span class="o">=</span> <span class="n">bp</span>
+
+        <span class="k">for</span> <span class="n">chan</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">constants</span><span class="o">.</span><span class="n">kg1r_ppf_bp_met</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="n">nodename</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">constants</span><span class="o">.</span><span class="n">kg1r_ppf_bp_met</span><span class="p">[</span><span class="n">chan</span><span class="p">]</span>
+            <span class="n">bp</span> <span class="o">=</span> <span class="n">SignalBase</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">constants</span><span class="p">)</span>
+
+            <span class="n">dda</span> <span class="o">=</span> <span class="n">nodename</span><span class="p">[:</span><span class="n">nodename</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">)]</span>
+            <span class="n">dtype</span> <span class="o">=</span> <span class="n">nodename</span><span class="p">[</span><span class="n">nodename</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">)</span><span class="o">+</span><span class="mi">1</span><span class="p">:]</span>
+            <span class="n">status</span> <span class="o">=</span> <span class="n">bp</span><span class="o">.</span><span class="n">read_data_ppf</span><span class="p">(</span><span class="n">dda</span><span class="p">,</span> <span class="n">dtype</span><span class="p">,</span> <span class="n">shot_no</span><span class="p">,</span> <span class="n">read_bad</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">read_uid</span><span class="o">=</span><span class="n">read_uid</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">bp</span><span class="o">.</span><span class="n">data</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">bp_met</span><span class="p">[</span><span class="n">chan</span><span class="p">]</span> <span class="o">=</span> <span class="n">bp</span>
+
+        <span class="k">for</span> <span class="n">chan</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">constants</span><span class="o">.</span><span class="n">kg1r_ppf_jxb</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="n">nodename</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">constants</span><span class="o">.</span><span class="n">kg1r_ppf_jxb</span><span class="p">[</span><span class="n">chan</span><span class="p">]</span>
+            <span class="n">jxb</span> <span class="o">=</span> <span class="n">SignalBase</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">constants</span><span class="p">)</span>
+            <span class="n">dda</span> <span class="o">=</span> <span class="n">nodename</span><span class="p">[:</span><span class="n">nodename</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">)]</span>
+            <span class="n">dtype</span> <span class="o">=</span> <span class="n">nodename</span><span class="p">[</span><span class="n">nodename</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">)</span><span class="o">+</span><span class="mi">1</span><span class="p">:]</span>
+            <span class="n">status</span> <span class="o">=</span> <span class="n">jxb</span><span class="o">.</span><span class="n">read_data_ppf</span><span class="p">(</span><span class="n">dda</span><span class="p">,</span> <span class="n">dtype</span><span class="p">,</span> <span class="n">shot_no</span><span class="p">,</span> <span class="n">read_bad</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">read_uid</span><span class="o">=</span><span class="n">read_uid</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">jxb</span><span class="o">.</span><span class="n">data</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">jxb</span><span class="p">[</span><span class="n">chan</span><span class="p">]</span> <span class="o">=</span> <span class="n">jxb</span>
+
+        <span class="k">for</span> <span class="n">chan</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">constants</span><span class="o">.</span><span class="n">kg1r_ppf_type</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="n">nodename</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">constants</span><span class="o">.</span><span class="n">kg1r_ppf_type</span><span class="p">[</span><span class="n">chan</span><span class="p">]</span>
+            <span class="n">sig_type</span> <span class="o">=</span> <span class="n">SignalBase</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">constants</span><span class="p">)</span>
+            <span class="n">dda</span> <span class="o">=</span> <span class="n">nodename</span><span class="p">[:</span><span class="n">nodename</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">)]</span>
+            <span class="n">dtype</span> <span class="o">=</span> <span class="n">nodename</span><span class="p">[</span><span class="n">nodename</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">)</span><span class="o">+</span><span class="mi">1</span><span class="p">:]</span>
+            <span class="n">status</span> <span class="o">=</span> <span class="n">sig_type</span><span class="o">.</span><span class="n">read_data_ppf</span><span class="p">(</span><span class="n">dda</span><span class="p">,</span> <span class="n">dtype</span><span class="p">,</span> <span class="n">shot_no</span><span class="p">,</span> <span class="n">read_bad</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">read_uid</span><span class="o">=</span><span class="n">read_uid</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">sig_type</span><span class="o">.</span><span class="n">data</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="n">ind_type</span> <span class="o">=</span> <span class="n">sig_type</span><span class="o">.</span><span class="n">ihdata</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s2">&quot;SIG TYPE:&quot;</span><span class="p">)</span><span class="o">+</span><span class="nb">len</span><span class="p">(</span><span class="s2">&quot;SIG TYPE:&quot;</span><span class="p">)</span><span class="o">+</span><span class="mi">1</span>
+                <span class="n">ind_chan</span> <span class="o">=</span> <span class="n">sig_type</span><span class="o">.</span><span class="n">ihdata</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s2">&quot;CH.&quot;</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">type</span><span class="p">[</span><span class="n">chan</span><span class="p">]</span> <span class="o">=</span> <span class="n">sig_type</span><span class="o">.</span><span class="n">ihdata</span><span class="p">[</span><span class="n">ind_type</span><span class="p">:</span><span class="n">ind_chan</span><span class="p">]</span>
+        
+
+        <span class="n">nodename_mode</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">constants</span><span class="o">.</span><span class="n">mode</span>
+
+        <span class="n">signal_mode</span> <span class="o">=</span> <span class="n">SignalBase</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">constants</span><span class="p">)</span>
+        
+        <span class="n">signal_mode</span><span class="o">.</span><span class="n">read_data_ppf</span><span class="p">(</span><span class="s1">&#39;KG1V&#39;</span><span class="p">,</span> <span class="s1">&#39;MODE&#39;</span><span class="p">,</span> <span class="n">shot_no</span><span class="p">,</span> <span class="n">read_bad</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">read_uid</span><span class="o">=</span><span class="n">read_uid</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="o">=</span> <span class="n">signal_mode</span><span class="o">.</span><span class="n">ihdata</span><span class="p">[</span><span class="mi">36</span><span class="p">:]</span>
+        
+
+
+        
+        <span class="k">return</span> <span class="bp">True</span></div>
+
+
+    <span class="c1"># ------------------------</span>
+<div class="viewcode-block" id="Kg1PPFData.set_status"><a class="viewcode-back" href="../kg1_ppf_data.html#kg1_ppf_data.Kg1PPFData.set_status">[docs]</a>    <span class="k">def</span> <span class="nf">set_status</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lid</span><span class="p">,</span> <span class="n">new_status</span><span class="p">,</span> <span class="n">time</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set time-dependent status flags for lid.</span>
+<span class="sd">        If neither time or index are given, set status flags for all time points</span>
+<span class="sd">        :param lid: LID number to set status for</span>
+<span class="sd">        :param new_status: status to be set</span>
+<span class="sd">        :param time: time, or time range in which to set status.</span>
+<span class="sd">        :param index: index, or index range in which to set status.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">lid</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">status</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="ow">or</span> <span class="n">new_status</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">new_status</span> <span class="o">&gt;</span> <span class="mi">4</span><span class="p">:</span>
+            <span class="k">return</span>
+
+        <span class="c1"># Set status for all time points</span>
+        <span class="k">if</span> <span class="n">time</span> <span class="ow">is</span> <span class="bp">None</span> <span class="ow">and</span> <span class="n">index</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">status</span><span class="p">[</span><span class="n">lid</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">new_status</span>
+            <span class="k">return</span>
+
+        <span class="c1"># Find indices to set from time</span>
+        <span class="k">if</span> <span class="n">time</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">time</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">index</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">status</span><span class="p">[</span><span class="n">lid</span><span class="p">]</span><span class="o">.</span><span class="n">time</span><span class="p">,</span> <span class="n">time</span><span class="p">,</span> <span class="n">atol</span><span class="o">=</span><span class="mf">0.00005</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="mf">1e-6</span><span class="p">))[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="n">time</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">time</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="n">index</span> <span class="o">=</span> <span class="p">[(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">status</span><span class="p">[</span><span class="n">lid</span><span class="p">]</span><span class="o">.</span><span class="n">time</span> <span class="o">-</span> <span class="n">time</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span><span class="o">.</span><span class="n">argmin</span><span class="p">(),</span>
+                     <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">status</span><span class="p">[</span><span class="n">lid</span><span class="p">]</span><span class="o">.</span><span class="n">time</span> <span class="o">-</span> <span class="n">time</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span><span class="o">.</span><span class="n">argmin</span><span class="p">()]</span>
+
+        <span class="c1"># Set status flags</span>
+        <span class="k">if</span> <span class="n">index</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">index</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">status</span><span class="p">[</span><span class="n">lid</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">index</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span><span class="n">index</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span> <span class="o">=</span> <span class="n">new_status</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Chan {}: Setting status to {} between {}-{}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">lid</span><span class="p">,</span> <span class="n">new_status</span><span class="p">,</span>
+                                                                                      <span class="bp">self</span><span class="o">.</span><span class="n">status</span><span class="p">[</span><span class="n">lid</span><span class="p">]</span><span class="o">.</span><span class="n">time</span><span class="p">[</span><span class="n">index</span><span class="p">[</span><span class="mi">0</span><span class="p">]],</span>
+                                                                                      <span class="bp">self</span><span class="o">.</span><span class="n">status</span><span class="p">[</span><span class="n">lid</span><span class="p">]</span><span class="o">.</span><span class="n">time</span><span class="p">[</span><span class="n">index</span><span class="p">[</span><span class="mi">1</span><span class="p">]]))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">status</span><span class="p">[</span><span class="n">lid</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">index</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_status</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Chan {}: Setting status to {} for time point {}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">lid</span><span class="p">,</span> <span class="n">new_status</span><span class="p">,</span>
+                                                                                   <span class="bp">self</span><span class="o">.</span><span class="n">status</span><span class="p">[</span><span class="n">lid</span><span class="p">]</span><span class="o">.</span><span class="n">time</span><span class="p">[</span><span class="n">index</span><span class="p">]))</span></div>
+
+
+    <span class="c1"># # ------------------------</span>
+    <span class="c1"># def uncorrect_fj(self, corr, index):</span>
+    <span class="c1">#     &quot;&quot;&quot;</span>
+    <span class="c1">#     Uncorrect a fringe jump by corr, from the time corresponding to index onwards.</span>
+    <span class="c1">#     Not used ATM. Will need more testing if we want to use it... Suspect isclose is wrong.</span>
+    <span class="c1">#</span>
+    <span class="c1">#     :param corr: Correction to add to the data</span>
+    <span class="c1">#     :param index: Index from which to make the correction</span>
+    <span class="c1">#</span>
+    <span class="c1">#     &quot;&quot;&quot;</span>
+    <span class="c1">#     # Check we made a correction at this time.</span>
+    <span class="c1">#     ind_corr = np.where(np.isclose(self.corrections.time, self.time[index], atol=5e-5, rtol=1e-6) == 1)</span>
+    <span class="c1">#     if np.size(ind_corr) == 0:</span>
+    <span class="c1">#         return</span>
+    <span class="c1">#</span>
+    <span class="c1">#     # Uncorrect correction</span>
+    <span class="c1">#     self.data[index:] = self.data[index:] + corr</span>
+    <span class="c1">#</span>
+    <span class="c1">#     self.corrections.data = np.delete(self.corrections.data, ind_corr)</span>
+    <span class="c1">#     self.corrections.time = np.delete(self.corrections.time, ind_corr)</span>
+    <span class="c1">#</span>
+    <span class="c1"># # ------------------------</span>
+    <span class="c1"># def correct_fj(self, chan, fringe,mirror=None, time=None, index=None, store=True, correct_type=&quot;&quot;, corr_dcn=None, corr_met=None):</span>
+    <span class="c1">#     &quot;&quot;&quot;</span>
+    <span class="c1">#     Shifts all data from time onwards, or index onwards,</span>
+    <span class="c1">#     down by corr. Either time or index must be specified</span>
+    <span class="c1">#</span>
+    <span class="c1">#     :param corr: The correction to be subtracted</span>
+    <span class="c1">#     :param time: The time from which to make the correction (if this is specified index is ignored)</span>
+    <span class="c1">#     :param index: The index from which to make the correction</span>
+    <span class="c1">#     :param store: To record the correction set to True</span>
+    <span class="c1">#     :param correct_type: String describing which part of the code made the correction</span>
+    <span class="c1">#     :param corr_dcn: Only for use with lateral channels. Stores the correction,</span>
+    <span class="c1">#                      in terms of the number of FJ in DCN laser (as opposed to in the combined density)</span>
+    <span class="c1">#     :param corr_met: Only for use with lateral channels. Stores the correction,</span>
+    <span class="c1">#                      in terms of the number of FJ in the MET laser (as opposed to the correction in the vibration)</span>
+    <span class="c1">#</span>
+    <span class="c1">#     &quot;&quot;&quot;</span>
+    <span class="c1">#     poss_ne_corr = np.array([self.data.constants.CORR_NE]*20) * np.array([np.arange(20)+1]*len(self.data.constants.CORR_NE)).transpose()</span>
+    <span class="c1">#     poss_vib_corr = np.array([self.data.constants.CORR_VIB]*20) * np.array([np.arange(20)+1]*len(self.data.constants.CORR_VIB)).transpose()</span>
+    <span class="c1">#     poss_dcn_corr = np.array([self.data.constants.FJ_DCN]*20) * np.array([np.arange(20)+1]*len(self.data.constants.FJ_DCN)).transpose()</span>
+    <span class="c1">#     poss_met_corr = np.array([self.data.constants.FJ_MET]*20) * np.array([np.arange(20)+1]*len(self.data.constants.FJ_MET)).transpose()</span>
+    <span class="c1">#</span>
+    <span class="c1">#</span>
+    <span class="c1">#     if time is None and index is None:</span>
+    <span class="c1">#         logger.warning(&quot;No time or index was specified for making the FJ correction.&quot;)</span>
+    <span class="c1">#         return</span>
+    <span class="c1">#</span>
+    <span class="c1">#     if time is not None:</span>
+    <span class="c1">#         index = np.where(self.time &gt; time),</span>
+    <span class="c1">#         if np.size(index) == 0:</span>
+    <span class="c1">#             logger.warning(&quot;Could not find time near {} for making the FJ correction.&quot;.format(time))</span>
+    <span class="c1">#             return</span>
+    <span class="c1">#</span>
+    <span class="c1">#         index = np.min(index)</span>
+    <span class="c1">#</span>
+    <span class="c1">#     logger.debug( &quot;From index {}, time {}, subtracting {} ({} fringes)&quot;.format(index, self.time[index],</span>
+    <span class="c1">#                                                                                   corr, corr/self.dfr))</span>
+    <span class="c1">#     corr = fringe * self.dfr</span>
+    <span class="c1">#</span>
+    <span class="c1">#     self.density[chan].data[index:] = self.density[chan].data[index:] - corr</span>
+    <span class="c1">#</span>
+    <span class="c1">#     # Store correction in terms of number of fringes</span>
+    <span class="c1">#     # corr_store = int(corr / self.dfr)</span>
+    <span class="c1">#     corr_store = int(corr)</span>
+    <span class="c1">#</span>
+    <span class="c1">#     # If this is a mirror movement signal, store raw correction</span>
+    <span class="c1">#</span>
+    <span class="c1">#     if store:</span>
+    <span class="c1">#         # Store in terms of the number of fringes for density, or vibration itself for vibration</span>
+    <span class="c1">#         if self.fj_dcn[chan].data is None:</span>
+    <span class="c1">#             self.fj_dcn[chan].data = np.array([corr_store])</span>
+    <span class="c1">#             self.fj_dcn[chan].time = np.array([self.time[index]])</span>
+    <span class="c1">#         else:</span>
+    <span class="c1">#             self.fj_dcn[chan].data = np.append(self.fj_dcn.data, corr_store)</span>
+    <span class="c1">#             self.fj_dcn[chan].time = np.append(self.fj_dcn.time, self.time[index])</span>
+    <span class="c1">#</span>
+    <span class="c1">#         kg1_signals.density[chan].correct_fj(corr_ne, time=start_time, correct_type=&quot;zeroend&quot;, corr_dcn=corr_dcn)</span>
+    <span class="c1">#         kg1_signals.vibration[chan].correct_fj(corr_vib, time=start_time, correct_type=&quot;zeroend&quot;, corr_met=corr_met)</span>
+    <span class="c1">#     else:</span>
+    <span class="c1">#         logger.debug(&quot;Setting the end to zero from {}&quot;.format(start_time))</span>
+    <span class="c1">#         # Set end to zero from ind_time (corresponds to CORRECT_TIME)</span>
+    <span class="c1">#         kg1_signals.density[chan].correct_fj(corr_ne, index=ind_time, correct_type=&quot;zeroend&quot;, corr_dcn=corr_dcn)</span>
+    <span class="c1">#         kg1_signals.vibration[chan].correct_fj(corr_vib, index=ind_time, correct_type=&quot;zeroend&quot;, corr_met=corr_met)</span>
+    <span class="c1">#</span>
+
+
+    <span class="c1"># ------------------------</span>
+
+    <span class="c1"># ------------------------</span>
+<div class="viewcode-block" id="Kg1PPFData.get_coord"><a class="viewcode-back" href="../kg1_ppf_data.html#kg1_ppf_data.Kg1PPFData.get_coord">[docs]</a>    <span class="k">def</span> <span class="nf">get_coord</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">shot_no</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get vacuum vessel temperature &amp; extract spatial coordinates of KG4 chords from text file.</span>
+<span class="sd">        Function copied from A. Boboc&#39;s kg4r_py code.</span>
+
+<span class="sd">        :param shot_no: shot number</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">nodename_temp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">constants</span><span class="o">.</span><span class="n">temp_node</span>
+
+        <span class="n">vv_temp</span><span class="p">,</span> <span class="n">err</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_jpf_point</span><span class="p">(</span><span class="n">shot_no</span><span class="p">,</span> <span class="n">nodename_temp</span><span class="p">)</span>
+
+        <span class="n">filename</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">constants</span><span class="o">.</span><span class="n">geometry_filename</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">raw</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">loadtxt</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">skiprows</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+
+            <span class="n">temp</span> <span class="o">=</span> <span class="n">raw</span><span class="p">[:,</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">index</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">temp</span><span class="o">==</span><span class="n">vv_temp</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">Coord_Rref</span> <span class="o">=</span> <span class="n">raw</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">:</span><span class="mi">9</span><span class="p">]</span>
+            <span class="n">Coord_Zref</span> <span class="o">=</span> <span class="n">raw</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">9</span><span class="p">:</span><span class="mi">17</span><span class="p">]</span>
+            <span class="n">Coord_Aref</span> <span class="o">=</span> <span class="n">raw</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">17</span><span class="p">:</span><span class="mi">25</span><span class="p">]</span>
+            <span class="n">Coord_R</span> <span class="o">=</span> <span class="n">raw</span><span class="p">[</span><span class="n">index</span><span class="p">,</span><span class="mi">1</span><span class="p">:</span><span class="mi">9</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">Coord_Z</span> <span class="o">=</span> <span class="n">raw</span><span class="p">[</span><span class="n">index</span><span class="p">,</span><span class="mi">9</span><span class="p">:</span><span class="mi">17</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">Coord_A</span> <span class="o">=</span> <span class="n">raw</span><span class="p">[</span><span class="n">index</span><span class="p">,</span><span class="mi">17</span><span class="p">:</span><span class="mi">25</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">Coord_Temperature</span> <span class="o">=</span> <span class="n">vv_temp</span>
+
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Vaccum Vessel temperature(deg.C) {}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">vv_temp</span><span class="p">))</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Rref {}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">Coord_Rref</span><span class="p">))</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Zref {}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">Coord_Zref</span><span class="p">))</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Aref {}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">Coord_Aref</span><span class="p">))</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;R {}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">Coord_R</span><span class="p">))</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Z {}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">Coord_Z</span><span class="p">))</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;A {}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">Coord_A</span><span class="p">))</span>
+
+            <span class="k">return</span> <span class="p">(</span><span class="n">Coord_Temperature</span><span class="p">,</span><span class="n">Coord_R</span><span class="p">,</span><span class="n">Coord_Z</span><span class="p">,</span>\
+                    <span class="n">Coord_A</span><span class="p">,</span><span class="n">Coord_Rref</span><span class="p">,</span><span class="n">Coord_Zref</span><span class="p">,</span><span class="n">Coord_Aref</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span>
+
+        <span class="k">except</span> <span class="ne">IOError</span><span class="p">:</span>
+            <span class="k">pass</span>
+            <span class="n">ier</span> <span class="o">=</span> <span class="mi">1</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Reading KG4 R,Z,A coordinates data from {} failed&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">filename</span><span class="p">))</span>
+            <span class="k">return</span> <span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">66</span></div>
+
+    <span class="c1"># ------------------------</span>
+
+    <span class="c1"># ------------------------</span>
+<div class="viewcode-block" id="Kg1PPFData.get_jpf_point"><a class="viewcode-back" href="../kg1_ppf_data.html#kg1_ppf_data.Kg1PPFData.get_jpf_point">[docs]</a>    <span class="k">def</span> <span class="nf">get_jpf_point</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">shot_no</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get a single value from the JPF</span>
+<span class="sd">        ie. Convert Nord data to real number</span>
+<span class="sd">        Function copied from A. Boboc&#39;s kg4r_py code.</span>
+
+<span class="sd">        :param shot_no: shot number</span>
+<span class="sd">        :param node: JPF node</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="p">(</span><span class="n">raw</span><span class="p">,</span><span class="n">nwords</span><span class="p">,</span><span class="n">label</span><span class="p">,</span><span class="n">ecode</span><span class="p">)</span> <span class="o">=</span> <span class="n">getdat</span><span class="o">.</span><span class="n">getraw</span><span class="p">(</span><span class="n">node</span><span class="p">,</span><span class="n">shot_no</span><span class="p">)</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="k">if</span> <span class="n">ecode</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;{} {} BAD&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">shot_no</span><span class="p">,</span> <span class="n">node</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">nwords</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+                <span class="c1"># Data is 3 16bit words Nord float, 48 bit</span>
+                <span class="c1"># word 0, bit 0 is sign</span>
+                <span class="c1"># word 0, bit 1..15 is exponent, biased</span>
+                <span class="c1"># word 1, bit 0..15 is most significant mantissa</span>
+                <span class="c1"># word 2, bit 0..15 is least significant mantissa</span>
+                <span class="n">w0</span> <span class="o">=</span> <span class="n">raw</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&amp;</span> <span class="mh">0xffff</span>
+                <span class="n">w1</span> <span class="o">=</span> <span class="n">raw</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&amp;</span> <span class="mh">0xffff</span>
+                <span class="n">w2</span> <span class="o">=</span> <span class="n">raw</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">&amp;</span> <span class="mh">0xffff</span>
+                <span class="k">if</span> <span class="n">w0</span> <span class="o">&amp;</span> <span class="mh">0x8000</span> <span class="p">:</span> <span class="c1"># sign</span>
+                    <span class="n">s</span> <span class="o">=</span> <span class="o">-</span><span class="mf">1.0</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">s</span> <span class="o">=</span>  <span class="mf">1.0</span>
+                <span class="n">e</span> <span class="o">=</span> <span class="n">w0</span> <span class="o">&amp;</span> <span class="mh">0x7fff</span> <span class="c1"># exponent</span>
+                <span class="n">eb</span> <span class="o">=</span> <span class="mh">0x4000</span> <span class="c1"># exponent bias</span>
+                <span class="c1">#print jpn, node, w0, w1, w2,</span>
+                <span class="n">msm</span> <span class="o">=</span> <span class="n">w1</span><span class="o">&lt;&lt;</span><span class="mi">8</span>  <span class="c1"># most significant mantissa for IEE754 float, 32 bit</span>
+                <span class="n">lsm</span> <span class="o">=</span> <span class="n">w2</span><span class="o">&gt;&gt;</span><span class="mi">8</span>  <span class="c1"># least significant mantissa</span>
+                <span class="n">mm</span> <span class="o">=</span> <span class="mh">0x1000000</span> <span class="c1"># mantissa max</span>
+                <span class="n">fm</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">msm</span><span class="o">+</span><span class="n">lsm</span><span class="p">)</span>
+                <span class="n">fmm</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">mm</span><span class="p">)</span>
+                <span class="k">if</span> <span class="p">(</span><span class="n">e</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">t</span> <span class="o">=</span> <span class="n">s</span> <span class="o">*</span> <span class="p">(</span><span class="mi">2</span><span class="o">**</span><span class="p">(</span><span class="n">e</span><span class="o">-</span><span class="n">eb</span><span class="p">))</span> <span class="o">*</span> <span class="p">(</span><span class="n">fm</span><span class="o">/</span><span class="n">fmm</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">t</span><span class="o">=</span> <span class="mf">0.0</span>
+                <span class="c1">#Debug_msg(1,&#39;Pulse&#39; +str(jpn)+node+&#39; &#39;+t)</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">t</span><span class="p">,</span><span class="n">ecode</span><span class="p">)</span></div></div>
+
+    <span class="c1"># # ------------------------</span>
+    <span class="c1"># def uncorrect_fj(self, corr, index):</span>
+    <span class="c1">#     &quot;&quot;&quot;</span>
+    <span class="c1">#     Uncorrect a fringe jump by corr, from the time corresponding to index onwards.</span>
+    <span class="c1">#     Not used ATM. Will need more testing if we want to use it... Suspect isclose is wrong.</span>
+    <span class="c1">#</span>
+    <span class="c1">#     :param corr: Correction to add to the data</span>
+    <span class="c1">#     :param index: Index from which to make the correction</span>
+    <span class="c1">#</span>
+    <span class="c1">#     &quot;&quot;&quot;</span>
+    <span class="c1">#     # Check we made a correction at this time.</span>
+    <span class="c1">#     ind_corr = np.where(np.isclose(self.corrections.time, self.time[index], atol=5e-5, rtol=1e-6) == 1)</span>
+    <span class="c1">#     if np.size(ind_corr) == 0:</span>
+    <span class="c1">#         return</span>
+    <span class="c1">#</span>
+    <span class="c1">#     # Uncorrect correction</span>
+    <span class="c1">#     self.data[index:] = self.data[index:] + corr</span>
+    <span class="c1">#</span>
+    <span class="c1">#     self.corrections.data = np.delete(self.corrections.data, ind_corr)</span>
+    <span class="c1">#     self.corrections.time = np.delete(self.corrections.time, ind_corr)</span>
+    <span class="c1">#</span>
+    <span class="c1"># # ------------------------</span>
+    <span class="c1"># def correct_fj(self, corr, time=None, index=None, store=True, correct_type=&quot;&quot;, corr_dcn=None, corr_met=None):</span>
+    <span class="c1">#     &quot;&quot;&quot;</span>
+    <span class="c1">#     Shifts all data from time onwards, or index onwards,</span>
+    <span class="c1">#     down by corr. Either time or index must be specified</span>
+    <span class="c1">#</span>
+    <span class="c1">#     :param corr: The correction to be subtracted</span>
+    <span class="c1">#     :param time: The time from which to make the correction (if this is specified index is ignored)</span>
+    <span class="c1">#     :param index: The index from which to make the correction</span>
+    <span class="c1">#     :param store: To record the correction set to True</span>
+    <span class="c1">#     :param correct_type: String describing which part of the code made the correction</span>
+    <span class="c1">#     :param corr_dcn: Only for use with lateral channels. Stores the correction,</span>
+    <span class="c1">#                      in terms of the number of FJ in DCN laser (as opposed to in the combined density)</span>
+    <span class="c1">#     :param corr_met: Only for use with lateral channels. Stores the correction,</span>
+    <span class="c1">#                      in terms of the number of FJ in the MET laser (as opposed to the correction in the vibration)</span>
+    <span class="c1">#</span>
+    <span class="c1">#     &quot;&quot;&quot;</span>
+    <span class="c1">#</span>
+    <span class="c1">#     if time is None and index is None:</span>
+    <span class="c1">#         logger.warning(&quot;No time or index was specified for making the FJ correction.&quot;)</span>
+    <span class="c1">#         return</span>
+    <span class="c1">#</span>
+    <span class="c1">#     if time is not None:</span>
+    <span class="c1">#         index = np.where(self.time &gt; time),</span>
+    <span class="c1">#         if np.size(index) == 0:</span>
+    <span class="c1">#             logger.warning(&quot;Could not find time near {} for making the FJ correction.&quot;.format(time))</span>
+    <span class="c1">#             return</span>
+    <span class="c1">#</span>
+    <span class="c1">#         index = np.min(index)</span>
+    <span class="c1">#</span>
+    <span class="c1">#     logger.log(5, &quot;From index {}, time {}, subtracting {} ({} fringes)&quot;.format(index, self.time[index],</span>
+    <span class="c1">#                                                                                    corr, corr/self.dfr))</span>
+    <span class="c1">#     self.data[index:] = self.data[index:] - corr</span>
+    <span class="c1">#</span>
+    <span class="c1">#     # Store correction in terms of number of fringes</span>
+    <span class="c1">#     corr_store = int(corr / self.dfr)</span>
+    <span class="c1">#</span>
+    <span class="c1">#     # If this is a mirror movement signal, store raw correction</span>
+    <span class="c1">#     if &quot;vib&quot; in self.signal_type:</span>
+    <span class="c1">#         corr_store = corr</span>
+    <span class="c1">#</span>
+    <span class="c1">#     if store:</span>
+    <span class="c1">#         # Store in terms of the number of fringes for density, or vibration itself for vibration</span>
+    <span class="c1">#         if self.corrections.data is None:</span>
+    <span class="c1">#             self.corrections.data = np.array([corr_store])</span>
+    <span class="c1">#             self.corrections.time = np.array([self.time[index]])</span>
+    <span class="c1">#         else:</span>
+    <span class="c1">#             self.corrections.data = np.append(self.corrections.data, corr_store)</span>
+    <span class="c1">#             self.corrections.time = np.append(self.corrections.time, self.time[index])</span>
+    <span class="c1">#</span>
+    <span class="c1">#         self.correction_type = np.append(self.correction_type, correct_type)</span>
+    <span class="c1">#</span>
+    <span class="c1">#         # Also store corresponding correction for the DCN &amp; MET lasers (for use with lateral channels only)</span>
+    <span class="c1">#         if corr_dcn is not None:</span>
+    <span class="c1">#             self.correction_dcn = np.append(self.correction_dcn, corr_dcn)</span>
+    <span class="c1">#</span>
+    <span class="c1">#         if corr_met is not None:</span>
+    <span class="c1">#             self.correction_met = np.append(self.correction_met, corr_met)</span>
+    <span class="c1">#</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019, Bruno Viola.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.4.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.7</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

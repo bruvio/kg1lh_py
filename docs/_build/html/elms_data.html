@@ -1,0 +1,184 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>ElmsData &mdash; CORMAT_py 0.0.13 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.0.13',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="CORMAT_py 0.0.13 documentation" href="index.html" />
+    <link rel="up" title="Classes" href="classes.html" />
+    <link rel="next" title="HRTSData" href="hrts_data.html" />
+    <link rel="prev" title="Kg1PPFData" href="kg1_ppf_data.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="module-elms_data">
+<span id="elmsdata"></span><h1>ElmsData<a class="headerlink" href="#module-elms_data" title="Permalink to this headline">¶</a></h1>
+<p>Class to read Be-II signals, and detect ELMs.</p>
+<p>The disruption time can be specified, in which case only ELMs before this time will be detected</p>
+<p>Method used for ELM detection:</p>
+<blockquote>
+<div><ul class="simple">
+<li>Only use the Be-II signal up until the disruption time, if there is a disruption.
+This ensures that the filtering doesn&#8217;t give us extra unwanted oscillations due
+to the large signal at the time of the disruption.</li>
+<li>Find the background using wavelet filtering (module wv_get_background).</li>
+<li>Find ELMs by studying the first derivative of the Be-II signal. We are looking for a positive derivative, followed by a negative derivative. Different thresholds can be set for the positive &amp; negative derivative to account for the shape of the ELM signals (sharp rise, followed by shallower fall off).</li>
+</ul>
+</div></blockquote>
+<dl class="docutils">
+<dt>Future improvements:</dt>
+<dd><ul class="first last simple">
+<li>Finding the background using wavelets is a bit slow: try a moving average</li>
+<li>a variable threshold. Sometimes the threshold is too low/high, resulting in incorrectly detected ELMs or missing ELMs.</li>
+</ul>
+</dd>
+</dl>
+<dl class="class">
+<dt id="elms_data.ElmsData">
+<em class="property">class </em><code class="descclassname">elms_data.</code><code class="descname">ElmsData</code><span class="sig-paren">(</span><em>constants</em>, <em>shot_no</em>, <em>dis_time=0.0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/elms_data.html#ElmsData"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#elms_data.ElmsData" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>Class to read Be-II signals, and detect ELMs.</p>
+<dl class="attribute">
+<dt id="elms_data.ElmsData.WV_FAMILY">
+<code class="descname">WV_FAMILY</code><em class="property"> = 'db15'</em><a class="headerlink" href="#elms_data.ElmsData.WV_FAMILY" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="elms_data.ElmsData.WV_PERC">
+<code class="descname">WV_PERC</code><em class="property"> = 99.0</em><a class="headerlink" href="#elms_data.ElmsData.WV_PERC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="elms_data.ElmsData.START_TIME">
+<code class="descname">START_TIME</code><em class="property"> = 40.0</em><a class="headerlink" href="#elms_data.ElmsData.START_TIME" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="elms_data.ElmsData.END_TIME">
+<code class="descname">END_TIME</code><em class="property"> = 65.0</em><a class="headerlink" href="#elms_data.ElmsData.END_TIME" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="elms_data.ElmsData.UP_THRESH">
+<code class="descname">UP_THRESH</code><em class="property"> = 0.5</em><a class="headerlink" href="#elms_data.ElmsData.UP_THRESH" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="elms_data.ElmsData.DOWN_THRESH">
+<code class="descname">DOWN_THRESH</code><em class="property"> = -0.3</em><a class="headerlink" href="#elms_data.ElmsData.DOWN_THRESH" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="elms_data.ElmsData.ELM_WIDTH_MAX">
+<code class="descname">ELM_WIDTH_MAX</code><em class="property"> = 0.1</em><a class="headerlink" href="#elms_data.ElmsData.ELM_WIDTH_MAX" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="elms_data.ElmsData.BE_START_TIME">
+<code class="descname">BE_START_TIME</code><em class="property"> = 35.0</em><a class="headerlink" href="#elms_data.ElmsData.BE_START_TIME" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="elms_data.ElmsData._find_elms">
+<code class="descname">_find_elms</code><span class="sig-paren">(</span><em>shot_no</em>, <em>dis_time</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/elms_data.html#ElmsData._find_elms"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#elms_data.ElmsData._find_elms" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read in ELMs signal and find elms</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>shot_no</strong> &#8211; shot number</li>
+<li><strong>dis_time</strong> &#8211; Disruption time. Set to zero for no disruption. ELMs will only be detected before this time.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  <li><a href="classes.html">Classes</a><ul>
+      <li>Previous: <a href="kg1_ppf_data.html" title="previous chapter">Kg1PPFData</a></li>
+      <li>Next: <a href="hrts_data.html" title="next chapter">HRTSData</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/elms_data.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019, Bruno Viola.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.4.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.7</a>
+      
+      |
+      <a href="_sources/elms_data.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

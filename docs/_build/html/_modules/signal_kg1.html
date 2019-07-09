@@ -1,0 +1,263 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>signal_kg1 &mdash; CORMAT_py 0.0.13 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.0.13',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="top" title="CORMAT_py 0.0.13 documentation" href="../index.html" />
+    <link rel="up" title="Module code" href="index.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for signal_kg1</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Class for reading and storing KG1 signals.</span>
+
+<span class="sd">Inherits from SignalBase (signal_base.py).</span>
+
+<span class="sd">Additional functionality for correcting fringe </span>
+<span class="sd">jumps and storing status flags</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">copy</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">signal_base</span> <span class="kn">import</span> <span class="n">SignalBase</span>
+<span class="kn">from</span> <span class="nn">make_plots</span> <span class="kn">import</span> <span class="n">make_plot</span>
+<span class="kn">from</span> <span class="nn">kg4_data</span> <span class="kn">import</span> <span class="n">Kg4Data</span>
+<span class="kn">from</span> <span class="nn">library</span> <span class="kn">import</span> <span class="o">*</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="n">__name__</span><span class="p">)</span>
+
+<span class="c1"># ----------------------------</span>
+<span class="n">__author__</span> <span class="o">=</span> <span class="s2">&quot;B. Viola&quot;</span>
+<span class="c1"># ----------------------------</span>
+
+
+<div class="viewcode-block" id="SignalKg1"><a class="viewcode-back" href="../signal_kg1.html#signal_kg1.SignalKg1">[docs]</a><span class="k">class</span> <span class="nc">SignalKg1</span><span class="p">(</span><span class="n">SignalBase</span><span class="p">):</span>
+
+
+    <span class="c1"># ------------------------</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">constants</span><span class="p">,</span><span class="n">shot_no</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Init function</span>
+
+<span class="sd">        :param constants: Instance of Kg1Consts, containing useful constants &amp; all node names for PPF &amp; JPFs</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">signal_type</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>  <span class="c1"># kg1r, kg1c, kg1v</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dcn_or_met</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span> <span class="c1"># dcn, met</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">corrections</span> <span class="o">=</span> <span class="n">SignalBase</span><span class="p">(</span><span class="n">constants</span><span class="p">)</span>  <span class="c1"># Corrections that have been made</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">correction_type</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span> <span class="c1"># For debugging : to keep track of where corrections have been made</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">correction_dcn</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span> <span class="c1"># For use with the lateral channels</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">correction_met</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span> <span class="c1"># For use with the lateral channels</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">pulse</span> <span class="o">=</span> <span class="n">shot_no</span>
+
+        <span class="nb">super</span><span class="p">(</span><span class="n">SignalKg1</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">constants</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">dfr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">constants</span><span class="o">.</span><span class="n">DFR_DCN</span>
+
+    <span class="c1"># ------------------------</span>
+    <span class="k">def</span> <span class="nf">__deepcopy__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">memo</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Override deepcopy. Only a few of the attributes need to be copied.</span>
+
+<span class="sd">        :param memo:</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">dpcpy</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__class__</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">constants</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">corrections</span><span class="o">.</span><span class="n">data</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">dpcpy</span><span class="o">.</span><span class="n">corrections</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">corrections</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">corrections</span><span class="o">.</span><span class="n">time</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">dpcpy</span><span class="o">.</span><span class="n">corrections</span><span class="o">.</span><span class="n">time</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">corrections</span><span class="o">.</span><span class="n">time</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">correction_type</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">dpcpy</span><span class="o">.</span><span class="n">correction_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">correction_type</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">correction_dcn</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">dpcpy</span><span class="o">.</span><span class="n">correction_dcn</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">correction_dcn</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">correction_met</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">dpcpy</span><span class="o">.</span><span class="n">correction_met</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">correction_met</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">dpcpy</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">time</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">dpcpy</span><span class="o">.</span><span class="n">time</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">time</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">dpcpy</span><span class="o">.</span><span class="n">dfr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dfr</span>
+        <span class="n">dpcpy</span><span class="o">.</span><span class="n">signal_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">signal_type</span>
+        <span class="n">dpcpy</span><span class="o">.</span><span class="n">dcn_or_met</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dcn_or_met</span>
+
+        <span class="k">return</span> <span class="n">dpcpy</span>
+
+
+    <span class="c1"># ------------------------</span>
+<div class="viewcode-block" id="SignalKg1.uncorrect_fj"><a class="viewcode-back" href="../signal_kg1.html#signal_kg1.SignalKg1.uncorrect_fj">[docs]</a>    <span class="k">def</span> <span class="nf">uncorrect_fj</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">corr</span><span class="p">,</span> <span class="n">index</span><span class="p">,</span><span class="n">fringe_vib</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Uncorrect a fringe jump by corr, from the time corresponding to index onwards.</span>
+<span class="sd">        Not used ATM. Will need more testing if we want to use it... Suspect isclose is wrong.</span>
+<span class="sd">        07mar2019</span>
+<span class="sd">        used this function instead of is close as there is an issue with types and the value we are looking for</span>
+<span class="sd">        sometimes are not found</span>
+
+<span class="sd">        :param corr: Correction to add to the data</span>
+<span class="sd">        :param index: Index from which to make the correction</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># # Check we made a correction at this time.</span>
+
+
+        <span class="n">ind_corr</span><span class="p">,</span> <span class="n">value</span> <span class="o">=</span> <span class="n">find_nearest</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">corrections</span><span class="o">.</span><span class="n">time</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">time</span><span class="p">[</span><span class="n">index</span><span class="p">])</span>
+        <span class="c1"># ind_corr = np.where(np.isclose(self.corrections.time, self.time[index], atol=1e-3, rtol=1e-6) == 1)</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="n">ind_corr</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">&#39;no correction to Undo!&#39;</span><span class="p">)</span>
+            <span class="k">return</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span>
+                   <span class="s2">&quot;From index {}, time {}, subtracting {} ({} fringes)&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                       <span class="n">ind_corr</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span>
+                       <span class="n">corr</span><span class="p">,</span> <span class="n">corr</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">constants</span><span class="o">.</span><span class="n">DFR_DCN</span><span class="p">))</span>
+        <span class="c1"># Uncorrect correction</span>
+        <span class="k">if</span> <span class="n">fringe_vib</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">index</span><span class="p">:]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">index</span><span class="p">:]</span> <span class="o">+</span> <span class="n">corr</span>
+
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">index</span><span class="p">:]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">index</span><span class="p">:]</span> <span class="o">+</span> <span class="n">fringe_vib</span>
+
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">corrections</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">corrections</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">ind_corr</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">corrections</span><span class="o">.</span><span class="n">time</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">corrections</span><span class="o">.</span><span class="n">time</span><span class="p">,</span> <span class="n">ind_corr</span><span class="p">)</span></div>
+
+
+    <span class="c1"># ------------------------</span>
+<div class="viewcode-block" id="SignalKg1.correct_fj"><a class="viewcode-back" href="../signal_kg1.html#signal_kg1.SignalKg1.correct_fj">[docs]</a>    <span class="k">def</span> <span class="nf">correct_fj</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">corr</span><span class="p">,</span> <span class="n">time</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">store</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">corr_dcn</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">corr_met</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span><span class="n">lid</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Shifts all data from time onwards, or index onwards,</span>
+<span class="sd">        down by corr. Either time or index must be specified</span>
+
+<span class="sd">        :param corr: The correction to be subtracted</span>
+<span class="sd">        :param time: The time from which to make the correction (if this is specified index is ignored)</span>
+<span class="sd">        :param index: The index from which to make the correction</span>
+<span class="sd">        :param store: To record the correction set to True</span>
+<span class="sd">        :param corr_dcn: Only for use with lateral channels. Stores the correction,</span>
+<span class="sd">                         in terms of the number of FJ in DCN laser (as opposed to in the combined density)</span>
+<span class="sd">        :param corr_met: Only for use with lateral channels. Stores the correction,</span>
+<span class="sd">                         in terms of the number of FJ in the MET laser (as opposed to the correction in the vibration)</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">time</span> <span class="ow">is</span> <span class="bp">None</span> <span class="ow">and</span> <span class="n">index</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;No time or index was specified for making the FJ correction.&quot;</span><span class="p">)</span>
+            <span class="k">return</span>
+
+        <span class="k">if</span> <span class="n">time</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">index</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">time</span> <span class="o">&gt;</span> <span class="n">time</span><span class="p">),</span>
+            <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="n">index</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Could not find time near {} for making the FJ correction.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">time</span><span class="p">))</span>
+                <span class="k">return</span>
+
+            <span class="n">index</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">index</span><span class="p">)</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="s2">&quot;From index {}, time {}, subtracting {} ({} fringes)&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">index</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">time</span><span class="p">[</span><span class="n">index</span><span class="p">],</span>
+                                                                                       <span class="n">corr</span><span class="p">,</span> <span class="n">corr</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">constants</span><span class="o">.</span><span class="n">DFR_DCN</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">index</span><span class="p">:]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">index</span><span class="p">:]</span> <span class="o">-</span> <span class="n">corr</span>
+
+        <span class="c1"># Store correction in terms of number of fringes</span>
+        <span class="k">if</span> <span class="n">lid</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">corr_store</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">corr</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">constants</span><span class="o">.</span><span class="n">DFR_DCN</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">corr_store</span> <span class="o">=</span> <span class="n">lid</span>
+
+
+        <span class="c1"># If this is a mirror movement signal, store raw correction</span>
+        <span class="k">if</span> <span class="s2">&quot;vib&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">signal_type</span><span class="p">:</span>
+                <span class="n">corr_store</span> <span class="o">=</span> <span class="n">corr</span>
+
+
+        <span class="k">if</span> <span class="n">store</span><span class="p">:</span>
+            <span class="c1"># Store in terms of the number of fringes for density, or vibration itself for vibration</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">corrections</span><span class="o">.</span><span class="n">data</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">corrections</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">corr_store</span><span class="p">])</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">corrections</span><span class="o">.</span><span class="n">time</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">time</span><span class="p">[</span><span class="n">index</span><span class="p">]])</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">corrections</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">corrections</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">corr_store</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">corrections</span><span class="o">.</span><span class="n">time</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">corrections</span><span class="o">.</span><span class="n">time</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">time</span><span class="p">[</span><span class="n">index</span><span class="p">])</span>
+
+
+
+            <span class="c1"># Also store corresponding correction for the DCN &amp; MET lasers (for use with lateral channels only)</span>
+            <span class="k">if</span> <span class="n">corr_dcn</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">correction_dcn</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">correction_dcn</span><span class="p">,</span> <span class="n">corr_dcn</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">corr_met</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">correction_met</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">correction_met</span><span class="p">,</span> <span class="n">corr_met</span><span class="p">)</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019, Bruno Viola.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.4.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.7</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

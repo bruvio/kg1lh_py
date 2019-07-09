@@ -1,0 +1,156 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Signalkg1 &mdash; CORMAT_py 0.0.13 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.0.13',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="CORMAT_py 0.0.13 documentation" href="index.html" />
+    <link rel="up" title="Classes" href="classes.html" />
+    <link rel="next" title="Kg1PPFData" href="kg1_ppf_data.html" />
+    <link rel="prev" title="SignalBase" href="signal_base.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="module-signal_kg1">
+<span id="signalkg1"></span><h1>Signalkg1<a class="headerlink" href="#module-signal_kg1" title="Permalink to this headline">¶</a></h1>
+<p>Class for reading and storing KG1 signals.</p>
+<p>Inherits from SignalBase (signal_base.py).</p>
+<p>Additional functionality for correcting fringe 
+jumps and storing status flags</p>
+<dl class="class">
+<dt id="signal_kg1.SignalKg1">
+<em class="property">class </em><code class="descclassname">signal_kg1.</code><code class="descname">SignalKg1</code><span class="sig-paren">(</span><em>constants</em>, <em>shot_no</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/signal_kg1.html#SignalKg1"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#signal_kg1.SignalKg1" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="signal_base.html#signal_base.SignalBase" title="signal_base.SignalBase"><code class="xref py py-class docutils literal"><span class="pre">signal_base.SignalBase</span></code></a></p>
+<dl class="method">
+<dt id="signal_kg1.SignalKg1.uncorrect_fj">
+<code class="descname">uncorrect_fj</code><span class="sig-paren">(</span><em>corr</em>, <em>index</em>, <em>fringe_vib=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/signal_kg1.html#SignalKg1.uncorrect_fj"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#signal_kg1.SignalKg1.uncorrect_fj" title="Permalink to this definition">¶</a></dt>
+<dd><p>Uncorrect a fringe jump by corr, from the time corresponding to index onwards.
+Not used ATM. Will need more testing if we want to use it... Suspect isclose is wrong.
+07mar2019
+used this function instead of is close as there is an issue with types and the value we are looking for
+sometimes are not found</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>corr</strong> &#8211; Correction to add to the data</li>
+<li><strong>index</strong> &#8211; Index from which to make the correction</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="signal_kg1.SignalKg1.correct_fj">
+<code class="descname">correct_fj</code><span class="sig-paren">(</span><em>corr</em>, <em>time=None</em>, <em>index=None</em>, <em>store=True</em>, <em>corr_dcn=None</em>, <em>corr_met=None</em>, <em>lid=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/signal_kg1.html#SignalKg1.correct_fj"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#signal_kg1.SignalKg1.correct_fj" title="Permalink to this definition">¶</a></dt>
+<dd><p>Shifts all data from time onwards, or index onwards,
+down by corr. Either time or index must be specified</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>corr</strong> &#8211; The correction to be subtracted</li>
+<li><strong>time</strong> &#8211; The time from which to make the correction (if this is specified index is ignored)</li>
+<li><strong>index</strong> &#8211; The index from which to make the correction</li>
+<li><strong>store</strong> &#8211; To record the correction set to True</li>
+<li><strong>corr_dcn</strong> &#8211; Only for use with lateral channels. Stores the correction,
+in terms of the number of FJ in DCN laser (as opposed to in the combined density)</li>
+<li><strong>corr_met</strong> &#8211; Only for use with lateral channels. Stores the correction,
+in terms of the number of FJ in the MET laser (as opposed to the correction in the vibration)</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  <li><a href="classes.html">Classes</a><ul>
+      <li>Previous: <a href="signal_base.html" title="previous chapter">SignalBase</a></li>
+      <li>Next: <a href="kg1_ppf_data.html" title="next chapter">Kg1PPFData</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/signal_kg1.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019, Bruno Viola.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.4.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.7</a>
+      
+      |
+      <a href="_sources/signal_kg1.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

@@ -1,0 +1,645 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Cormat_main module &mdash; CORMAT_py 0.0.13 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.0.13',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="CORMAT_py 0.0.13 documentation" href="index.html" />
+    <link rel="up" title="Main control function" href="control.html" />
+    <link rel="next" title="Modules" href="modules.html" />
+    <link rel="prev" title="Main control function" href="control.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="cormat-main-module">
+<h1>Cormat_main module<a class="headerlink" href="#cormat-main-module" title="Permalink to this headline">¶</a></h1>
+<span class="target" id="module-Cormat_main"></span><p>Class that runs CORMAT_py GUI</p>
+<dl class="function">
+<dt id="Cormat_main.myself">
+<code class="descclassname">Cormat_main.</code><code class="descname">myself</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Cormat_main.myself" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="class">
+<dt id="Cormat_main.CORMAT_GUI">
+<em class="property">class </em><code class="descclassname">Cormat_main.</code><code class="descname">CORMAT_GUI</code><span class="sig-paren">(</span><em>parent=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/Cormat_main.html#CORMAT_GUI"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Cormat_main.CORMAT_GUI" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">PyQt4.QtGui.QMainWindow</span></code>, <a class="reference internal" href="CORMAT_GUI.html#CORMAT_GUI.Ui_CORMAT_py" title="CORMAT_GUI.Ui_CORMAT_py"><code class="xref py py-class docutils literal"><span class="pre">CORMAT_GUI.Ui_CORMAT_py</span></code></a>, <a class="reference internal" href="custom_formatters.html#custom_formatters.QPlainTextEditLogger" title="custom_formatters.QPlainTextEditLogger"><code class="xref py py-class docutils literal"><span class="pre">custom_formatters.QPlainTextEditLogger</span></code></a></p>
+<p>Main control function for CORMATpy GUI.</p>
+<dl class="method">
+<dt id="Cormat_main.CORMAT_GUI.handle_readbutton_master">
+<code class="descname">handle_readbutton_master</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/Cormat_main.html#CORMAT_GUI.handle_readbutton_master"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Cormat_main.CORMAT_GUI.handle_readbutton_master" title="Permalink to this definition">¶</a></dt>
+<dd><p>implemets what happen when clicking the load button on the GUI
+the logic is explained in the FLowDiagram ../FlowDiagram/load_button_new.dia</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="Cormat_main.CORMAT_GUI.checkStatuFlags">
+<code class="descname">checkStatuFlags</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/Cormat_main.html#CORMAT_GUI.checkStatuFlags"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Cormat_main.CORMAT_GUI.checkStatuFlags" title="Permalink to this definition">¶</a></dt>
+<dd><p>reads the list containing pulse status flag
+:return:</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="Cormat_main.CORMAT_GUI.canvasselected">
+<code class="descname">canvasselected</code><span class="sig-paren">(</span><em>arg=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/Cormat_main.html#CORMAT_GUI.canvasselected"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Cormat_main.CORMAT_GUI.canvasselected" title="Permalink to this definition">¶</a></dt>
+<dd><p>function that convert arg number into tab name
+it also sets the SF value when changing tabs
+:param arg: index of canvas
+:return:</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="Cormat_main.CORMAT_GUI.setcoord">
+<code class="descname">setcoord</code><span class="sig-paren">(</span><em>chan</em>, <em>reset=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/Cormat_main.html#CORMAT_GUI.setcoord"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Cormat_main.CORMAT_GUI.setcoord" title="Permalink to this definition">¶</a></dt>
+<dd><p>connects selected tab to its own list of selected data points</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>reset</strong> &#8211; </td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="Cormat_main.CORMAT_GUI.checkstate">
+<code class="descname">checkstate</code><span class="sig-paren">(</span><em>button</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/Cormat_main.html#CORMAT_GUI.checkstate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Cormat_main.CORMAT_GUI.checkstate" title="Permalink to this definition">¶</a></dt>
+<dd><p>connect tab number to LID channel and sets status flag
+it also performs a check if the user clicked a radio button to change status flag for current tab/channel
+:param button:
+:return:</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="Cormat_main.CORMAT_GUI.set_status_flag_radio">
+<code class="descname">set_status_flag_radio</code><span class="sig-paren">(</span><em>value</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/Cormat_main.html#CORMAT_GUI.set_status_flag_radio"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Cormat_main.CORMAT_GUI.set_status_flag_radio" title="Permalink to this definition">¶</a></dt>
+<dd><p>converts status flag integer value into boolean to check SF radio buttons in GUI
+:param value: status flag to be applied to selected channel
+:return:</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="Cormat_main.CORMAT_GUI.load_pickle">
+<code class="descname">load_pickle</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/Cormat_main.html#CORMAT_GUI.load_pickle"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Cormat_main.CORMAT_GUI.load_pickle" title="Permalink to this definition">¶</a></dt>
+<dd><p>loads last saved data from non saved operations
+data are saved in pickle format (binary)</p>
+<p>also to be used when reloading a pulse</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="Cormat_main.CORMAT_GUI.save_to_pickle">
+<code class="descname">save_to_pickle</code><span class="sig-paren">(</span><em>folder</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/Cormat_main.html#CORMAT_GUI.save_to_pickle"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Cormat_main.CORMAT_GUI.save_to_pickle" title="Permalink to this definition">¶</a></dt>
+<dd><p>saves to pickle experimental data
+:param folder: for now user can save either to saved or scratch folder
+:return:</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="Cormat_main.CORMAT_GUI.save_kg1">
+<code class="descname">save_kg1</code><span class="sig-paren">(</span><em>folder</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/Cormat_main.html#CORMAT_GUI.save_kg1"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Cormat_main.CORMAT_GUI.save_kg1" title="Permalink to this definition">¶</a></dt>
+<dd><p>module that saves just kg1 data to folder
+:param folder:
+:return:</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="Cormat_main.CORMAT_GUI.dump_kg1">
+<code class="descname">dump_kg1</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/Cormat_main.html#CORMAT_GUI.dump_kg1"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Cormat_main.CORMAT_GUI.dump_kg1" title="Permalink to this definition">¶</a></dt>
+<dd><p>temporary save kg1 data to scratch folder
+:return:</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="Cormat_main.CORMAT_GUI.handle_no">
+<code class="descname">handle_no</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/Cormat_main.html#CORMAT_GUI.handle_no"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Cormat_main.CORMAT_GUI.handle_no" title="Permalink to this definition">¶</a></dt>
+<dd><p>functions that ask to confirm if user wants NOT to proceed</p>
+<p>to set read data for selected pulse</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="Cormat_main.CORMAT_GUI.handle_yes">
+<code class="descname">handle_yes</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/Cormat_main.html#CORMAT_GUI.handle_yes"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Cormat_main.CORMAT_GUI.handle_yes" title="Permalink to this definition">¶</a></dt>
+<dd><p>functions that ask to confirm if user wants to proceed</p>
+<p>to set read data for selected pulse</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="Cormat_main.CORMAT_GUI.handle_yes_reload">
+<code class="descname">handle_yes_reload</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/Cormat_main.html#CORMAT_GUI.handle_yes_reload"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Cormat_main.CORMAT_GUI.handle_yes_reload" title="Permalink to this definition">¶</a></dt>
+<dd><p>module that handles readloading already downloaded data
+:return:</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="Cormat_main.CORMAT_GUI.readdata">
+<code class="descname">readdata</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/Cormat_main.html#CORMAT_GUI.readdata"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Cormat_main.CORMAT_GUI.readdata" title="Permalink to this definition">¶</a></dt>
+<dd><p>function that reads data as described in const.ini
+:return: True if success</p>
+<blockquote>
+<div>False if error
+saves data to pickle files: one just for KG1 (kg1_data) and one for everything else (data.pkl)</div></blockquote>
+</dd></dl>
+
+<dl class="method">
+<dt id="Cormat_main.CORMAT_GUI.plot_data">
+<code class="descname">plot_data</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/Cormat_main.html#CORMAT_GUI.plot_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Cormat_main.CORMAT_GUI.plot_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>handles widgets
+initialises canvas to blank
+sets grid and axes
+plots KG1 data</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="Cormat_main.CORMAT_GUI.GUI_refresh">
+<code class="descname">GUI_refresh</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/Cormat_main.html#CORMAT_GUI.GUI_refresh"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Cormat_main.CORMAT_GUI.GUI_refresh" title="Permalink to this definition">¶</a></dt>
+<dd><p>updates GUI after reading data
+enables/disables buttons</p>
+<p>connects tab to tabselected signal</p>
+<p>finally run a check on status flag applied to selected channel
+:return:</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="Cormat_main.CORMAT_GUI.update_channel">
+<code class="descname">update_channel</code><span class="sig-paren">(</span><em>chan</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/Cormat_main.html#CORMAT_GUI.update_channel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Cormat_main.CORMAT_GUI.update_channel" title="Permalink to this definition">¶</a></dt>
+<dd><p>after a correction is applied this module updates kg1 data to new values
+and replots data on all tabs
+:param chan:
+:return:</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="Cormat_main.CORMAT_GUI.set_xlimits">
+<code class="descname">set_xlimits</code><span class="sig-paren">(</span><em>lower</em>, <em>upper</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/Cormat_main.html#CORMAT_GUI.set_xlimits"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Cormat_main.CORMAT_GUI.set_xlimits" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convenience method to canvas.axes.set_xlim
+as matplotlib autoupdate is bugged</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>lower</strong> &#8211; lower limit of data</li>
+<li><strong>upper</strong> &#8211; upper limit of data</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="Cormat_main.CORMAT_GUI.plot_2nd_trace">
+<code class="descname">plot_2nd_trace</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/Cormat_main.html#CORMAT_GUI.plot_2nd_trace"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Cormat_main.CORMAT_GUI.plot_2nd_trace" title="Permalink to this definition">¶</a></dt>
+<dd><p>function that plots a second trace in the tabs(each canvas)
+at the moment clears the canvas and re-plot everything
+so probably a little slow.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="Cormat_main.CORMAT_GUI.plot_markers">
+<code class="descname">plot_markers</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/Cormat_main.html#CORMAT_GUI.plot_markers"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Cormat_main.CORMAT_GUI.plot_markers" title="Permalink to this definition">¶</a></dt>
+<dd><p>function that plots a marker traces in the tabs(each canvas)
+This version creates sub plot inside the canvas
+:return:</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="Cormat_main.CORMAT_GUI.handle_check_status">
+<code class="descname">handle_check_status</code><span class="sig-paren">(</span><em>button_newpulse</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/Cormat_main.html#CORMAT_GUI.handle_check_status"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Cormat_main.CORMAT_GUI.handle_check_status" title="Permalink to this definition">¶</a></dt>
+<dd><p>function used for debugging and control purposes -
+-
+checks if button &#8220;newpulse&#8221; is clicked
+:param button_newpulse:
+:return: disable/enable combobox</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="Cormat_main.CORMAT_GUI.handle_saveppfbutton">
+<code class="descname">handle_saveppfbutton</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/Cormat_main.html#CORMAT_GUI.handle_saveppfbutton"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Cormat_main.CORMAT_GUI.handle_saveppfbutton" title="Permalink to this definition">¶</a></dt>
+<dd><p>save data</p>
+<p>user will save either Status Flags or ppf (and SF)</p>
+<p>if user selects in GUI to save ppf a new PPF sequence will be written for dda=&#8217;KG1V&#8217;
+if user selects in GUI to save SF only the SF will be written in the last sequence (no new sequence)</p>
+<p>is data is has not been modified it automatically switches to save status flags only</p>
+<p>as from May 2019 there is a bug in ppfssr so a new ppf will written in either cases.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="Cormat_main.CORMAT_GUI.handle_save_data_statusflag">
+<code class="descname">handle_save_data_statusflag</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/Cormat_main.html#CORMAT_GUI.handle_save_data_statusflag"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Cormat_main.CORMAT_GUI.handle_save_data_statusflag" title="Permalink to this definition">¶</a></dt>
+<dd><p>function data handles the writing of a new PPF</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">67 if there has been an error in writing status flag
+0 otherwise (success)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="Cormat_main.CORMAT_GUI.handle_save_statusflag">
+<code class="descname">handle_save_statusflag</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/Cormat_main.html#CORMAT_GUI.handle_save_statusflag"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Cormat_main.CORMAT_GUI.handle_save_statusflag" title="Permalink to this definition">¶</a></dt>
+<dd><p>function that uses ppfssf inside ppf library (ATTENTION this function is not listed yet in the ppf library python documentation (only C++ version)
+:return: 0 if success</p>
+<blockquote>
+<div>68 if fails to write status flags</div></blockquote>
+</dd></dl>
+
+<dl class="method">
+<dt id="Cormat_main.CORMAT_GUI.handle_normalizebutton">
+<code class="descname">handle_normalizebutton</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/Cormat_main.html#CORMAT_GUI.handle_normalizebutton"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Cormat_main.CORMAT_GUI.handle_normalizebutton" title="Permalink to this definition">¶</a></dt>
+<dd><p>function that normalises the second trace to KG1 for comparing purposes during validation and fringe correction
+:return:</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="Cormat_main.CORMAT_GUI.handle_button_restore">
+<code class="descname">handle_button_restore</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/Cormat_main.html#CORMAT_GUI.handle_button_restore"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Cormat_main.CORMAT_GUI.handle_button_restore" title="Permalink to this definition">¶</a></dt>
+<dd><p>function that restores signals to original amplitude
+:return:</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="Cormat_main.CORMAT_GUI.handle_makepermbutton">
+<code class="descname">handle_makepermbutton</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/Cormat_main.html#CORMAT_GUI.handle_makepermbutton"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Cormat_main.CORMAT_GUI.handle_makepermbutton" title="Permalink to this definition">¶</a></dt>
+<dd><p>function that makes permanent last correction
+store data into FC dtype only</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="Cormat_main.CORMAT_GUI.check_current_tab">
+<code class="descname">check_current_tab</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/Cormat_main.html#CORMAT_GUI.check_current_tab"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Cormat_main.CORMAT_GUI.check_current_tab" title="Permalink to this definition">¶</a></dt>
+<dd><p>returns current tab
+:return: current tab</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="Cormat_main.CORMAT_GUI.keyPressEvent">
+<code class="descname">keyPressEvent</code><span class="sig-paren">(</span><em>event</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/Cormat_main.html#CORMAT_GUI.keyPressEvent"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Cormat_main.CORMAT_GUI.keyPressEvent" title="Permalink to this definition">¶</a></dt>
+<dd><p>keyboard events that enable actions are:</p>
+<p>. starts single correction mode
+m stats multiple correction mode
+starts zeroing
+n starts neutralisation mode</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>event</strong> &#8211; keyboard event</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="Cormat_main.CORMAT_GUI.handle_help_menu">
+<code class="descname">handle_help_menu</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/Cormat_main.html#CORMAT_GUI.handle_help_menu"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Cormat_main.CORMAT_GUI.handle_help_menu" title="Permalink to this definition">¶</a></dt>
+<dd><p>opens Chrome browser to read HTML documentation
+:return:</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="Cormat_main.CORMAT_GUI.handle_pdf_open">
+<code class="descname">handle_pdf_open</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/Cormat_main.html#CORMAT_GUI.handle_pdf_open"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Cormat_main.CORMAT_GUI.handle_pdf_open" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">opens pdf file of the guide</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="Cormat_main.CORMAT_GUI.multiplecorrections">
+<code class="descname">multiplecorrections</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/Cormat_main.html#CORMAT_GUI.multiplecorrections"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Cormat_main.CORMAT_GUI.multiplecorrections" title="Permalink to this definition">¶</a></dt>
+<dd><p>this module applies multiple corrections (same fringe correction) to selected channel</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="Cormat_main.CORMAT_GUI.zeroingcorrection">
+<code class="descname">zeroingcorrection</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/Cormat_main.html#CORMAT_GUI.zeroingcorrection"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Cormat_main.CORMAT_GUI.zeroingcorrection" title="Permalink to this definition">¶</a></dt>
+<dd><p>this module zeroes correction on selected channel</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="Cormat_main.CORMAT_GUI.neutralisatecorrections">
+<code class="descname">neutralisatecorrections</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/Cormat_main.html#CORMAT_GUI.neutralisatecorrections"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Cormat_main.CORMAT_GUI.neutralisatecorrections" title="Permalink to this definition">¶</a></dt>
+<dd><p>module that neutralises permanent corretions</p>
+<p>first the code will process manual corrections not made permanent yet</p>
+<p>then the code will process automatic corrections produced by hardware and stored inside KG1V/FCx</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="Cormat_main.CORMAT_GUI.suggestcorrection">
+<code class="descname">suggestcorrection</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/Cormat_main.html#CORMAT_GUI.suggestcorrection"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Cormat_main.CORMAT_GUI.suggestcorrection" title="Permalink to this definition">¶</a></dt>
+<dd><p>module that suggests correction to apply on selected point
+:return:</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="Cormat_main.CORMAT_GUI.getcorrectionpointwidget">
+<code class="descname">getcorrectionpointwidget</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/Cormat_main.html#CORMAT_GUI.getcorrectionpointwidget"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Cormat_main.CORMAT_GUI.getcorrectionpointwidget" title="Permalink to this definition">¶</a></dt>
+<dd><p>action to perform when the single correction signal is emitted:
+each widget (canvas) is connected to the function that gets data point from canvas</p>
+<p>and shows widget to apply correction
+:return:</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="Cormat_main.CORMAT_GUI.getmultiplecorrectionpointswidget">
+<code class="descname">getmultiplecorrectionpointswidget</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/Cormat_main.html#CORMAT_GUI.getmultiplecorrectionpointswidget"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Cormat_main.CORMAT_GUI.getmultiplecorrectionpointswidget" title="Permalink to this definition">¶</a></dt>
+<dd><p>action to perform when the single correction signal is emitted:
+each widget (canvas) is connected to the function that gets data point from canvas</p>
+<p>and shows widget to apply correction
+:return:</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="Cormat_main.CORMAT_GUI.disconnnet_multiplecorrectionpointswidget">
+<code class="descname">disconnnet_multiplecorrectionpointswidget</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/Cormat_main.html#CORMAT_GUI.disconnnet_multiplecorrectionpointswidget"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Cormat_main.CORMAT_GUI.disconnnet_multiplecorrectionpointswidget" title="Permalink to this definition">¶</a></dt>
+<dd><p>action to perform when the single correction signal is emitted:
+each widget (canvas) is connected to the function that gets data point from canvas</p>
+<p>and shows widget to apply correction
+:return:</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="Cormat_main.CORMAT_GUI.gettotalcorrections">
+<code class="descname">gettotalcorrections</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/Cormat_main.html#CORMAT_GUI.gettotalcorrections"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Cormat_main.CORMAT_GUI.gettotalcorrections" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="Cormat_main.CORMAT_GUI.singlecorrection">
+<code class="descname">singlecorrection</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/Cormat_main.html#CORMAT_GUI.singlecorrection"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Cormat_main.CORMAT_GUI.singlecorrection" title="Permalink to this definition">¶</a></dt>
+<dd><p>this module applies single correction to selected channel</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="Cormat_main.CORMAT_GUI.get_point">
+<code class="descname">get_point</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/Cormat_main.html#CORMAT_GUI.get_point"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Cormat_main.CORMAT_GUI.get_point" title="Permalink to this definition">¶</a></dt>
+<dd><p>each tab as its own vector where input data points are stored in a list
+user later by correction modules to get where to apply corrections
+:return:</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="Cormat_main.CORMAT_GUI.get_multiple_points">
+<code class="descname">get_multiple_points</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/Cormat_main.html#CORMAT_GUI.get_multiple_points"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Cormat_main.CORMAT_GUI.get_multiple_points" title="Permalink to this definition">¶</a></dt>
+<dd><p>each tab as its own vector where input data points are stored in a list
+user later by correction modules to get where to apply corrections
+:return:</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="Cormat_main.CORMAT_GUI.discard_single_point">
+<code class="descname">discard_single_point</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/Cormat_main.html#CORMAT_GUI.discard_single_point"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Cormat_main.CORMAT_GUI.discard_single_point" title="Permalink to this definition">¶</a></dt>
+<dd><p>after a single correction is applied
+this function allows the user to undo it</p>
+<p>before it is permanently applied
+:return:</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="Cormat_main.CORMAT_GUI.discard_neutralise_corrections">
+<code class="descname">discard_neutralise_corrections</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/Cormat_main.html#CORMAT_GUI.discard_neutralise_corrections"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Cormat_main.CORMAT_GUI.discard_neutralise_corrections" title="Permalink to this definition">¶</a></dt>
+<dd><p>after correction are neutralised
+this function allows the user to undo it</p>
+<p>before it is permanently applied</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="Cormat_main.CORMAT_GUI.discard_multiple_points">
+<code class="descname">discard_multiple_points</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/Cormat_main.html#CORMAT_GUI.discard_multiple_points"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Cormat_main.CORMAT_GUI.discard_multiple_points" title="Permalink to this definition">¶</a></dt>
+<dd><p>after multiple corrections are applied
+this function allows the user to undo it</p>
+<p>before it are permanently applied</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="Cormat_main.CORMAT_GUI.which_tab">
+<code class="descname">which_tab</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/Cormat_main.html#CORMAT_GUI.which_tab"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Cormat_main.CORMAT_GUI.which_tab" title="Permalink to this definition">¶</a></dt>
+<dd><p>function used to detect which tab is currently active and set ax and widget</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">ax and widget name of current tab</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="Cormat_main.CORMAT_GUI.show_kb">
+<code class="descname">show_kb</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/Cormat_main.html#CORMAT_GUI.show_kb"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Cormat_main.CORMAT_GUI.show_kb" title="Permalink to this definition">¶</a></dt>
+<dd><p>function that shows or hide the widget used to select corrections
+so far max/min correction are +/- 5 fringes
+:return:</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="Cormat_main.CORMAT_GUI.handle_exit_button">
+<code class="descname">handle_exit_button</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/Cormat_main.html#CORMAT_GUI.handle_exit_button"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Cormat_main.CORMAT_GUI.handle_exit_button" title="Permalink to this definition">¶</a></dt>
+<dd><p>Exit the application</p>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="Cormat_main.CORMAT_GUI.handle_yes_exit">
+<em class="property">static </em><code class="descname">handle_yes_exit</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/Cormat_main.html#CORMAT_GUI.handle_yes_exit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Cormat_main.CORMAT_GUI.handle_yes_exit" title="Permalink to this definition">¶</a></dt>
+<dd><p>close application
+::todo: check why using this function doens&#8217;t allow to use profiling (what exit values does it need?)</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="Cormat_main.main">
+<code class="descclassname">Cormat_main.</code><code class="descname">main</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/Cormat_main.html#main"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Cormat_main.main" title="Permalink to this definition">¶</a></dt>
+<dd><p>Main function</p>
+<p>the only input to the GUI is the debug</p>
+<p>by default is set to INFO</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="Cormat_main.bin_">
+<code class="descclassname">Cormat_main.</code><code class="descname">bin_</code><span class="sig-paren">(</span><em>QTextStream</em><span class="sig-paren">)</span> &rarr; QTextStream<a class="headerlink" href="#Cormat_main.bin_" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="Cormat_main.hex_">
+<code class="descclassname">Cormat_main.</code><code class="descname">hex_</code><span class="sig-paren">(</span><em>QTextStream</em><span class="sig-paren">)</span> &rarr; QTextStream<a class="headerlink" href="#Cormat_main.hex_" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="Cormat_main.oct_">
+<code class="descclassname">Cormat_main.</code><code class="descname">oct_</code><span class="sig-paren">(</span><em>QTextStream</em><span class="sig-paren">)</span> &rarr; QTextStream<a class="headerlink" href="#Cormat_main.oct_" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  <li><a href="control.html">Main control function</a><ul>
+      <li>Previous: <a href="control.html" title="previous chapter">Main control function</a></li>
+      <li>Next: <a href="modules.html" title="next chapter">Modules</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/Cormat_main.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019, Bruno Viola.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.4.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.7</a>
+      
+      |
+      <a href="_sources/Cormat_main.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

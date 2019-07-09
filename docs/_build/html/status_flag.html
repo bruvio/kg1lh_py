@@ -1,0 +1,193 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>status_flag module &mdash; CORMAT_py 0.0.13 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.0.13',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="CORMAT_py 0.0.13 documentation" href="index.html" />
+    <link rel="up" title="Modules" href="modules.html" />
+    <link rel="next" title="wv_denoise module" href="wv_denoise.html" />
+    <link rel="prev" title="ppf_write" href="ppf_write.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="status-flag-module">
+<h1>status_flag module<a class="headerlink" href="#status-flag-module" title="Permalink to this headline">¶</a></h1>
+<span class="target" id="module-status_flag"></span><p>Simple program to access status flags
+contains a main that creates a database for a given pulse list</p>
+<dl class="function">
+<dt id="status_flag.find_disruption">
+<code class="descclassname">status_flag.</code><code class="descname">find_disruption</code><span class="sig-paren">(</span><em>pulse</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/status_flag.html#find_disruption"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#status_flag.find_disruption" title="Permalink to this definition">¶</a></dt>
+<dd><p>given a pulse return if it has disrupted (True) or not (False)     returns n/a if there is no information about disruptions
+:param pulse:
+:return: boolean</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="status_flag.initread">
+<code class="descclassname">status_flag.</code><code class="descname">initread</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/status_flag.html#initread"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#status_flag.initread" title="Permalink to this definition">¶</a></dt>
+<dd><p>initialize ppf
+:return:</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="status_flag.GetSF">
+<code class="descclassname">status_flag.</code><code class="descname">GetSF</code><span class="sig-paren">(</span><em>pulse</em>, <em>dda</em>, <em>dtype</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/status_flag.html#GetSF"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#status_flag.GetSF" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>pulse</strong> &#8211; </li>
+<li><strong>dda</strong> &#8211; string e.g. &#8216;kg1v&#8217;</li>
+<li><strong>dtype</strong> &#8211; string e.g. &#8216;lid3&#8217;</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">SF := status flag</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="status_flag.Getnonvalidatedpulses">
+<code class="descclassname">status_flag.</code><code class="descname">Getnonvalidatedpulses</code><span class="sig-paren">(</span><em>pulselist</em>, <em>dtypelist</em>, <em>SF_validated</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/status_flag.html#Getnonvalidatedpulses"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#status_flag.Getnonvalidatedpulses" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>pulselist</strong> &#8211; list of pulses</li>
+<li><strong>dtypelist</strong> &#8211; string e.g. &#8216;lid1&#8217;,&#8217;lid2&#8217;,...</li>
+<li><strong>SF_validated</strong> &#8211; integer rapresenting SF for validated shots</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">array of integer with pulse numbers,status flag list</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="status_flag.GETfringejumps">
+<code class="descclassname">status_flag.</code><code class="descname">GETfringejumps</code><span class="sig-paren">(</span><em>pulse</em>, <em>FJC_dtypelist</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/status_flag.html#GETfringejumps"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#status_flag.GETfringejumps" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>pulse</strong> &#8211; pulse number</li>
+<li><strong>FJC_dtypelist</strong> &#8211; string e.g. &#8216;FC1&#8217;,&#8217;FC2&#8217;,...</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">array of integer, rapresenting fringe jumps corrections</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="status_flag.main">
+<code class="descclassname">status_flag.</code><code class="descname">main</code><span class="sig-paren">(</span><em>pulse1</em>, <em>pulse2</em>, <em>FJthres</em>, <em>outputfilename</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/status_flag.html#main"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#status_flag.main" title="Permalink to this definition">¶</a></dt>
+<dd><p>:param pulse1:intial pulse
+:param pulse2: final pulse
+:param FJthres: threshold to be used to check number of fringe jumps in pulse
+:param outputfilename: output database name
+:return: database containing all pulses inside the given interval whose median of fringe jumps exceed the given threshold and marks if there was a disruption or not</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="status_flag.printdict">
+<code class="descclassname">status_flag.</code><code class="descname">printdict</code><span class="sig-paren">(</span><em>goodpulses_sorted</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/status_flag.html#printdict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#status_flag.printdict" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  <li><a href="modules.html">Modules</a><ul>
+      <li>Previous: <a href="ppf_write.html" title="previous chapter">ppf_write</a></li>
+      <li>Next: <a href="wv_denoise.html" title="next chapter">wv_denoise module</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/status_flag.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019, Bruno Viola.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.4.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.7</a>
+      
+      |
+      <a href="_sources/status_flag.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

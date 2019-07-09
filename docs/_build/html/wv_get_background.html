@@ -1,0 +1,150 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>wv_get_background module &mdash; CORMAT_py 0.0.13 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.0.13',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="CORMAT_py 0.0.13 documentation" href="index.html" />
+    <link rel="up" title="Modules" href="modules.html" />
+    <link rel="next" title="Classes" href="classes.html" />
+    <link rel="prev" title="wv_denoise module" href="wv_denoise.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="module-wv_get_background">
+<span id="wv-get-background-module"></span><h1>wv_get_background module<a class="headerlink" href="#module-wv_get_background" title="Permalink to this headline">¶</a></h1>
+<p>Module for determining the background in a signal.
+Approximate implementation of the method described in Galloway et al. (2009),
+An iterative algorithm for background removal in spectroscopy by wavelet transforms, ),
+which finds the background using an iterative wavelet filtering method .Applied Spectroscopy, 63, 1370</p>
+<p>Depends on wv_denoise</p>
+<p>It&#8217;s a bit slow...</p>
+<dl class="function">
+<dt id="wv_get_background.recursive_wv">
+<code class="descclassname">wv_get_background.</code><code class="descname">recursive_wv</code><span class="sig-paren">(</span><em>data</em>, <em>ind_times</em>, <em>currentiter=0</em>, <em>niter=10</em>, <em>nlevels=12</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/wv_get_background.html#recursive_wv"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wv_get_background.recursive_wv" title="Permalink to this definition">¶</a></dt>
+<dd><p>Recursively find background of the data</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>data</strong> &#8211; data</li>
+<li><strong>ind_times</strong> &#8211; time indices of background regions</li>
+<li><strong>currentiter</strong> &#8211; current iteration number</li>
+<li><strong>niter</strong> &#8211; total number of iterations</li>
+<li><strong>nlevels</strong> &#8211; number of levels for the wavelet filtering</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="wv_get_background.wv_get_background">
+<code class="descclassname">wv_get_background.</code><code class="descname">wv_get_background</code><span class="sig-paren">(</span><em>time</em>, <em>data</em>, <em>start_time</em>, <em>end_time</em>, <em>nlevels=12</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/wv_get_background.html#wv_get_background"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wv_get_background.wv_get_background" title="Permalink to this definition">¶</a></dt>
+<dd><p>Use wavelet filtering to determine the background for a data set</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>time</strong> &#8211; array of time values</li>
+<li><strong>data</strong> &#8211; array of data values</li>
+<li><strong>start_time</strong> &#8211; time before which signal can be considered to be background</li>
+<li><strong>end_time</strong> &#8211; time after which signal can be considered to be background</li>
+<li><strong>nlevels</strong> &#8211; number of levels to use for the wavelet filtering</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">background</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  <li><a href="modules.html">Modules</a><ul>
+      <li>Previous: <a href="wv_denoise.html" title="previous chapter">wv_denoise module</a></li>
+      <li>Next: <a href="classes.html" title="next chapter">Classes</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/wv_get_background.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019, Bruno Viola.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.4.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.7</a>
+      
+      |
+      <a href="_sources/wv_get_background.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

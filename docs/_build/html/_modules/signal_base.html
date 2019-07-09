@@ -1,0 +1,398 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>signal_base &mdash; CORMAT_py 0.0.13 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.0.13',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="top" title="CORMAT_py 0.0.13 documentation" href="../index.html" />
+    <link rel="up" title="Module code" href="index.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for signal_base</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Class for reading and storing a signal from the PPF or JPF system, </span>
+<span class="sd">with functionality for filtering, resampling, and calculating the </span>
+<span class="sd">differences between adjacent time points.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">logging</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">scipy</span> <span class="kn">import</span> <span class="n">signal</span>
+<span class="c1"># from getdat import getdat, getsca</span>
+<span class="kn">from</span> <span class="nn">getdat</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">ppf</span> <span class="kn">import</span> <span class="n">ppfgo</span><span class="p">,</span> <span class="n">ppfget</span><span class="p">,</span> <span class="n">ppfssr</span><span class="p">,</span> <span class="n">ppfuid</span>
+
+<span class="kn">from</span> <span class="nn">wv_denoise</span> <span class="kn">import</span> <span class="n">wv_denoise</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="n">__name__</span><span class="p">)</span>
+
+<span class="c1"># ----------------------------</span>
+<span class="n">__author__</span> <span class="o">=</span> <span class="s2">&quot;L. Kogan&quot;</span>
+<span class="c1"># ----------------------------</span>
+
+<span class="kn">from</span> <span class="nn">scipy.signal</span> <span class="kn">import</span> <span class="n">firwin</span><span class="p">,</span> <span class="n">lfilter</span><span class="p">,</span> <span class="n">filtfilt</span><span class="p">,</span> <span class="n">cheby1</span><span class="p">,</span> <span class="n">lti</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<div class="viewcode-block" id="decimate_ZP"><a class="viewcode-back" href="../signal_base.html#signal_base.decimate_ZP">[docs]</a><span class="k">def</span> <span class="nf">decimate_ZP</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">q</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">ftype</span><span class="o">=</span><span class="s1">&#39;iir&#39;</span><span class="p">,</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">zero_phase</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Downsample the signal by using a filter.</span>
+<span class="sd">    By default, an order 8 Chebyshev type I filter is used.  A 30 point FIR</span>
+<span class="sd">    filter with hamming window is used if `ftype` is &#39;fir&#39;.</span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    x : ndarray</span>
+<span class="sd">        The signal to be downsampled, as an N-dimensional array.</span>
+<span class="sd">    q : int</span>
+<span class="sd">        The downsampling factor.</span>
+<span class="sd">    n : int, optional</span>
+<span class="sd">        The order of the filter (1 less than the length for &#39;fir&#39;).</span>
+<span class="sd">    ftype : str {&#39;iir&#39;, &#39;fir&#39;}, optional</span>
+<span class="sd">        The type of the lowpass filter.</span>
+<span class="sd">    axis : int, optional</span>
+<span class="sd">        The axis along which to decimate.</span>
+<span class="sd">    zero_phase : bool</span>
+<span class="sd">        Prevent phase shift by filtering with ``filtfilt`` instead of ``lfilter``.</span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    y : ndarray</span>
+<span class="sd">        The down-sampled signal.</span>
+<span class="sd">    See also</span>
+<span class="sd">    --------</span>
+<span class="sd">    resample</span>
+<span class="sd">    </span>
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    The ``zero_phase`` keyword was added in 0.17.0.</span>
+<span class="sd">    The possibility to use instances of ``lti`` as ``ftype`` was added in 0.17.0.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">q</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;q must be an integer&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">ftype</span> <span class="o">==</span> <span class="s1">&#39;fir&#39;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">n</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">n</span> <span class="o">=</span> <span class="mi">30</span>
+        <span class="n">b</span> <span class="o">=</span> <span class="n">firwin</span><span class="p">(</span><span class="n">n</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="mf">1.</span> <span class="o">/</span> <span class="n">q</span><span class="p">,</span> <span class="n">window</span><span class="o">=</span><span class="s1">&#39;hamming&#39;</span><span class="p">)</span>
+        <span class="n">a</span> <span class="o">=</span> <span class="mf">1.</span>
+    
+    <span class="k">elif</span> <span class="n">ftype</span> <span class="o">==</span> <span class="s1">&#39;iir&#39;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">n</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">n</span> <span class="o">=</span> <span class="mi">8</span>
+        <span class="n">b</span><span class="p">,</span> <span class="n">a</span> <span class="o">=</span> <span class="n">cheby1</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="mf">0.05</span><span class="p">,</span> <span class="mf">0.8</span> <span class="o">/</span> <span class="n">q</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">b</span> <span class="o">=</span> <span class="n">ftype</span><span class="o">.</span><span class="n">num</span>
+        <span class="n">a</span> <span class="o">=</span> <span class="n">ftype</span><span class="o">.</span><span class="n">den</span>
+
+    <span class="k">if</span> <span class="n">zero_phase</span><span class="p">:</span>    
+        <span class="n">y</span> <span class="o">=</span> <span class="n">filtfilt</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="n">axis</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">lfilter</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="n">axis</span><span class="p">)</span>
+
+    <span class="n">sl</span> <span class="o">=</span> <span class="p">[</span><span class="nb">slice</span><span class="p">(</span><span class="bp">None</span><span class="p">)]</span> <span class="o">*</span> <span class="n">y</span><span class="o">.</span><span class="n">ndim</span>
+    <span class="n">sl</span><span class="p">[</span><span class="n">axis</span><span class="p">]</span> <span class="o">=</span> <span class="nb">slice</span><span class="p">(</span><span class="bp">None</span><span class="p">,</span> <span class="bp">None</span><span class="p">,</span> <span class="n">q</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">y</span><span class="p">[</span><span class="n">sl</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="gcd"><a class="viewcode-back" href="../signal_base.html#signal_base.gcd">[docs]</a><span class="k">def</span> <span class="nf">gcd</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Compute the greatest common divisor of a and b&quot;&quot;&quot;</span>
+    <span class="k">while</span> <span class="n">b</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="n">b</span><span class="p">,</span> <span class="n">a</span> <span class="o">%</span> <span class="n">b</span>
+    <span class="k">return</span> <span class="n">a</span></div>
+
+
+<div class="viewcode-block" id="lcm"><a class="viewcode-back" href="../signal_base.html#signal_base.lcm">[docs]</a><span class="k">def</span> <span class="nf">lcm</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Compute the lowest common multiple of a and b&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">a</span> <span class="o">*</span> <span class="n">b</span> <span class="o">/</span> <span class="n">gcd</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="SignalBase"><a class="viewcode-back" href="../signal_base.html#signal_base.SignalBase">[docs]</a><span class="k">class</span> <span class="nc">SignalBase</span><span class="p">():</span>
+    <span class="c1"># ------------------------</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">constants</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialise variables to hold the data and filtered data.</span>
+<span class="sd">        :param constants: Instance of Kg1Consts, containing useful constants &amp; node names</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">constants</span> <span class="o">=</span> <span class="n">constants</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">time</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ihdata</span> <span class="o">=</span> <span class="bp">None</span> <span class="c1"># For use with PPF data</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">iwdata</span> <span class="o">=</span> <span class="bp">None</span> <span class="c1"># For use with PPF data</span>
+
+
+    <span class="c1"># ------------------------</span>
+<div class="viewcode-block" id="SignalBase.read_data_ppf"><a class="viewcode-back" href="../signal_base.html#signal_base.SignalBase.read_data_ppf">[docs]</a>    <span class="k">def</span> <span class="nf">read_data_ppf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dda</span><span class="p">,</span> <span class="n">dtype</span><span class="p">,</span> <span class="n">shot_no</span><span class="p">,</span> <span class="n">read_bad</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">read_uid</span><span class="o">=</span><span class="s2">&quot;JETPPF&quot;</span><span class="p">,</span> <span class="n">seq</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Read in and store PPF data</span>
+<span class="sd">        :param dda: DDA</span>
+<span class="sd">        :param dtype: DTYPE</span>
+<span class="sd">        :param shot_no: shot number</span>
+<span class="sd">        :param read_bad: If set to true, data is read in for all sequence numbers (even status == 4)</span>
+<span class="sd">        :param read_uid: UID to use to read PPF data</span>
+<span class="sd">        :param seq: sequence number to read in</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span> <span class="s2">&quot;Reading in PPF signal {}/{} with uid {}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">dda</span><span class="p">,</span> <span class="n">dtype</span><span class="p">,</span> <span class="n">read_uid</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="n">dda</span> <span class="o">==</span> <span class="s2">&quot;&quot;</span> <span class="ow">or</span> <span class="n">dtype</span> <span class="o">==</span> <span class="s2">&quot;&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="mi">0</span>
+
+        <span class="n">ier</span> <span class="o">=</span> <span class="n">ppfgo</span><span class="p">(</span><span class="n">shot_no</span><span class="p">,</span> <span class="n">seq</span><span class="o">=</span><span class="n">seq</span><span class="p">)</span>
+
+        <span class="n">ppfuid</span><span class="p">(</span><span class="n">read_uid</span><span class="p">,</span> <span class="n">rw</span><span class="o">=</span><span class="s2">&quot;R&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">read_bad</span><span class="p">:</span>
+            <span class="n">ppfssr</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">4</span><span class="p">])</span>
+
+        <span class="k">if</span> <span class="n">ier</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="mi">0</span>
+
+        <span class="n">ihdata</span><span class="p">,</span> <span class="n">iwdata</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">time</span><span class="p">,</span> <span class="n">ier</span> <span class="o">=</span> <span class="n">ppfget</span><span class="p">(</span><span class="n">shot_no</span><span class="p">,</span> <span class="n">dda</span><span class="p">,</span> <span class="n">dtype</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">ier</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="mi">0</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">time</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">time</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ihdata</span> <span class="o">=</span> <span class="n">ihdata</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">iwdata</span> <span class="o">=</span> <span class="n">iwdata</span>
+
+        <span class="c1"># Return the status flag</span>
+        <span class="k">return</span> <span class="n">iwdata</span><span class="p">[</span><span class="mi">11</span><span class="p">]</span></div>
+
+    <span class="c1"># ------------------------</span>
+<div class="viewcode-block" id="SignalBase.read_data_jpf"><a class="viewcode-back" href="../signal_base.html#signal_base.SignalBase.read_data_jpf">[docs]</a>    <span class="k">def</span> <span class="nf">read_data_jpf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">signal_name</span><span class="p">,</span> <span class="n">shot_no</span><span class="p">,</span> <span class="n">use_64bit</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Read in and store JPF data</span>
+<span class="sd">        :param signal_name: Node name for JPF</span>
+<span class="sd">        :param shot_no: shot number</span>
+<span class="sd">        :param use_64bit: If set to true the data is stored as 64 bit float</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pulse</span> <span class="o">=</span> <span class="n">shot_no</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span> <span class="s2">&quot;Reading in JPF signal {}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">signal_name</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="n">signal_name</span> <span class="o">==</span> <span class="s2">&quot;&quot;</span><span class="p">:</span>
+            <span class="k">return</span>
+
+        <span class="n">data</span><span class="p">,</span> <span class="n">time</span><span class="p">,</span> <span class="n">nwds</span><span class="p">,</span> <span class="n">title</span><span class="p">,</span> <span class="n">units</span><span class="p">,</span> <span class="n">ier</span> <span class="o">=</span> <span class="n">getdat</span><span class="p">(</span><span class="n">signal_name</span><span class="p">,</span> <span class="n">shot_no</span><span class="p">,</span> <span class="n">nwds</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">ier</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span>
+
+        <span class="k">if</span> <span class="n">use_64bit</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">time</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">time</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">time</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">time</span><span class="p">)</span></div>
+
+    <span class="c1"># ------------------------</span>
+<div class="viewcode-block" id="SignalBase.read_data_jpf_1D"><a class="viewcode-back" href="../signal_base.html#signal_base.SignalBase.read_data_jpf_1D">[docs]</a>    <span class="k">def</span> <span class="nf">read_data_jpf_1D</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">signal_name</span><span class="p">,</span> <span class="n">shot_no</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Read in JPF data with only one dimension</span>
+<span class="sd">        :param signal_name: signal name</span>
+<span class="sd">        :param shot_no: shot number</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span> <span class="s2">&quot;Reading in JPF 1D signal {}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">signal_name</span><span class="p">))</span>
+        <span class="n">data</span><span class="p">,</span> <span class="n">nwds</span><span class="p">,</span> <span class="n">title</span><span class="p">,</span> <span class="n">units</span><span class="p">,</span> <span class="n">ier</span> <span class="o">=</span> <span class="n">getsca</span><span class="p">(</span><span class="n">signal_name</span><span class="p">,</span> <span class="n">shot_no</span><span class="p">,</span> <span class="n">nwds</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">ier</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span>
+
+        <span class="k">if</span> <span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mf">0.0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">data</span></div>
+
+    <span class="c1"># ------------------------</span>
+<div class="viewcode-block" id="SignalBase.filter_signal"><a class="viewcode-back" href="../signal_base.html#signal_base.SignalBase.filter_signal">[docs]</a>    <span class="k">def</span> <span class="nf">filter_signal</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">family</span><span class="p">,</span> <span class="n">ncoeff</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">percent</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">start_time</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">end_time</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Filter the signal using wavelet filtering</span>
+<span class="sd">        :param family: wavelet family to use for filtering</span>
+<span class="sd">        :param ncoeff: number of coefficients to retain in the filtering</span>
+<span class="sd">        :param percent: percentage of coefficients to retain in the filtering</span>
+<span class="sd">        :param start_time: Time from which to start the filtering</span>
+<span class="sd">        :param end_time: Time to finish the filtering</span>
+<span class="sd">        :return: numpy array containing the filtered data from start_time - end_time</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">ind_start</span><span class="p">,</span> <span class="n">ind_end</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_time_inds</span><span class="p">(</span><span class="n">start_time</span><span class="p">,</span> <span class="n">end_time</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">wv_denoise</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">ind_start</span><span class="p">:</span><span class="n">ind_end</span><span class="o">+</span><span class="mi">1</span><span class="p">],</span> <span class="n">family</span><span class="p">,</span> <span class="n">ncoeff</span><span class="o">=</span><span class="n">ncoeff</span><span class="p">,</span> <span class="n">percent</span><span class="o">=</span><span class="n">percent</span><span class="p">)</span></div>
+
+    <span class="c1"># ------------------------</span>
+<div class="viewcode-block" id="SignalBase.get_time_inds"><a class="viewcode-back" href="../signal_base.html#signal_base.SignalBase.get_time_inds">[docs]</a>    <span class="k">def</span> <span class="nf">get_time_inds</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">start_time</span><span class="p">,</span> <span class="n">end_time</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the index of the times corresponding to start_time and end_time</span>
+<span class="sd">        :param start_time: start time</span>
+<span class="sd">        :param end_time: end time</span>
+<span class="sd">        :return: index of start_time, index of end_time</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">ind_start</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">ind_end</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span>
+
+        <span class="k">if</span> <span class="n">end_time</span> <span class="o">&gt;</span> <span class="mf">0.0</span><span class="p">:</span>
+            <span class="n">ind_after</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">time</span> <span class="o">&gt;</span> <span class="n">start_time</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">ind_after</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">ind_start</span> <span class="o">=</span> <span class="n">ind_after</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+            <span class="n">ind_before</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">time</span> <span class="o">&lt;</span> <span class="n">end_time</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">ind_before</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">ind_end</span> <span class="o">=</span> <span class="n">ind_before</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="n">ind_start</span><span class="p">,</span> <span class="n">ind_end</span></div>
+
+    <span class="c1"># ------------------------</span>
+<div class="viewcode-block" id="SignalBase.resample_signal"><a class="viewcode-back" href="../signal_base.html#signal_base.SignalBase.resample_signal">[docs]</a>    <span class="k">def</span> <span class="nf">resample_signal</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">resample_method</span><span class="p">,</span> <span class="n">new_time</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Resample the signal, to a different timebase,</span>
+<span class="sd">        by</span>
+<span class="sd">        -interpolation,</span>
+<span class="sd">        -zeropadding</span>
+<span class="sd">        :param resample_method: method to use, only &quot;interp&quot; implemented atm.</span>
+<span class="sd">        :return: numpy array of resampled data</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">resample_method</span> <span class="o">==</span> <span class="s2">&quot;interp&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">interp</span><span class="p">(</span><span class="n">new_time</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">time</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">resample_method</span> <span class="o">==</span><span class="s1">&#39;zeropadding&#39;</span><span class="p">:</span>
+            <span class="c1"># zero padding procedure</span>
+            <span class="n">M</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">time</span><span class="p">)</span>
+            <span class="n">N</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">new_time</span><span class="p">)</span>
+            <span class="n">ratioMN</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">M</span> <span class="o">/</span> <span class="n">N</span><span class="p">)</span>
+            <span class="c1"># Out[5]: 4</span>
+            <span class="c1"># ratioMN+1</span>
+            <span class="c1"># increase vector so to have integer ratio between signals</span>
+            <span class="c1"># (ratioMN+1)*N</span>
+            <span class="c1"># Out[7]: 150195</span>
+            <span class="c1"># number of point to add  to increase vector size so to have integer ratio between signals</span>
+            <span class="n">points</span> <span class="o">=</span> <span class="p">(</span><span class="n">ratioMN</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">N</span> <span class="o">-</span> <span class="n">M</span>
+            <span class="c1"># Out[8]: 20200</span>
+            <span class="c1"># In[7]: np.mean(np.diff(time_kg1r))</span>
+            <span class="c1"># Out[9]: 0.00019999998</span>
+            <span class="c1"># newtime base</span>
+            <span class="n">dt</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">time</span><span class="p">))</span>
+            <span class="n">ttt</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">points</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">1</span><span class="p">:]</span> <span class="o">*</span> <span class="n">dt</span>
+            <span class="c1"># In[10]: len(ttt)</span>
+            <span class="c1"># Out[12]: 20200</span>
+            <span class="n">ttt</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">points</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">1</span><span class="p">:]</span> <span class="o">*</span> <span class="n">dt</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">time</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="c1"># newtime=np.concatenate(time_kg1r, ttt)</span>
+
+            <span class="n">newtime</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">time</span><span class="p">,</span> <span class="n">ttt</span><span class="p">))</span>
+            <span class="n">resTime</span> <span class="o">=</span> <span class="n">newtime</span><span class="p">[::</span><span class="n">ratioMN</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span>
+            <span class="c1"># newtime.size</span>
+            <span class="c1"># Out[17]: 150195</span>
+            <span class="c1"># newtime.size/5</span>
+            <span class="c1"># Out[18]: 30039.0</span>
+            <span class="n">xxx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">points</span><span class="p">)</span>
+            <span class="n">newsig</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">xxx</span><span class="p">))</span>
+            <span class="c1"># In[19]: newsig.size</span>
+            <span class="c1"># Out[21]: 150195</span>
+            <span class="c1"># In[20]: newsig.size/5</span>
+            <span class="c1"># Out[22]: 30039.0</span>
+<span class="c1">#            resSig = signal.decimate(newsig, ratioMN + 1)</span>
+            <span class="n">resSig</span> <span class="o">=</span> <span class="n">decimate_ZP</span><span class="p">(</span><span class="n">newsig</span><span class="p">,</span> <span class="n">ratioMN</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">zero_phase</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">resSig</span><span class="p">,</span><span class="n">resTime</span>
+
+
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Unknown resampling method, data has not been resampled!&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span></div>
+
+    <span class="c1"># ------------------------</span>
+<div class="viewcode-block" id="SignalBase.get_differences"><a class="viewcode-back" href="../signal_base.html#signal_base.SignalBase.get_differences">[docs]</a>    <span class="k">def</span> <span class="nf">get_differences</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">npoints</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the difference between the data npoints apart.</span>
+<span class="sd">        :param npoints: Number of points over which to calculate the difference</span>
+<span class="sd">        :return: numpy array of difference</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">diff</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">npoints</span><span class="p">:]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="o">*</span><span class="n">npoints</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">diff</span></div>
+
+    <span class="c1"># ------------------------</span>
+<div class="viewcode-block" id="SignalBase.get_second_differences"><a class="viewcode-back" href="../signal_base.html#signal_base.SignalBase.get_second_differences">[docs]</a>    <span class="k">def</span> <span class="nf">get_second_differences</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">npoints</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the second differential over npoints</span>
+<span class="sd">        :param npoints: Number of points over which to calculate the difference</span>
+<span class="sd">        :return: numpy array of second differential</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">diff</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">npoints</span><span class="p">:]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="o">*</span><span class="n">npoints</span><span class="p">]</span>
+        <span class="n">diff_second</span> <span class="o">=</span> <span class="n">diff</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span> <span class="o">-</span> <span class="n">diff</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">diff_second</span></div>
+
+    <span class="c1"># ------------------------</span>
+<div class="viewcode-block" id="SignalBase.delete_points"><a class="viewcode-back" href="../signal_base.html#signal_base.SignalBase.delete_points">[docs]</a>    <span class="k">def</span> <span class="nf">delete_points</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ind_points</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Delete points with indices ind_points</span>
+<span class="sd">        :param ind_points: indices of points to delete</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">ind_points</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">time</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">time</span><span class="p">,</span> <span class="n">ind_points</span><span class="p">)</span></div></div>
+
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019, Bruno Viola.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.4.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.7</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

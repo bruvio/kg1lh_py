@@ -1,0 +1,178 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>SupportClasses &mdash; CORMAT_py 0.0.13 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.0.13',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="CORMAT_py 0.0.13 documentation" href="index.html" />
+    <link rel="up" title="Classes" href="classes.html" />
+    <link rel="next" title="Formatters" href="custom_formatters.html" />
+    <link rel="prev" title="Canvas" href="canvas.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="module-support_classes">
+<span id="supportclasses"></span><h1>SupportClasses<a class="headerlink" href="#module-support_classes" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="support_classes.MyLocator">
+<em class="property">class </em><code class="descclassname">support_classes.</code><code class="descname">MyLocator</code><a class="reference internal" href="_modules/support_classes.html#MyLocator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#support_classes.MyLocator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">matplotlib.ticker.AutoLocator</span></code></p>
+<dl class="method">
+<dt id="support_classes.MyLocator.view_limits">
+<code class="descname">view_limits</code><span class="sig-paren">(</span><em>vmin</em>, <em>vmax</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/support_classes.html#MyLocator.view_limits"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#support_classes.MyLocator.view_limits" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="support_classes.LineEdit">
+<em class="property">class </em><code class="descclassname">support_classes.</code><code class="descname">LineEdit</code><a class="reference internal" href="_modules/support_classes.html#LineEdit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#support_classes.LineEdit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">PyQt4.QtGui.QLineEdit</span></code></p>
+<p>inherit from QLineEdit
+we use super so that child classes that may be using cooperative multiple inheritance will call the correct next parent class function in the Method Resolution Order (MRO).</p>
+<p>uses mouse press event and emit signal when clicked</p>
+<dl class="attribute">
+<dt id="support_classes.LineEdit.signal_evoke_kb">
+<code class="descname">signal_evoke_kb</code><a class="headerlink" href="#support_classes.LineEdit.signal_evoke_kb" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="support_classes.LineEdit.mousePressEvent">
+<code class="descname">mousePressEvent</code><span class="sig-paren">(</span><em>QMouseEvent</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/support_classes.html#LineEdit.mousePressEvent"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#support_classes.LineEdit.mousePressEvent" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="support_classes.Key">
+<em class="property">class </em><code class="descclassname">support_classes.</code><code class="descname">Key</code><span class="sig-paren">(</span><em>name</em>, <em>event</em>, <em>receiver</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/support_classes.html#Key"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#support_classes.Key" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">PyQt4.QtGui.QPushButton</span></code></p>
+</dd></dl>
+
+<dl class="class">
+<dt id="support_classes.KeyBoard">
+<em class="property">class </em><code class="descclassname">support_classes.</code><code class="descname">KeyBoard</code><span class="sig-paren">(</span><em>receiver</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/support_classes.html#KeyBoard"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#support_classes.KeyBoard" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">PyQt4.QtGui.QWidget</span></code></p>
+<p>Keyboard class is a new widget that pops up when the QlineEdit is clicked
+to show keys that can be pressed to write in the QlineEdit defining the corrections the users wants to apply</p>
+<dl class="attribute">
+<dt id="support_classes.KeyBoard.apply_pressed_signal">
+<code class="descname">apply_pressed_signal</code><a class="headerlink" href="#support_classes.KeyBoard.apply_pressed_signal" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="support_classes.KeyBoard.key_pressed">
+<code class="descname">key_pressed</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/support_classes.html#KeyBoard.key_pressed"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#support_classes.KeyBoard.key_pressed" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="support_classes.KeyBoard.apply_pressed">
+<code class="descname">apply_pressed</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/support_classes.html#KeyBoard.apply_pressed"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#support_classes.KeyBoard.apply_pressed" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="support_classes.KeyBoard.keyPressEvent">
+<code class="descname">keyPressEvent</code><span class="sig-paren">(</span><em>evt</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/support_classes.html#KeyBoard.keyPressEvent"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#support_classes.KeyBoard.keyPressEvent" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="support_classes.bin_">
+<code class="descclassname">support_classes.</code><code class="descname">bin_</code><span class="sig-paren">(</span><em>QTextStream</em><span class="sig-paren">)</span> &rarr; QTextStream<a class="headerlink" href="#support_classes.bin_" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="support_classes.hex_">
+<code class="descclassname">support_classes.</code><code class="descname">hex_</code><span class="sig-paren">(</span><em>QTextStream</em><span class="sig-paren">)</span> &rarr; QTextStream<a class="headerlink" href="#support_classes.hex_" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="support_classes.oct_">
+<code class="descclassname">support_classes.</code><code class="descname">oct_</code><span class="sig-paren">(</span><em>QTextStream</em><span class="sig-paren">)</span> &rarr; QTextStream<a class="headerlink" href="#support_classes.oct_" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  <li><a href="classes.html">Classes</a><ul>
+      <li>Previous: <a href="canvas.html" title="previous chapter">Canvas</a></li>
+      <li>Next: <a href="custom_formatters.html" title="next chapter">Formatters</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/support_classes.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019, Bruno Viola.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.4.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.7</a>
+      
+      |
+      <a href="_sources/support_classes.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

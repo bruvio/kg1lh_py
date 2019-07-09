@@ -1,0 +1,288 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>signal_amp &mdash; CORMAT_py 0.0.13 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.0.13',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="top" title="CORMAT_py 0.0.13 documentation" href="../index.html" />
+    <link rel="up" title="Module code" href="index.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for signal_amp</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Class for reading and storing KG1 amplitude signals.</span>
+
+<span class="sd">Inherits from SignalBase (signal_base.py).</span>
+
+<span class="sd">Additional functionality for finding bad points,</span>
+<span class="sd">and checking if the amplitude is valid in general</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">logging</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">signal_base</span> <span class="kn">import</span> <span class="n">SignalBase</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="n">__name__</span><span class="p">)</span>
+
+<span class="c1"># ----------------------------</span>
+<span class="n">__author__</span> <span class="o">=</span> <span class="s2">&quot;L. Kogan&quot;</span>
+<span class="c1"># ----------------------------</span>
+
+
+<div class="viewcode-block" id="SignalAmp"><a class="viewcode-back" href="../signal_amp.html#signal_amp.SignalAmp">[docs]</a><span class="k">class</span> <span class="nc">SignalAmp</span><span class="p">(</span><span class="n">SignalBase</span><span class="p">):</span>
+
+    <span class="c1"># The thresholds which the amplitude at start of the time trace</span>
+    <span class="c1"># must exceed</span>
+    <span class="n">KG1C_START_AMP_BAD</span> <span class="o">=</span> <span class="mf">0.2</span>
+    <span class="n">KG1R_START_AMP_BAD</span> <span class="o">=</span> <span class="mi">3500</span>
+    <span class="n">KG1V_START_AMP_BAD</span> <span class="o">=</span> <span class="mf">0.5</span>
+
+    <span class="c1"># The time before which the amplitude is checked</span>
+    <span class="n">KG1R_TIME_AMP_CHECK</span> <span class="o">=</span> <span class="mf">38.5</span>
+    <span class="n">KG1V_TIME_AMP_CHECK</span> <span class="o">=</span> <span class="mf">32.0</span>
+
+    <span class="c1"># ------------------------</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">constants</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialisation for the class</span>
+
+<span class="sd">        :param constants: Instance of Kg1Consts, containing useful constants &amp; node names for JPFs, PPFs</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">signal_type</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>  <span class="c1"># KG1R, KG1C, KG1V</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dcn_or_met</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>  <span class="c1"># dcn or met</span>
+
+        <span class="c1"># To be an array with the same number of time points as the signal, </span>
+        <span class="c1"># but with 0 or 1 to indicate points with a bad amplitude</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bad_points</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">SignalAmp</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">constants</span><span class="p">)</span>
+
+    <span class="c1"># ------------------------</span>
+<div class="viewcode-block" id="SignalAmp.read_data_ppf"><a class="viewcode-back" href="../signal_amp.html#signal_amp.SignalAmp.read_data_ppf">[docs]</a>    <span class="k">def</span> <span class="nf">read_data_ppf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dda</span><span class="p">,</span> <span class="n">dtype</span><span class="p">,</span> <span class="n">shot_no</span><span class="p">,</span> <span class="n">signal_type</span><span class="p">,</span> <span class="n">dcn_or_met</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Overide read_data_ppf method, to include additional</span>
+<span class="sd">        argument to set the signal type &amp; dcn_or_met.</span>
+
+<span class="sd">        :param dda: DDA</span>
+<span class="sd">        :param dtype: DTYPE</span>
+<span class="sd">        :param shot_no: shot number</span>
+<span class="sd">        :param signal_type: String to indicate if this is KG1R, KG1C or KG1V</span>
+<span class="sd">        :param dcn_or_met: &quot;dcn&quot; or &quot;met&quot; depending on whether signal is from DCN or MET laser</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">signal_type</span> <span class="o">=</span> <span class="n">signal_type</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">dcn_or_met</span> <span class="o">=</span> <span class="n">dcn_or_met</span>
+
+        <span class="nb">super</span><span class="p">(</span><span class="n">SignalAmp</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">read_data_ppf</span><span class="p">(</span><span class="n">dda</span><span class="p">,</span> <span class="n">dtype</span><span class="p">,</span> <span class="n">shot_no</span><span class="p">)</span></div>
+
+    <span class="c1"># ------------------------</span>
+<div class="viewcode-block" id="SignalAmp.read_data_jpf"><a class="viewcode-back" href="../signal_amp.html#signal_amp.SignalAmp.read_data_jpf">[docs]</a>    <span class="k">def</span> <span class="nf">read_data_jpf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">signal_name</span><span class="p">,</span> <span class="n">shot_no</span><span class="p">,</span> <span class="n">signal_type</span><span class="p">,</span> <span class="n">dcn_or_met</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Overide read_data_jpf method, to include additional argument to set the signal type</span>
+<span class="sd">        and check the amplitude of the signal</span>
+
+<span class="sd">        :param signal_name: JPF signal name</span>
+<span class="sd">        :param shot_no: shot number</span>
+<span class="sd">        :param signal_type: Identifies whether data is KG1C or KG1R or KG1V</span>
+<span class="sd">        :param dcn_or_met: &quot;dcn&quot; or &quot;met&quot;, ie. signal is from DCN or MET laser</span>
+<span class="sd">        :returns: 0: Amplitude was read in and is OK,</span>
+<span class="sd">                  9: Error reading the JPF signal,</span>
+<span class="sd">                  10: The amplitude is bad</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">signal_type</span> <span class="o">=</span> <span class="n">signal_type</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">dcn_or_met</span> <span class="o">=</span> <span class="n">dcn_or_met</span>
+
+        <span class="nb">super</span><span class="p">(</span><span class="n">SignalAmp</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">read_data_jpf</span><span class="p">(</span><span class="n">signal_name</span><span class="p">,</span> <span class="n">shot_no</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="ow">is</span> <span class="bp">None</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">time</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="mi">9</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">signal_type</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;kg1c&quot;</span><span class="p">):</span>
+            <span class="n">amp_ok</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_check_amp_kg1c</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">signal_type</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;kg1r&quot;</span><span class="p">):</span>
+            <span class="n">amp_ok</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_check_amp_average</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">KG1R_TIME_AMP_CHECK</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">KG1R_START_AMP_BAD</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">signal_type</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;kg1v&quot;</span><span class="p">):</span>
+            <span class="n">amp_ok</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_check_amp_average</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">KG1V_TIME_AMP_CHECK</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">KG1V_START_AMP_BAD</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">amp_ok</span> <span class="o">=</span> <span class="bp">False</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">amp_ok</span><span class="p">:</span>
+            <span class="k">return</span> <span class="mi">10</span>
+
+        <span class="k">return</span> <span class="mi">0</span></div>
+
+    <span class="c1"># ------------------------</span>
+<div class="viewcode-block" id="SignalAmp.find_bad_points"><a class="viewcode-back" href="../signal_amp.html#signal_amp.SignalAmp.find_bad_points">[docs]</a>    <span class="k">def</span> <span class="nf">find_bad_points</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Find points with a bad amplitude.</span>
+
+<span class="sd">        - For KG1C, CPRB should be within a valid range</span>
+<span class="sd">        - For KG1R &amp; KG1V the amplitude should be above a certain value</span>
+
+<span class="sd">        :return indices of bad points</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">signal_type</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;kg1c&quot;</span><span class="p">):</span>
+            <span class="n">cprb_mid</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">constants</span><span class="o">.</span><span class="n">cprb_mid_dcn</span>
+            <span class="n">cprb_range</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">constants</span><span class="o">.</span><span class="n">cprb_range_dcn</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">dcn_or_met</span> <span class="o">==</span> <span class="s2">&quot;met&quot;</span><span class="p">:</span>
+                <span class="n">cprb_mid</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">constants</span><span class="o">.</span><span class="n">cprb_mid_met</span>
+                <span class="n">cprb_range</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">constants</span><span class="o">.</span><span class="n">cprb_range_met</span>
+
+            <span class="n">ind_bad_amp</span><span class="p">,</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">absolute</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">-</span> <span class="n">cprb_mid</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">cprb_range</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">signal_type</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;kg1r&quot;</span><span class="p">):</span>
+            <span class="n">ind_bad_amp</span><span class="p">,</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">absolute</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">)</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">constants</span><span class="o">.</span><span class="n">min_amp_kg1r</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">signal_type</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;kg1v&quot;</span><span class="p">):</span>
+            <span class="n">ind_bad_amp</span><span class="p">,</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">absolute</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">)</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">constants</span><span class="o">.</span><span class="n">min_amp_kg1v</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">ind_bad_amp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">ind_bad_amp</span></div>
+
+    <span class="c1"># ------------------------</span>
+<div class="viewcode-block" id="SignalAmp._check_amp_average"><a class="viewcode-back" href="../signal_amp.html#signal_amp.SignalAmp._check_amp_average">[docs]</a>    <span class="k">def</span> <span class="nf">_check_amp_average</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time</span><span class="p">,</span> <span class="n">threshold</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Check the average amplitude at the start of the pulse is high enough.</span>
+<span class="sd">        For use with KG1R or KG1V</span>
+
+<span class="sd">        :return: good_amp : True if the amplitude is good, false otherwise</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="s2">&quot;Checking average amplitude exceeds threshold.&quot;</span><span class="p">)</span>
+
+        <span class="n">ind_start</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">time</span> <span class="o">&lt;</span> <span class="n">time</span><span class="p">)</span>
+
+        <span class="n">good_amp</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">absolute</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">ind_start</span><span class="p">]))</span> <span class="o">&gt;</span> <span class="n">threshold</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">good_amp</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span> <span class="p">(</span><span class="s2">&quot;Average amplitude is bad at the start: {}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">ind_start</span><span class="p">])))</span>
+
+        <span class="k">return</span> <span class="n">good_amp</span></div>
+
+    <span class="c1"># ------------------------</span>
+<div class="viewcode-block" id="SignalAmp._check_amp_kg1c"><a class="viewcode-back" href="../signal_amp.html#signal_amp.SignalAmp._check_amp_kg1c">[docs]</a>    <span class="k">def</span> <span class="nf">_check_amp_kg1c</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Check the CPRB signal (the KG1C frequency, which acts as the amplitude here).</span>
+<span class="sd">        The CPRB signal at the start of the pulse should be within 80% of cprb_mid.</span>
+<span class="sd">        It should also not fall below this value by more than cprb_range too many times</span>
+<span class="sd">        in the whole pulse.</span>
+<span class="sd">        cprb_mid and cprb_range are different for DCN and MET lasers.</span>
+
+<span class="sd">        :return: good_amp : True if the amplitude is good, false otherwise</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="s2">&quot;Checking KG1C CPRB signal is in expected range.&quot;</span><span class="p">)</span>
+
+        <span class="n">cprb_mid</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">constants</span><span class="o">.</span><span class="n">cprb_mid_dcn</span>
+        <span class="n">cprb_range</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">constants</span><span class="o">.</span><span class="n">cprb_range_dcn</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">dcn_or_met</span> <span class="o">==</span> <span class="s2">&quot;met&quot;</span><span class="p">:</span>
+            <span class="n">cprb_mid</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">constants</span><span class="o">.</span><span class="n">cprb_mid_met</span>
+            <span class="n">cprb_range</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">constants</span><span class="o">.</span><span class="n">cprb_range_met</span>
+
+        <span class="c1"># Correct amp signal for early test jumps</span>
+        <span class="n">ind_31</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">time</span> <span class="o">&lt;</span> <span class="mf">31.004</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">ind_31</span><span class="p">]</span> <span class="o">=</span> <span class="n">cprb_mid</span>
+
+        <span class="n">amp_cf_mid</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">-</span> <span class="n">cprb_mid</span>
+
+        <span class="n">ind_test_drops</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">time</span> <span class="o">&gt;</span> <span class="mf">31.05</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">time</span> <span class="o">&lt;</span> <span class="mf">32.0</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">amp_cf_mid</span> <span class="o">&lt;</span> <span class="o">-</span><span class="mf">1.0</span><span class="o">*</span><span class="n">cprb_range</span><span class="p">)))[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">ind_test_drops</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">ind_test_drops</span><span class="p">]</span> <span class="o">=</span> <span class="n">cprb_mid</span>
+
+        <span class="c1"># Check for whether the amplitude is very low at the beginning of the trace</span>
+        <span class="n">ind_start</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">time</span> <span class="o">&gt;</span> <span class="mf">31.15</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">time</span> <span class="o">&lt;</span> <span class="mf">32.0</span><span class="p">))</span>
+        <span class="n">good_amp</span> <span class="o">=</span> <span class="p">((</span><span class="n">np</span><span class="o">.</span><span class="n">absolute</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">ind_start</span><span class="p">])</span> <span class="o">-</span> <span class="n">cprb_mid</span><span class="p">)</span> <span class="o">/</span> <span class="n">cprb_mid</span><span class="p">)</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">KG1C_START_AMP_BAD</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">good_amp</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Bad amplitude: KG1C CPRB is bad at the start: {}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">ind_start</span><span class="p">])))</span>
+            <span class="k">return</span> <span class="n">good_amp</span>
+
+        <span class="c1"># Check over the rest of the time range for loads of CPRB drops</span>
+        <span class="n">ind_rest</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">time</span> <span class="o">&gt;</span> <span class="mf">31.15</span><span class="p">)</span>
+        <span class="n">ind_drops</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">amp_cf_mid</span><span class="p">[</span><span class="n">ind_rest</span><span class="p">]</span> <span class="o">&lt;</span> <span class="o">-</span><span class="mf">1.0</span><span class="o">*</span><span class="n">cprb_range</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="n">good_amp</span> <span class="o">=</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">ind_drops</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">5000</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">good_amp</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Bad amplitude: KG1C CPRB drops below valid range {} times&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">ind_drops</span><span class="p">)))</span>
+
+        <span class="k">return</span> <span class="n">good_amp</span></div></div>
+
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019, Bruno Viola.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.4.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.7</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

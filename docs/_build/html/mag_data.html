@@ -1,0 +1,175 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>MagData &mdash; CORMAT_py 0.0.13 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.0.13',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="CORMAT_py 0.0.13 documentation" href="index.html" />
+    <link rel="up" title="Classes" href="classes.html" />
+    <link rel="next" title="NBIData" href="nbi_data.html" />
+    <link rel="prev" title="Kg4Data" href="kg4_data.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="module-mag_data">
+<span id="magdata"></span><h1>MagData<a class="headerlink" href="#module-mag_data" title="Permalink to this headline">¶</a></h1>
+<p>Class to read and store magnetics data</p>
+<dl class="class">
+<dt id="mag_data.MagData">
+<em class="property">class </em><code class="descclassname">mag_data.</code><code class="descname">MagData</code><span class="sig-paren">(</span><em>constants</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mag_data.html#MagData"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mag_data.MagData" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<dl class="attribute">
+<dt id="mag_data.MagData.MIN_IP">
+<code class="descname">MIN_IP</code><em class="property"> = 0.3</em><a class="headerlink" href="#mag_data.MagData.MIN_IP" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="mag_data.MagData.PER_IP_FLAT">
+<code class="descname">PER_IP_FLAT</code><em class="property"> = 0.8</em><a class="headerlink" href="#mag_data.MagData.PER_IP_FLAT" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="mag_data.MagData.CBVAC">
+<code class="descname">CBVAC</code><em class="property"> = 5.1892e-05</em><a class="headerlink" href="#mag_data.MagData.CBVAC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="mag_data.MagData.MIN_BVAC">
+<code class="descname">MIN_BVAC</code><em class="property"> = -1.5</em><a class="headerlink" href="#mag_data.MagData.MIN_BVAC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="mag_data.MagData.read_data">
+<code class="descname">read_data</code><span class="sig-paren">(</span><em>shot_no</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mag_data.html#MagData.read_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mag_data.MagData.read_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read in magnetics data</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>shot_no</strong> &#8211; shot number</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">True if data was read successfully and there is ip
+False otherwise.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="mag_data.MagData._find_ip_times">
+<code class="descname">_find_ip_times</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/mag_data.html#MagData._find_ip_times"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mag_data.MagData._find_ip_times" title="Permalink to this definition">¶</a></dt>
+<dd><p>Find the start and end time of
+the ip and the flat-top.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">False if there is no IP
+True otherwise</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="mag_data.MagData._find_bvac_times">
+<code class="descname">_find_bvac_times</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/mag_data.html#MagData._find_bvac_times"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mag_data.MagData._find_bvac_times" title="Permalink to this definition">¶</a></dt>
+<dd><p>Find the start and end time of
+the Bvac &gt; 1.5T</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">False if there is no Bvac
+True otherwise</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  <li><a href="classes.html">Classes</a><ul>
+      <li>Previous: <a href="kg4_data.html" title="previous chapter">Kg4Data</a></li>
+      <li>Next: <a href="nbi_data.html" title="next chapter">NBIData</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/mag_data.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019, Bruno Viola.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.4.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.7</a>
+      
+      |
+      <a href="_sources/mag_data.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
