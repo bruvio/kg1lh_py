@@ -14,10 +14,12 @@ __email__ = "bruno.viola@ukaea.uk"
 __status__ = "Testing"
 # __status__ = "Production"
 
+from threading import Thread
 
-
+import matplotlib.pyplot as plt
 import pdb
-from multiprocessing.dummy import Pool as ThreadPool
+# from multiprocessing.dummy import Pool as ThreadPool
+from multiprocessing.pool import ThreadPool
 import threading
 import argparse
 import logging
@@ -45,6 +47,7 @@ from kg1_ppf_data import Kg1PPFData
 
 from library import * #containing useful function
 from efit_data import EFITData
+from kg1l_data import KG1LData
 # from mag_data import MagData
 from matplotlib import gridspec
 from matplotlib.backends.backend_qt4agg import \
@@ -61,7 +64,10 @@ import cProfile, pstats, io
 from pycallgraph import PyCallGraph
 from pycallgraph.output import GraphvizOutput
 import inspect
-
+from  ppf import *
+from scipy import signal
+import numpy as np
+import matplotlib.pyplot as plt
 
 
 # qm = QtGui.QMessageBox
@@ -71,9 +77,150 @@ myself = lambda: inspect.stack()[1][3]
 logger = logging.getLogger(__name__)
 # noinspection PyUnusedLocal
 
+# multi threading
+# pool = ThreadPool(16)
+pool = ThreadPool(processes=8)
+
+class ThreadWithReturnValue(Thread):
+    def __init__(self, group=None, target=None, name=None,
+                 args=(), kwargs={}, Verbose=None):
+        Thread.__init__(self, group, target, name, args, kwargs)
+        self._return = None
+    def run(self):
+        print(type(self._target))
+        if self._target is not None:
+            self._return = self._target(*self._args,
+                                                **self._kwargs)
+    def join(self, *args):
+        Thread.join(self, *args)
+        return self._return
+
+def thread_map(f, iterable, pool=None):
+    """
+    Just like [f(x) for x in iterable] but each f(x) in a separate thread.
+    :param f: f
+    :param iterable: iterable
+    :param pool: thread pool, infinite by default
+    :return: list if results
+    """
+    res = {}
+    if pool is None:
+        def target(arg, num):
+            try:
+                res[num] = f(arg)
+            except:
+                res[num] = sys.exc_info()
+
+        threads = [Thread(target=target, args=[arg, i]) for i, arg in enumerate(iterable)]
+    else:
+        class WorkerThread(Thread):
+            def run(self):
+                while True:
+                    try:
+                        num, arg = queue.get(block=False)
+                        try:
+                            res[num] = f(arg)
+                        except:
+                            res[num] = sys.exc_info()
+                    except Empty:
+                        break
+
+        queue = Queue()
+        for i, arg in enumerate(iterable):
+            queue.put((i, arg))
+
+        threads = [WorkerThread() for _ in range(pool)]
+
+    [t.start() for t in threads]
+    [t.join() for t in threads]
+    return [res[i] for i in range(len(res))]
+
+
+
+
+
+
+
+
+def getdata(shot,dda,dtype,uid=None):
+    ier = ppfgo(shot, seq=0)
+    if uid is None:
+        ppfuid('jetppf', rw="R")
+    else:
+        ppfuid(uid, rw="R")
+    ihdata, iwdata, data, x, time, ier = ppfget(
+        shot, dda, dtype)
+    pulse, seq, iwdat, comment, numdda, ddalist, ier = ppfinf(comlen=50,
+                                                              numdda=50)
+
+    name=dict()
+    name['ihdata']=ihdata
+    name['iwdata']=iwdata
+    name['data']=data
+    name['x']=x
+    name['time']=time
+    name['ier']=ier
+    name['seq']=seq
+    name['pulse']=pulse
+    name['dda']=dda
+    name['dtype']=dtype
+    return name,seq
+
+def plottimedata(*args):
+    plt.figure()
+    for arg in args:
+
+        plt.plot(arg['time'], arg['data'], label=retrieve_name(arg))
+        plt.legend(loc=0, prop={'size': 8})
+
+def subplottimedata(*args):
+    fig,ax = plt.subplots(nrows=len(args), sharex = True)
+    for arg,i in enumerate(args):
+
+            ax[arg].plot(i['time'], i['data'], label=retrieve_name(i))
+            ax[arg].legend(loc=0, prop={'size': 8})
+
+
+        # plt.plot(arg['time'], arg['data'], label=retrieve_name(arg))
+        # plt.legend(loc=0, prop={'size': 8})
+
+
+import inspect
+
+
+def retrieve_name(var):
+        """
+        Gets the name of var. Does it from the out most frame inner-wards.
+        :param var: variable to get name from.
+        :return: string
+        """
+        for fi in reversed(inspect.stack()):
+            names = [var_name for var_name, var_val in fi.frame.f_locals.items() if var_val is var]
+            if len(names) > 0:
+                return names[0]
+
+
 #--------
-def map_kg1_efit(ntefit,tefit,data,tsmo,chan):
+def map_kg1_efit(data,chan):
+
+    if data.code.lower()=='kg1l':
+        ntefit = len(data.EFIT_data.rmag.time)
+        tefit = data.EFIT_data.rmag.time
+        data_efit = data.EFIT_data.rmag.data
+
+    else:
+        ntefit = len(data.EFIT_data.rmag_fast.time)
+        tefit = data.EFIT_data.rmag_fast.time
+        data_efit = data.EFIT_data.rmag_fast.data
+
+    density = np.zeros(ntefit)
+    ntkg1v = len(data.KG1_data.density[chan].time)
+    tkg1v = data.KG1_data.density[chan].time
+    tsmo = data.KG1LH_data.tsmo
+
+    dummy=[]
     for it in range(0, ntefit):
+        # pdb.set_trace()
         sum = np.zeros(8)
 
         nsum = 0
@@ -81,37 +228,32 @@ def map_kg1_efit(ntefit,tefit,data,tsmo,chan):
         tmin = 1000.0
 
         jmin = 1
-        density = np.zeros(ntefit)
-        # for chan in data.KG1_data.density.keys():
-        pdb.set_trace()
+
+        # in principle they can be different (?!)
         ntkg1v = len(data.KG1_data.density[chan].time)
         tkg1v = data.KG1_data.density[chan].time
+
         for jj in range(0, ntkg1v):
             tdif = abs(tkg1v[jj] - tefit[it])
+            dummy.append(tdif)
             if (tdif < tmin):
                 tmin = tdif
                 jmin = jj
             if (tkg1v[jj] >= tefit[it] + tsmo):
-                if nsum > 0:
-                    # pdb.set_trace()
-                    # data.KG1LH_data.density[chan] = SignalBase(data.constants)
-                    density[it] = sum[chan - 1] / float(nsum)
-                else:
-                    density[it] = data.KG1_data.density[chan].data[jmin]
-
-            if (tkg1v[jj] < tefit[it] - tsmo):
+                break
+            if (tkg1v[jj] > tefit[it] - tsmo):
                 sum[chan - 1] = sum[chan - 1] + \
                                 data.KG1_data.density[chan].data[jj]
                 nsum = nsum + 1
-                if nsum > 0:
-                    # pdb.set_trace()
-                    # data.KG1LH_data.density[chan] = SignalBase(data.constants)
-                    density[it] = sum[chan - 1] / float(nsum)
-                else:
-                    density[it] = data.KG1_data.density[chan].data[jmin]
-    return density
+        if nsum > 0:
+            density[it] = sum[chan - 1] / float(nsum)
+        else:
+            density[it] = data.KG1_data.density[chan].data[jmin]
 
-    # pdb.set_trace()
+    data.KG1LH_data.lid[chan] = SignalBase(data.constants)
+    data.KG1LH_data.lid[chan].data = density
+    data.KG1LH_data.lid[chan].time = data.EFIT_data.rmag.time
+
 
 # ----------------------------
 
@@ -121,25 +263,24 @@ def main(shot_no, code,read_uid, write_uid, test=False):
     C kg1v. Other outputs are the tangent flux surface
     C and the distance to the edge divided by the chord length (curvature
     C of the edge for channel 4).
-    :param shot_no: 
-    :param code: 
-    :param read_uid: 
-    :param write_uid: 
-    :param test: 
-    :return: 
+    :param shot_no:
+    :param code:
+    :param read_uid:
+    :param write_uid:
+    :param test:
+    :return:
     '''
 
     data = SimpleNamespace()
     data.pulse = shot_no
 
-    # multi threading
-    pool = ThreadPool(4)
+
     #
 
     # C-----------------------------------------------------------------------
 # C init
 # C-----------------------------------------------------------------------
-        
+
 
     logger.info('\tStart KG1L/H \n')
     logger.info(
@@ -183,7 +324,6 @@ def main(shot_no, code,read_uid, write_uid, test=False):
 
     try:
         data.constants = Consts("consts.ini", __version__)
-        # constants = Kg1Consts("kg1_consts.ini", __version__)
     except KeyError:
         logger.error(" Could not read in configuration file consts.ini")
         sys.exit(65)
@@ -192,7 +332,7 @@ def main(shot_no, code,read_uid, write_uid, test=False):
     for user in data.constants.readusers.keys():
         user_name = data.constants.readusers[user]
         read_uis.append(user_name)
-    
+
     # -------------------------------
     # list of option to write ppf for current user
     # -------------------------------
@@ -220,15 +360,18 @@ def main(shot_no, code,read_uid, write_uid, test=False):
             tsmo = 0.025
     else:
             tsmo = 1.0e-4
-        
+
 
 
     # ----------------------------
+    data.code = code
     data.KG1_data = {}
     data.EFIT_data = {}
-    data.KG1LH_data = {}
+    data.KG1LH_data = KG1LData(data.constants)
 
-    data.KG1LH_data = {}
+    data.KG1LH_data.tsmo = tsmo
+
+    # data.KG1LH_data = {}
     logger.info('INIT DONE\n')
 
     # -------------------------------
@@ -253,25 +396,51 @@ def main(shot_no, code,read_uid, write_uid, test=False):
     # 3. map kg1v data onto efit time vector
     # -------------------------------
 
-    if code.lower()=='kg1l':
-        ntefit = len(data.EFIT_data.rmag.time)
-        tefit = data.EFIT_data.rmag.time
-        data_efit = data.EFIT_data.rmag.data
-        
-    else:
-        ntefit = len(data.EFIT_data.rmag_fast.time)
-        tefit = data.EFIT_data.rmag_fast.time
-        data_efit = data.EFIT_data.rmag_fast.data
+
 
     channels=range(1,8)
+
+    shot_no = 92121
+    # #shot_no = 81472
+
+
+
+    # kg1v_lid3,seq = getdata(shot_no, 'KG1V', 'LID3')
+    # kg1v_lid5,dummy = getdata(shot_no, 'KG1V', 'LID5')
+    kg1v92121_lid3,dummy = getdata(92121, 'KG1V', 'LID3')
+    kg1l92121_lad3,dummy = getdata(92121, 'KG1l', 'LAD3')
+
     # chan =1
     for chan in channels:
+        kg1v92121_lid3, dummy = getdata(92121, 'KG1V', 'LID'+str(chan))
+        kg1l92121_lad3, dummy = getdata(92121, 'KG1l', 'LAD'+str(chan))
         logger.info('computing channel {}'.format(chan))
         start_time = time.time()
-        threading.Thread(target=map_kg1_efit, args=(ntefit,tefit,data,tsmo,chan)).start()
-        # results = pool.map(map_kg1_efit(ntefit,tefit),channels)
+        twrv = ThreadWithReturnValue(target=map_kg1_efit, args=(data,chan))
+
+        twrv.start()
+        density = twrv.join()
         logger.info("--- {}s seconds ---".format((time.time() - start_time)))
+    #
+    #
+    #
+    #
+    #
+    #     # async_result = pool.apply_async(map_kg1_efit, (code,data,chan)) # tuple of args for foo
+    #     # density = async_result.get()  # get the return value from your function.
+    #     logger.info("--- {}s seconds ---".format((time.time() - start_time)))
+    #
+    #     # logger.info('computing channel {}'.format(chan))
+    #     # start_time = time.time()
+    #     # density = map_kg1_efit(code,data,chan)
+    #     # logger.info("--- {}s seconds ---".format((time.time() - start_time)))
+        plt.figure()
+        plottimedata(kg1v92121_lid3, kg1l92121_lad3)
+        plt.plot(data.KG1LH_data.lid[chan].time, data.KG1LH_data.lid[chan].data)
+        plt.show()
+
         pdb.set_trace()
+
 
     logger.info("\n             Finished.\n")
 #     return c
