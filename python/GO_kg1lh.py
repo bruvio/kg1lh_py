@@ -17,6 +17,8 @@ __status__ = "Testing"
 
 
 import pdb
+from multiprocessing.dummy import Pool as ThreadPool
+import threading
 import argparse
 import logging
 from types import SimpleNamespace
@@ -29,6 +31,7 @@ import pickle
 import platform
 import datetime
 import sys
+import os
 import time
 from pathlib import Path
 import matplotlib.pyplot as plt
@@ -68,6 +71,47 @@ myself = lambda: inspect.stack()[1][3]
 logger = logging.getLogger(__name__)
 # noinspection PyUnusedLocal
 
+#--------
+def map_kg1_efit(ntefit,tefit,data,tsmo,chan):
+    for it in range(0, ntefit):
+        sum = np.zeros(8)
+
+        nsum = 0
+
+        tmin = 1000.0
+
+        jmin = 1
+        density = np.zeros(ntefit)
+        # for chan in data.KG1_data.density.keys():
+        pdb.set_trace()
+        ntkg1v = len(data.KG1_data.density[chan].time)
+        tkg1v = data.KG1_data.density[chan].time
+        for jj in range(0, ntkg1v):
+            tdif = abs(tkg1v[jj] - tefit[it])
+            if (tdif < tmin):
+                tmin = tdif
+                jmin = jj
+            if (tkg1v[jj] >= tefit[it] + tsmo):
+                if nsum > 0:
+                    # pdb.set_trace()
+                    # data.KG1LH_data.density[chan] = SignalBase(data.constants)
+                    density[it] = sum[chan - 1] / float(nsum)
+                else:
+                    density[it] = data.KG1_data.density[chan].data[jmin]
+
+            if (tkg1v[jj] < tefit[it] - tsmo):
+                sum[chan - 1] = sum[chan - 1] + \
+                                data.KG1_data.density[chan].data[jj]
+                nsum = nsum + 1
+                if nsum > 0:
+                    # pdb.set_trace()
+                    # data.KG1LH_data.density[chan] = SignalBase(data.constants)
+                    density[it] = sum[chan - 1] / float(nsum)
+                else:
+                    density[it] = data.KG1_data.density[chan].data[jmin]
+    return density
+
+    # pdb.set_trace()
 
 # ----------------------------
 
@@ -88,13 +132,16 @@ def main(shot_no, code,read_uid, write_uid, test=False):
     data = SimpleNamespace()
     data.pulse = shot_no
 
+    # multi threading
+    pool = ThreadPool(4)
+    #
 
-# C-----------------------------------------------------------------------
+    # C-----------------------------------------------------------------------
 # C init
 # C-----------------------------------------------------------------------
         
 
-    logger.info('\tStart CORMATpy \n')
+    logger.info('\tStart KG1L/H \n')
     logger.info(
         '\t {} \n'.format(datetime.datetime.today().strftime('%Y-%m-%d')))
     cwd = os.getcwd()
@@ -174,12 +221,16 @@ def main(shot_no, code,read_uid, write_uid, test=False):
     else:
             tsmo = 1.0e-4
         
-    logger.info("\n             Finished.\n")
+
 
     # ----------------------------
     data.KG1_data = {}
     data.EFIT_data = {}
     data.KG1LH_data = {}
+
+    data.KG1LH_data = {}
+    logger.info('INIT DONE\n')
+
     # -------------------------------
     # 2. Read in KG1 data
     # -------------------------------
@@ -187,6 +238,9 @@ def main(shot_no, code,read_uid, write_uid, test=False):
 
     success = data.KG1_data.read_data(data.pulse,
                                            read_uid=read_uid)
+
+
+
     logger.log(5, 'success reading KG1 data?'.format(success))
     # -------------------------------
     # 2. Read in EFIT data
@@ -195,13 +249,32 @@ def main(shot_no, code,read_uid, write_uid, test=False):
     data.EFIT_data.read_data(data.pulse)
 
 
+    # -------------------------------
+    # 3. map kg1v data onto efit time vector
+    # -------------------------------
 
+    if code.lower()=='kg1l':
+        ntefit = len(data.EFIT_data.rmag.time)
+        tefit = data.EFIT_data.rmag.time
+        data_efit = data.EFIT_data.rmag.data
+        
+    else:
+        ntefit = len(data.EFIT_data.rmag_fast.time)
+        tefit = data.EFIT_data.rmag_fast.time
+        data_efit = data.EFIT_data.rmag_fast.data
 
+    channels=range(1,8)
+    # chan =1
+    for chan in channels:
+        logger.info('computing channel {}'.format(chan))
+        start_time = time.time()
+        threading.Thread(target=map_kg1_efit, args=(ntefit,tefit,data,tsmo,chan)).start()
+        # results = pool.map(map_kg1_efit(ntefit,tefit),channels)
+        logger.info("--- {}s seconds ---".format((time.time() - start_time)))
+        pdb.set_trace()
 
-    pdb.set_trace()
-    logger.info('INIT DONE\n')
-
-#     KG1L
+    logger.info("\n             Finished.\n")
+#     return c
 # 8 No validated data in KG1V
 # 9 No validated LID channels in KG1V
 # 20 No KG1V data
@@ -246,7 +319,7 @@ if __name__ == "__main__":
                         default="")
     parser.add_argument("-d", "--debug", type=int,
                         help="Debug level. 0: Error, 1: Warning, 2: Info, 3: Debug, 4: Debug Plus",
-                        default=1)
+                        default=2)
     parser.add_argument("-t", "--test",
                         help="""Run in test mode. In this mode code will run and if -uw=JETPPF then no PPF will be written, to avoid
                             over-writing validated data.""", default=False)

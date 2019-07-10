@@ -78,8 +78,12 @@ class Kg1PPFData(SignalBase):
                 self.status[chan].data = np.zeros(
                         len(self.density[chan].time))
                 self.status[chan].time = self.density[chan].time
-                dummy=check_SF(read_uid, shot_no)
-                self.global_status[chan] = dummy[chan-1]
+                ch_text = 'lid' + str(chan)
+                dummy = GetSF(shot_no, 'kg1v', ch_text)
+                dummy = asscalar(dummy)
+
+                # dummy=check_SF(read_uid, shot_no)
+                self.global_status[chan] = dummy
 
                 # self.density[chan].corrections = SignalBase(self.constants)
                 self.density[chan].signal_type = 'vert'
