@@ -175,3 +175,44 @@ class Kg1PPFData(SignalBase):
 
     # ------------------------
 
+    def get_jpf_point(self, shot_no, node):
+        """
+        Get a single value from the JPF
+        ie. Convert Nord data to real number
+        Function copied from A. Boboc's kg4r_py code.
+
+        :param shot_no: shot number
+        :param node: JPF node
+        """
+        (raw,nwords,label,ecode) = getdat.getraw(node,shot_no)
+        t = None
+        if ecode != 0:
+            logger.warning("{} {} BAD".format(shot_no, node))
+        else:
+            if nwords == 3:
+                # Data is 3 16bit words Nord float, 48 bit
+                # word 0, bit 0 is sign
+                # word 0, bit 1..15 is exponent, biased
+                # word 1, bit 0..15 is most significant mantissa
+                # word 2, bit 0..15 is least significant mantissa
+                w0 = raw[0] & 0xffff
+                w1 = raw[1] & 0xffff
+                w2 = raw[2] & 0xffff
+                if w0 & 0x8000 : # sign
+                    s = -1.0
+                else:
+                    s =  1.0
+                e = w0 & 0x7fff # exponent
+                eb = 0x4000 # exponent bias
+                #print jpn, node, w0, w1, w2,
+                msm = w1<<8  # most significant mantissa for IEE754 float, 32 bit
+                lsm = w2>>8  # least significant mantissa
+                mm = 0x1000000 # mantissa max
+                fm = float(msm+lsm)
+                fmm = float(mm)
+                if (e) != 0:
+                    t = s * (2**(e-eb)) * (fm/fmm)
+                else:
+                    t= 0.0
+                #Debug_msg(1,'Pulse' +str(jpn)+node+' '+t)
+        return (t,ecode)
