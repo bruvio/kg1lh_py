@@ -71,6 +71,8 @@ from scipy import signal
 import numpy as np
 import matplotlib.pyplot as plt
 from utility import *
+import pandas as pd
+
 
 # qm = QtGui.QMessageBox
 # qm_permanent = QtGui.QMessageBox
@@ -78,6 +80,42 @@ plt.rcParams["savefig.directory"] = os.chdir(os.getcwd())
 myself = lambda: inspect.stack()[1][3]
 logger = logging.getLogger(__name__)
 # noinspection PyUnusedLocal
+
+#--------
+def map_kg1_efit_RM_pandas(arg):
+    data = arg[0]
+    chan = arg[1]
+
+    if data.code.lower()=='kg1l':
+        ntefit = len(data.EFIT_data.rmag.time)
+        tefit = data.EFIT_data.rmag.time
+        data_efit = data.EFIT_data.rmag.data
+        data.EFIT_data.sampling_time = np.mean(np.diff(data.EFIT_data.rmag.time))
+
+    else:
+        ntefit = len(data.EFIT_data.rmag_fast.time)
+        tefit = data.EFIT_data.rmag_fast.time
+        data_efit = data.EFIT_data.rmag_fast.data
+        data.EFIT_data.sampling_time = np.mean(np.diff(data.EFIT_data.rmag_fast.time))
+
+    density = np.zeros(ntefit)
+    ntkg1v = len(data.KG1_data.density[chan].time)
+    tkg1v = data.KG1_data.density[chan].time
+    tsmo = data.KG1LH_data.tsmo
+
+    sampling_time_kg1v = np.mean(np.diff(tkg1v))
+
+    rolling_mean=int(round(tsmo/sampling_time_kg1v))
+
+    # density = pd.rolling_mean(data.KG1_data.density[chan].data,rolling_mean)
+    density = pd.Series(data.KG1_data.density[chan].data).rolling(window=rolling_mean).mean()
+
+    data.KG1LH_data.lid[chan] = SignalBase(data.constants)
+    data.KG1LH_data.lid[chan].data = density
+    data.KG1LH_data.lid[chan].time = data.KG1_data.density[chan].time
+
+    return (data,chan)
+
 
 
 #--------
@@ -304,6 +342,7 @@ def main(shot_no, code,read_uid, write_uid, test=False):
 
     data.KG1LH_data = KG1LData(data.constants)
     data.KG1LH_data1 = KG1LData(data.constants)
+    data.KG1LH_data2 = KG1LData(data.constants)
 
     data.KG1LH_data.tsmo = tsmo
 
@@ -359,20 +398,20 @@ def main(shot_no, code,read_uid, write_uid, test=False):
         Tefit = data.EFIT_data.rmag_fast.time
 
 
-    # test=True
-    test=False
+    test=True
+    # test=False
     if test:
     #
-        logger.info('start mapping kg1v data onto efit time vector')
-        start_time = time.time()
-        with Pool(10) as pool:
-            results = pool.map(map_kg1_efit, [(data, chan) for chan in np.arange(0, 8) + 1])
-        logger.info("--- {}s seconds ---".format((time.time() - start_time)))
-        # pdb.set_trace()
-        for i,r in enumerate(results):
-            data.KG1LH_data.lid[i+1] = SignalBase(data.constants)
-            data.KG1LH_data.lid[i+1].time = r[0].KG1LH_data.lid[r[1]].time
-            data.KG1LH_data.lid[i+1].data = r[0].KG1LH_data.lid[r[1]].data
+        # logger.info('start mapping kg1v data onto efit time vector')
+        # start_time = time.time()
+        # with Pool(10) as pool:
+        #     results = pool.map(map_kg1_efit, [(data, chan) for chan in np.arange(0, 8) + 1])
+        # logger.info("--- {}s seconds ---".format((time.time() - start_time)))
+        # # pdb.set_trace()
+        # for i,r in enumerate(results):
+        #     data.KG1LH_data.lid[i+1] = SignalBase(data.constants)
+        #     data.KG1LH_data.lid[i+1].time = r[0].KG1LH_data.lid[r[1]].time
+        #     data.KG1LH_data.lid[i+1].data = r[0].KG1LH_data.lid[r[1]].data
         #
         # #
         ## logger.info('start single thread')
@@ -407,22 +446,39 @@ def main(shot_no, code,read_uid, write_uid, test=False):
     linewidth = 0.5
     markersize = 1
 
-    # logger.info("\n             loading data from pickle.\n")
-    # with open('./test_data.pkl',
-    #           'rb') as f:
-    #     [data.EFIT_data, data.KG1_data,
-    #          data.KG1LH_data,data.KG1LH_data1] = pickle.load(f)
-    # f.close()
+    logger.info("\n             loading data from pickle.\n")
+    with open('./test_data.pkl',
+              'rb') as f:
+        [data.EFIT_data, data.KG1_data,
+             data.KG1LH_data,data.KG1LH_data1] = pickle.load(f)
+    f.close()
+
+    logger.info('start mapping kg1v data onto efit time vector')
+    start_time = time.time()
+    with Pool(10) as pool:
+        results = pool.map(map_kg1_efit_RM_pandas,
+                           [(data, chan) for chan in np.arange(0, 8) + 1])
+    logger.info("--- {}s seconds ---".format((time.time() - start_time)))
+
+    for i, r in enumerate(results):
+        data.KG1LH_data2.lid[i + 1] = SignalBase(data.constants)
+        data.KG1LH_data2.lid[i + 1].time = r[0].KG1LH_data.lid[r[1]].time
+        data.KG1LH_data2.lid[i + 1].data = r[0].KG1LH_data.lid[r[1]].data
+
+
     for chan in channels:
 
         plt.figure(chan)
         plt.plot(data.KG1_data.density[chan].time, data.KG1_data.density[chan].data,
                  label='kg1v_lid')
 
-        plt.plot(data.KG1LH_data.lid[chan].time, data.KG1LH_data.lid[chan].data,label='kg1l_lid_original_MT', marker = 'o', linestyle='-.', linewidth=linewidth,
-                             markersize=markersize)
+        # plt.plot(data.KG1LH_data.lid[chan].time, data.KG1LH_data.lid[chan].data,label='kg1l_lid_original_MT', marker = 'o', linestyle='-.', linewidth=linewidth,
+        #                      markersize=markersize)
 
         plt.plot(data.KG1LH_data1.lid[chan].time, data.KG1LH_data1.lid[chan].data,label='kg1l_lid_rollingmean_MT', marker = 'x', linestyle=':', linewidth=linewidth,
+                             markersize=markersize)
+
+        plt.plot(data.KG1LH_data2.lid[chan].time, data.KG1LH_data2.lid[chan].data,label='kg1l_lid_rollingmean_pandas_MT', marker = 'x', linestyle=':', linewidth=linewidth,
                              markersize=markersize)
 
 
@@ -441,43 +497,43 @@ def main(shot_no, code,read_uid, write_uid, test=False):
 
 
 
-    psim1 = 1.00
-
-    for  IT in range(0,ntefit):
-        TIMEM=Tefit[IT]
-        dtime=float(TIMEM)
-        t,ier = flushinit(15, data.pulse, TIMEM, lunget=12, iseq=0, uid='JETPPF', dda='EFIT', lunmsg=0)
-
-        ier = Flush_getError(ier)
-        if ier !=0:
-            logger.error('flush error {}'.format(ier))
-            return
-
-        # flusu2(nPsi, psi, npoint, npdim=0, work=None, jwork=None, lopt=2)
-
-        aa=Flush_getClosedFluxSurface(psim1, nPoints=360)
-
-        if iflsep ==0:
-            logger.debug('Time {}s; NO X-point found')
-            psimax=psim1
-            iskb=1
-        else:
-            logger.debug('Time {}s; NO X-point plasma')
-            if iflsep ==1:
-                psimax=psim1
-                if psisep[0] >=psim1:
-                    iskb=1
-                else:
-                    iskb=0
-                    growth = (psim1/psisep[0])-1
-            else:
-                psimax=psim1*psisep[0]
-                iskb=0
-                growth = psim1-1
-
-
-
-        Flush_getTangentsToSurfaces(r, z, flux, iside, accuracy, nBeams)
+    # psim1 = 1.00
+    #
+    # for  IT in range(0,ntefit):
+    #     TIMEM=Tefit[IT]
+    #     dtime=float(TIMEM)
+    #     t,ier = flushinit(15, data.pulse, TIMEM, lunget=12, iseq=0, uid='JETPPF', dda='EFIT', lunmsg=0)
+    #
+    #     ier = Flush_getError(ier)
+    #     if ier !=0:
+    #         logger.error('flush error {}'.format(ier))
+    #         return
+    #
+    #     # flusu2(nPsi, psi, npoint, npdim=0, work=None, jwork=None, lopt=2)
+    #
+    #     aa=Flush_getClosedFluxSurface(psim1, nPoints=360)
+    #
+    #     if iflsep ==0:
+    #         logger.debug('Time {}s; NO X-point found')
+    #         psimax=psim1
+    #         iskb=1
+    #     else:
+    #         logger.debug('Time {}s; NO X-point plasma')
+    #         if iflsep ==1:
+    #             psimax=psim1
+    #             if psisep[0] >=psim1:
+    #                 iskb=1
+    #             else:
+    #                 iskb=0
+    #                 growth = (psim1/psisep[0])-1
+    #         else:
+    #             psimax=psim1*psisep[0]
+    #             iskb=0
+    #             growth = psim1-1
+    #
+    #
+    #
+    #     Flush_getTangentsToSurfaces(r, z, flux, iside, accuracy, nBeams)
 
 
 
