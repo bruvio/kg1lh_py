@@ -17,6 +17,7 @@ __status__ = "Testing"
 from threading import Thread
 from multiprocessing.pool import Pool
 import matplotlib.pyplot as plt
+# from scipy.signal import sosfiltfilt, butter
 import pdb
 # from multiprocessing.dummy import Pool as ThreadPool
 from multiprocessing.pool import ThreadPool
@@ -24,7 +25,7 @@ import threading
 import argparse
 import pickle
 import logging
-from my_flush import *
+
 from types import SimpleNamespace
 from logging.handlers import RotatingFileHandler
 from logging import handlers
@@ -74,6 +75,10 @@ from utility import *
 import pandas as pd
 
 
+
+
+sys.path.append('../../')
+from eg_python_tools.my_flush import *
 # qm = QtGui.QMessageBox
 # qm_permanent = QtGui.QMessageBox
 plt.rcParams["savefig.directory"] = os.chdir(os.getcwd())
@@ -222,7 +227,121 @@ def map_kg1_efit(arg):
 
 # ----------------------------
 #--------
+def compute_len_lad_xtan(arg):
+    data = arg[0]
+    chan = arg[1]
+    if data.code.lower()=='kg1l':
+        ntefit = len(data.EFIT_data.rmag.time)
+        tefit = data.EFIT_data.rmag.time
+        data_efit = data.EFIT_data.rmag.data
+        data.EFIT_data.sampling_time = np.mean(np.diff(data.EFIT_data.rmag.time))
 
+    else:
+        ntefit = len(data.EFIT_data.rmag_fast.time)
+        tefit = data.EFIT_data.rmag_fast.time
+        data_efit = data.EFIT_data.rmag_fast.data
+        data.EFIT_data.sampling_time = np.mean(np.diff(data.EFIT_data.rmag_fast.time))
+
+
+    for IT in range(0, ntefit):
+            TIMEM = tefit[IT]
+            dtime = float(TIMEM)
+            #logger.info('************* Time = {}'.format(TIMEM))
+            t, ier = flushinit(15, data.pulse, TIMEM, lunget=12, iseq=0,
+                               uid='JETPPF', dda='EFIT', lunmsg=0)
+
+            #        ier = Flush_getError(ier)
+            #        if ier !=0:
+            #            logger.error('flush error {}'.format(ier))
+            #            return
+
+            # flusu2(nPsi, psi, npoint, npdim=0, work=None, jwork=None, lopt=2)
+
+            aa = Flush_getClosedFluxSurface(data.psim1, nPoints=360)
+
+            # look for xpoint
+            iflsep, rx, zx, fx, ier = flush_getXpoint()
+            #print(iflsep)
+            
+            
+            if int(iflsep) == 0:
+                 logger.debug('Time {}s; NO X-point found'.format(TIMEM))
+            #     psimax = data.psim1
+            #     iskb = 1
+            else:
+                 logger.debug('Time {}s; X-point plasma'.format(TIMEM))
+            #     if iflsep == 1:
+            #         psimax = data.psim1
+            #         if psisep[0] >= data.psim1:
+            #             iskb = 1
+            #         else:
+            #             iskb = 0
+            #             growth = (data.psim1 / psisep[0]) - 1
+            #     else:
+            #         psimax = data.psim1 * psisep[0]
+            #         iskb = 0
+            #         growth = data.psim1 - 1
+            #
+            # volume_m3, ier = Flush_getVolume(psimax)
+            #
+            # if iskb != 1:
+            #     Flush_blowUpSurface(psi, delta, nSurf, rSurf, zSurf)
+            #
+            # xpt = data.r_ref[chan-1]
+            # ypt = data.z_ref[chan-1]
+            # delta = data.a_ref[chan-1]
+
+            # -----------------------------------------------------------------------
+            # FIND PSI AT TANGENT FLUX SURFACE (to make FLUL2 quicker)
+            # -----------------------------------------------------------------------
+
+            # CALL FLUL1(XPT,YPT,DELTA,FPTAN,XPTAN,YPTAN,EPSDD,IER)
+            # Flush_getTangentsToSurfaces(r, z, flux, iside, accuracy, nBeams)
+
+            #
+            # ----------------------------------------------------------------------
+            # FIND INTERSECTION POINTS WITH PLASMA BOUNDARY
+            # ----------------------------------------------------------------------
+            # data.cord.append(0.0)
+            # NPSI = 1  # look for one surface
+            # # probably psi, cord, xp1, xp2, yp1, yp2 can be changed to variables
+            # # (no arrays)
+            # data.psi.append(psimax)  # look for maximum psi ie the edge
+            # EPSF = 0.00001  # value recommended in FLUSH documentation
+    #            CALL FLUL2(XPT,YPT,DELTA,XPTAN,YPTAN,NPSI,PSI,
+    #     &         CORD,XP1,YP1,XP2,YP2,EPSF,IER)
+
+    # -----------------------------------------------------------------------
+    # final results
+    # -----------------------------------------------------------------------
+    #        if ( cord( 1) .lt. 0.0) then
+    #           if (.not. auto .or. ndebug.gt.0)
+    # &                 write(6,*) 'cord = ', cord( 1)
+    #           cord( 1) = abs( cord( 1))
+    #        endif
+    #        len( it, chan) = cord( 1)/100.0 ! conversion from cm to m
+    #        if ( len( it, chan) .gt. 0.0) then
+    #           lad( it, chan) = efitlid( it, chan)/len( it, chan)
+    #        else
+    #           lad( it, chan) = 0.0
+    #        endif
+    #        xtan ( it, chan) = fptan
+    #         data.KG1LH_data.lad[chan] = SignalBase(data.constants)
+    #         data.KG1LH_data.lad[chan].data = lad
+    #         # data.KG1LH_data.lad[chan].time = data.EFIT_data.rmag.time
+    #         data.KG1LH_data.lid[chan].time = data.KG1_data.density[chan].time
+    #
+    #         data.KG1LH_data.len[chan] = SignalBase(data.constants)
+    #         data.KG1LH_data.len[chan].data = len
+    #         # data.KG1LH_data.lad[chan].time = data.EFIT_data.rmag.time
+    #         data.KG1LH_data.len[chan].time = data.KG1_data.density[chan].time
+    #
+    #         data.KG1LH_data.xtan[chan] = SignalBase(data.constants)
+    #         data.KG1LH_data.xtan[chan].data = xtan
+    #         # data.KG1LH_data.lad[chan].time = data.EFIT_data.rmag.time
+    #         data.KG1LH_data.xtan[chan].time = data.KG1_data.density[chan].time
+
+    return (data, chan)
 
 
 # ----------------------------
@@ -340,6 +459,10 @@ def main(shot_no, code,read_uid, write_uid, test=False):
     data.KG1_data = {}
     data.EFIT_data = {}
 
+    data.temp, data.r_ref, data.z_ref, data.a_ref, data.r_coord, data.z_coord, data_coord, data.coord_err = [[],[],[],[],[],[],[],[]]
+
+
+
     data.KG1LH_data = KG1LData(data.constants)
     data.KG1LH_data1 = KG1LData(data.constants)
     data.KG1LH_data2 = KG1LData(data.constants)
@@ -373,9 +496,12 @@ def main(shot_no, code,read_uid, write_uid, test=False):
     # 3. Read in line of sights
     # -------------------------------
     logging.info('reading line of sights')
-    temp, r_ref, z_ref, a_ref, r_coord, z_coord, a_coord, coord_err =data.KG1_data.get_coord(data.pulse)
+    data.temp, data.r_ref, data.z_ref, data.a_ref, data.r_coord, data.z_coord, data.a_coord, data.coord_err =data.KG1_data.get_coord(data.pulse)
 
-
+    # temp, r_ref, z_ref, a_ref, r_coord, z_coord, a_coord, coord_err = [[], [],
+    #                                                                    [], [],
+    #                                                                    [], [],
+    #                                                                    [], []]
 
 
     # -------------------------------
@@ -483,7 +609,7 @@ def main(shot_no, code,read_uid, write_uid, test=False):
 
 
         plt.legend(loc='best',prop={'size':12})
-    plt.show(block=True)
+    #plt.show(block=False)
 
     logger.info("\n             dumping data to pickle.\n")
     with open('./test_data.pkl', 'wb') as f:
@@ -493,54 +619,19 @@ def main(shot_no, code,read_uid, write_uid, test=False):
     f.close()
 
 
-    pdb.set_trace()
+    #pdb.set_trace()
 
 
 
-    # psim1 = 1.00
-    #
-    # for  IT in range(0,ntefit):
-    #     TIMEM=Tefit[IT]
-    #     dtime=float(TIMEM)
-    #     t,ier = flushinit(15, data.pulse, TIMEM, lunget=12, iseq=0, uid='JETPPF', dda='EFIT', lunmsg=0)
-    #
-    #     ier = Flush_getError(ier)
-    #     if ier !=0:
-    #         logger.error('flush error {}'.format(ier))
-    #         return
-    #
-    #     # flusu2(nPsi, psi, npoint, npdim=0, work=None, jwork=None, lopt=2)
-    #
-    #     aa=Flush_getClosedFluxSurface(psim1, nPoints=360)
-    #
-    #     if iflsep ==0:
-    #         logger.debug('Time {}s; NO X-point found')
-    #         psimax=psim1
-    #         iskb=1
-    #     else:
-    #         logger.debug('Time {}s; NO X-point plasma')
-    #         if iflsep ==1:
-    #             psimax=psim1
-    #             if psisep[0] >=psim1:
-    #                 iskb=1
-    #             else:
-    #                 iskb=0
-    #                 growth = (psim1/psisep[0])-1
-    #         else:
-    #             psimax=psim1*psisep[0]
-    #             iskb=0
-    #             growth = psim1-1
-    #
-    #
-    #
-    #     Flush_getTangentsToSurfaces(r, z, flux, iside, accuracy, nBeams)
+    data.psim1 = 1.00
+    data.cord=[]
+    data.XP1=[]
+    data.YP1=[]
+    data.XP2=[]
+    data.EPSDD = 0.1                           # accuracy for flul1
+    data.psi = []
 
-
-
-
-
-
-
+    compute_len_lad_xtan((data,chan))
     logger.info("\n             Finished.\n")
 #     return c
 # 8 No validated data in KG1V
