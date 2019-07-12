@@ -120,3 +120,29 @@ def retrieve_name(var):
             names = [var_name for var_name, var_val in fi.frame.f_locals.items() if var_val is var]
             if len(names) > 0:
                 return names[0]
+
+
+
+    # cumsum_vec = np.cumsum(np.insert(data.KG1_data.density[1].data, 0, 0))
+    # density = (cumsum_vec[rolling_mean:] - cumsum_vec[:-rolling_mean]) / rolling_mean
+    #
+    #
+def movingaverage(interval, window_size):
+        window = np.ones(int(window_size)) / float(window_size)
+        return np.convolve(interval, window, 'same')
+    #
+    #
+    #
+    # x = data.KG1_data.density[1].time
+    # y = data.KG1_data.density[1].data
+    #
+    # plt.plot(x, y, "k.")
+    # y_av = movingaverage(y, rolling_mean)
+    # plt.plot(x, y_av, "r")
+    # # xlim(0, 1000)
+    # plt.xlabel("Months since Jan 1749.")
+    # plt.ylabel("No. of Sun spots")
+    # plt.grid(True)
+    # plt.show()
+    #
+    # pdb.set_trace()

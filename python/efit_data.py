@@ -32,6 +32,7 @@ class EFITData:
         # density
         self.rmag = {}
         self.rmag_fast = {}
+        self.sampling_time = None
 
         # ------------------------
 

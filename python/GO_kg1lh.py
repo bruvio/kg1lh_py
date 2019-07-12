@@ -22,7 +22,9 @@ import pdb
 from multiprocessing.pool import ThreadPool
 import threading
 import argparse
+import pickle
 import logging
+from my_flush import *
 from types import SimpleNamespace
 from logging.handlers import RotatingFileHandler
 from logging import handlers
@@ -79,28 +81,68 @@ logger = logging.getLogger(__name__)
 
 
 #--------
-def map_kg1_efit(arg):
+def map_kg1_efit_RM(arg):
     data = arg[0]
     chan = arg[1]
-
-
 
     if data.code.lower()=='kg1l':
         ntefit = len(data.EFIT_data.rmag.time)
         tefit = data.EFIT_data.rmag.time
         data_efit = data.EFIT_data.rmag.data
+        data.EFIT_data.sampling_time = np.mean(np.diff(data.EFIT_data.rmag.time))
 
     else:
         ntefit = len(data.EFIT_data.rmag_fast.time)
         tefit = data.EFIT_data.rmag_fast.time
         data_efit = data.EFIT_data.rmag_fast.data
+        data.EFIT_data.sampling_time = np.mean(np.diff(data.EFIT_data.rmag_fast.time))
 
     density = np.zeros(ntefit)
     ntkg1v = len(data.KG1_data.density[chan].time)
     tkg1v = data.KG1_data.density[chan].time
     tsmo = data.KG1LH_data.tsmo
 
-    dummy=[]
+    sampling_time_kg1v = np.mean(np.diff(tkg1v))
+
+    rolling_mean=int(round(tsmo/sampling_time_kg1v))
+
+    # cumsum_vec = np.cumsum(np.insert(data.KG1_data.density[chan].data, 0, 0))
+    # density = (cumsum_vec[rolling_mean:] - cumsum_vec[:-rolling_mean]) / rolling_mean
+    density = movingaverage(data.KG1_data.density[chan].data, rolling_mean)
+
+
+
+    data.KG1LH_data.lid[chan] = SignalBase(data.constants)
+    data.KG1LH_data.lid[chan].data = density
+    data.KG1LH_data.lid[chan].time = data.KG1_data.density[chan].time
+
+    return (data,chan)
+
+
+#--------
+def map_kg1_efit(arg):
+    data = arg[0]
+    chan = arg[1]
+
+    if data.code.lower()=='kg1l':
+        ntefit = len(data.EFIT_data.rmag.time)
+        tefit = data.EFIT_data.rmag.time
+        data_efit = data.EFIT_data.rmag.data
+        data.EFIT_data.sampling_time = np.mean(np.diff(data.EFIT_data.rmag.time))
+
+    else:
+        ntefit = len(data.EFIT_data.rmag_fast.time)
+        tefit = data.EFIT_data.rmag_fast.time
+        data_efit = data.EFIT_data.rmag_fast.data
+        data.EFIT_data.sampling_time = np.mean(np.diff(data.EFIT_data.rmag_fast.time))
+
+    density = np.zeros(ntefit)
+    ntkg1v = len(data.KG1_data.density[chan].time)
+    tkg1v = data.KG1_data.density[chan].time
+    tsmo = data.KG1LH_data.tsmo
+
+
+
     for it in range(0, ntefit):
         # pdb.set_trace()
         sum = np.zeros(8)
@@ -117,7 +159,7 @@ def map_kg1_efit(arg):
 
         for jj in range(0, ntkg1v):
             tdif = abs(tkg1v[jj] - tefit[it])
-            dummy.append(tdif)
+
             if (tdif < tmin):
                 tmin = tdif
                 jmin = jj
@@ -141,6 +183,13 @@ def map_kg1_efit(arg):
 
 
 # ----------------------------
+#--------
+
+
+
+# ----------------------------
+
+
 
 def main(shot_no, code,read_uid, write_uid, test=False):
     '''
@@ -252,7 +301,9 @@ def main(shot_no, code,read_uid, write_uid, test=False):
     data.code = code
     data.KG1_data = {}
     data.EFIT_data = {}
+
     data.KG1LH_data = KG1LData(data.constants)
+    data.KG1LH_data1 = KG1LData(data.constants)
 
     data.KG1LH_data.tsmo = tsmo
 
@@ -267,7 +318,8 @@ def main(shot_no, code,read_uid, write_uid, test=False):
     success = data.KG1_data.read_data(data.pulse,
                                            read_uid=read_uid)
 
-
+    # ::todo:
+    # at least one channel has to be flagged/validated
 
     logger.log(5, 'success reading KG1 data?'.format(success))
     # -------------------------------
@@ -276,70 +328,161 @@ def main(shot_no, code,read_uid, write_uid, test=False):
     data.EFIT_data = EFITData(data.constants)
     data.EFIT_data.read_data(data.pulse)
 
+
+
+    # -------------------------------
+    # 3. Read in line of sights
+    # -------------------------------
+    logging.info('reading line of sights')
     temp, r_ref, z_ref, a_ref, r_coord, z_coord, a_coord, coord_err =data.KG1_data.get_coord(data.pulse)
 
-    # pdb.set_trace()
+
 
 
     # -------------------------------
-    # 3. map kg1v data onto efit time vector
+    # 4. map kg1v data onto efit time vector
     # -------------------------------
 
 
+    channels=np.arange(0, 8) + 1
 
-    channels=range(1,8)
-
-    shot_no = 92121
-    # #shot_no = 81472
-
-
-
-    # kg1v_lid3,seq = getdata(shot_no, 'KG1V', 'LID3')
-    # kg1v_lid5,dummy = getdata(shot_no, 'KG1V', 'LID5')
     kg1v92121_lid3,dummy = getdata(92121, 'KG1V', 'LID3')
     kg1l92121_lad3,dummy = getdata(92121, 'KG1l', 'LAD3')
 
-    # chan =1
-    # for chan in channels:
-    #     kg1v92121_lid3, dummy = getdata(92121, 'KG1V', 'LID'+str(chan))
-    #     kg1l92121_lad3, dummy = getdata(92121, 'KG1l', 'LAD'+str(chan))
-    #     logger.info('computing channel {}'.format(chan))
-    #     start_time = time.time()
-    #     twrv = ThreadWithReturnValue(target=map_kg1_efit, args=(data,chan))
-    #
-    #     twrv.start()
-    #     density = twrv.join()
-    #     logger.info("--- {}s seconds ---".format((time.time() - start_time)))
-    logger.info('start loop')
-    start_time = time.time()
-    with Pool(10) as pool:
-        results = pool.map(map_kg1_efit, [(data, chan) for chan in range(1, 8)])
-    logger.info("--- {}s seconds ---".format((time.time() - start_time)))
-    # pdb.set_trace()
-    for r in results:
-        plt.figure()
-        plt.plot(r[0].KG1LH_data.lid[r[1]].time, r[0].KG1LH_data.lid[r[1]].data)
-    plt.show()
 
-    #
-    #
-    #
-    #
-    #
-    #     # async_result = pool.apply_async(map_kg1_efit, (code,data,chan)) # tuple of args for foo
-    #     # density = async_result.get()  # get the return value from your function.
-    #     logger.info("--- {}s seconds ---".format((time.time() - start_time)))
-    #
-    #     # logger.info('computing channel {}'.format(chan))
-    #     # start_time = time.time()
-    #     # density = map_kg1_efit(code,data,chan)
-    #     # logger.info("--- {}s seconds ---".format((time.time() - start_time)))
-    #     plt.figure()
-    #     plottimedata(kg1v92121_lid3, kg1l92121_lad3)
-    #     plt.plot(data.KG1LH_data.lid[chan].time, data.KG1LH_data.lid[chan].data)
-    #     plt.show()
+    logger.info('start time loop')
+    if data.code.lower()=='kg1l':
+        ntefit = len(data.EFIT_data.rmag.time)
+        Tefit  = data.EFIT_data.rmag.time
+    else:
+        ntefit = len(data.EFIT_data.rmag_fast.time)
+        Tefit = data.EFIT_data.rmag_fast.time
 
+
+    # test=True
+    test=False
+    if test:
+    #
+        logger.info('start mapping kg1v data onto efit time vector')
+        start_time = time.time()
+        with Pool(10) as pool:
+            results = pool.map(map_kg1_efit, [(data, chan) for chan in np.arange(0, 8) + 1])
+        logger.info("--- {}s seconds ---".format((time.time() - start_time)))
         # pdb.set_trace()
+        for i,r in enumerate(results):
+            data.KG1LH_data.lid[i+1] = SignalBase(data.constants)
+            data.KG1LH_data.lid[i+1].time = r[0].KG1LH_data.lid[r[1]].time
+            data.KG1LH_data.lid[i+1].data = r[0].KG1LH_data.lid[r[1]].data
+        #
+        # #
+        ## logger.info('start single thread')
+        ## start_time = time.time()
+        ## output=map_kg1_efit((data, 1))
+        ## logger.info("--- {}s seconds ---".format((time.time() - start_time)))
+        ## # plt.figure()
+        ## plt.plot(output[0].KG1LH_data.lid[output[1]].time, output[0].KG1LH_data.lid[output[1]].data,label='original_ST')
+        ##
+        ## logger.info('start single thread RM')
+        ## start_time = time.time()
+        ## output = map_kg1_efit_RM((data, 1))
+        ## logger.info("--- {}s seconds ---".format((time.time() - start_time)))
+        ## plt.figure()
+        ## plt.plot(output[0].KG1LH_data.lid[output[1]].time, output[0].KG1LH_data.lid[output[1]].data,label='rolling_mean_ST')
+        # #
+
+        #
+        logger.info('start mapping kg1v data onto efit time vector')
+        start_time = time.time()
+        with Pool(10) as pool:
+            results = pool.map(map_kg1_efit_RM, [(data, chan) for chan in np.arange(0, 8) + 1])
+        logger.info("--- {}s seconds ---".format((time.time() - start_time)))
+
+        for i,r in enumerate(results):
+            data.KG1LH_data1.lid[i+1] = SignalBase(data.constants)
+            data.KG1LH_data1.lid[i+1].time = r[0].KG1LH_data.lid[r[1]].time
+            data.KG1LH_data1.lid[i+1].data = r[0].KG1LH_data.lid[r[1]].data
+
+
+
+    linewidth = 0.5
+    markersize = 1
+
+    # logger.info("\n             loading data from pickle.\n")
+    # with open('./test_data.pkl',
+    #           'rb') as f:
+    #     [data.EFIT_data, data.KG1_data,
+    #          data.KG1LH_data,data.KG1LH_data1] = pickle.load(f)
+    # f.close()
+    for chan in channels:
+
+        plt.figure(chan)
+        plt.plot(data.KG1_data.density[chan].time, data.KG1_data.density[chan].data,
+                 label='kg1v_lid')
+
+        plt.plot(data.KG1LH_data.lid[chan].time, data.KG1LH_data.lid[chan].data,label='kg1l_lid_original_MT', marker = 'o', linestyle='-.', linewidth=linewidth,
+                             markersize=markersize)
+
+        plt.plot(data.KG1LH_data1.lid[chan].time, data.KG1LH_data1.lid[chan].data,label='kg1l_lid_rollingmean_MT', marker = 'x', linestyle=':', linewidth=linewidth,
+                             markersize=markersize)
+
+
+        plt.legend(loc='best',prop={'size':12})
+    plt.show(block=True)
+
+    logger.info("\n             dumping data to pickle.\n")
+    with open('./test_data.pkl', 'wb') as f:
+        pickle.dump(
+            [data.EFIT_data, data.KG1_data,
+             data.KG1LH_data,data.KG1LH_data1], f)
+    f.close()
+
+
+    pdb.set_trace()
+
+
+
+    psim1 = 1.00
+
+    for  IT in range(0,ntefit):
+        TIMEM=Tefit[IT]
+        dtime=float(TIMEM)
+        t,ier = flushinit(15, data.pulse, TIMEM, lunget=12, iseq=0, uid='JETPPF', dda='EFIT', lunmsg=0)
+
+        ier = Flush_getError(ier)
+        if ier !=0:
+            logger.error('flush error {}'.format(ier))
+            return
+
+        # flusu2(nPsi, psi, npoint, npdim=0, work=None, jwork=None, lopt=2)
+
+        aa=Flush_getClosedFluxSurface(psim1, nPoints=360)
+
+        if iflsep ==0:
+            logger.debug('Time {}s; NO X-point found')
+            psimax=psim1
+            iskb=1
+        else:
+            logger.debug('Time {}s; NO X-point plasma')
+            if iflsep ==1:
+                psimax=psim1
+                if psisep[0] >=psim1:
+                    iskb=1
+                else:
+                    iskb=0
+                    growth = (psim1/psisep[0])-1
+            else:
+                psimax=psim1*psisep[0]
+                iskb=0
+                growth = psim1-1
+
+
+
+        Flush_getTangentsToSurfaces(r, z, flux, iside, accuracy, nBeams)
+
+
+
+
+
 
 
     logger.info("\n             Finished.\n")
