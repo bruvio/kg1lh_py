@@ -1,0 +1,13 @@
+#     return c
+# 8 No validated data in KG1V
+ok # 9 No validated LID channels in KG1V
+ok # 20 No KG1V data
+# 21 Could not read SF for KG1V
+ok # 22 Error reading KG1V line-of-sight data
+ok # 30 No EFIT data
+# 31 No points in EFIT
+# 70 Error in PDLPPF
+ok # 71 Invalid shot number
+# 72 No PPF exists for shot
+# 73 NDDA too small on input
+# 74 NSEQ too small on input
