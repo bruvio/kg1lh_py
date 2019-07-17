@@ -19,7 +19,7 @@ __author__ = "B. VIOLA"
 # ----------------------------
 
 
-class EFITData:
+class EFITData(SignalBase):
 
     # ------------------------
     def __init__(self, constants):
