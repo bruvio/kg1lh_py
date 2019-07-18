@@ -614,6 +614,7 @@ def time_loop(arg):
 
 #--------
 def compute_len_lad_xtan(arg):
+
     data = arg[0]
     chan = arg[1]
 
@@ -650,6 +651,12 @@ def compute_len_lad_xtan(arg):
 
     density = data.KG1LH_data.lid[chan].data
 
+    plt.figure()
+
+    plot_point((data.r_ref[chan - 1], data.z_ref[chan - 1]),
+               'LOS ch' + str(chan))
+
+    plt.legend(loc=0, prop={'size': 8})
 
     for IT in range(0,ntefit):
         TIMEM = time_efit[IT]
@@ -663,12 +670,12 @@ def compute_len_lad_xtan(arg):
 
         logger.log(5, '************* Time = {}s'.format(TIMEM))
 
-        # r, z, ier = Flush_getClosedFluxSurface(data.psim1, nPoints=360)
-        # r[:] = [x / 100 for x in r]
-        # z[:] = [x / 100 for x in z]
+        r, z, ier = Flush_getClosedFluxSurface(data.psim1, nPoints=360)
+        r[:] = [x / 100 for x in r]
+        z[:] = [x / 100 for x in z]
         # flux, ier = Flush_getlcfsFlux()
         # logger.debug('lcfsFlux is {}'.format(flux))
-        # plt.scatter(r,z,c='b')
+        plt.scatter(r,z,c='b')
 
         # if ier != 0:
         #     logger.warning('flush error {} in Flush_getClosedFluxSurface'.format(ier))
@@ -825,6 +832,7 @@ def compute_len_lad_xtan(arg):
 
         # xtan[IT] = fTan1
         xtan.append(fTan1)
+        # pdb.set_trace()
 
     #
     data.KG1LH_data.lad[chan] = SignalBase(data.constants)
@@ -1128,29 +1136,30 @@ def main(shot_no, code,read_uid, write_uid, test=False):
     # -------------------------------
     # pdb.set_trace()
 
-    # chan = 3
-    # logger.info('start time loop chan {}'.format(chan))
-    # start_time = time.time()
-    # compute_len_lad_xtan((data,chan))
-    # logger.info("--- {}s seconds ---".format((time.time() - start_time)))
-    #
-    # pdb.set_trace()
-    logger.info('start time loop')
+    chan = 3
+    logger.info('start time loop chan {}'.format(chan))
     start_time = time.time()
-    with Pool(10) as pool:
-        results = pool.map(compute_len_lad_xtan,
-                           [(data, chan) for chan in channels])
+    compute_len_lad_xtan((data,chan))
     logger.info("--- {}s seconds ---".format((time.time() - start_time)))
-    for i, r in enumerate(results):
-        data.KG1LH_data.lad[i + 1] = SignalBase(data.constants)
-        data.KG1LH_data.lad[i + 1].time = r[0].KG1LH_data.lad[r[1]].time
-        data.KG1LH_data.lad[i + 1].data = r[0].KG1LH_data.lad[r[1]].data
-        data.KG1LH_data.len[i + 1] = SignalBase(data.constants)
-        data.KG1LH_data.len[i + 1].time = r[0].KG1LH_data.len[r[1]].time
-        data.KG1LH_data.len[i + 1].data = r[0].KG1LH_data.len[r[1]].data
-        data.KG1LH_data.xta[i + 1] = SignalBase(data.constants)
-        data.KG1LH_data.xta[i + 1].time = r[0].KG1LH_data.xta[r[1]].time
-        data.KG1LH_data.xta[i + 1].data = r[0].KG1LH_data.xta[r[1]].data
+    plt.show()
+    #
+    pdb.set_trace()
+    # logger.info('start time loop')
+    # start_time = time.time()
+    # with Pool(10) as pool:
+    #     results = pool.map(compute_len_lad_xtan,
+    #                        [(data, chan) for chan in channels])
+    # logger.info("--- {}s seconds ---".format((time.time() - start_time)))
+    # for i, r in enumerate(results):
+    #     data.KG1LH_data.lad[i + 1] = SignalBase(data.constants)
+    #     data.KG1LH_data.lad[i + 1].time = r[0].KG1LH_data.lad[r[1]].time
+    #     data.KG1LH_data.lad[i + 1].data = r[0].KG1LH_data.lad[r[1]].data
+    #     data.KG1LH_data.len[i + 1] = SignalBase(data.constants)
+    #     data.KG1LH_data.len[i + 1].time = r[0].KG1LH_data.len[r[1]].time
+    #     data.KG1LH_data.len[i + 1].data = r[0].KG1LH_data.len[r[1]].data
+    #     data.KG1LH_data.xta[i + 1] = SignalBase(data.constants)
+    #     data.KG1LH_data.xta[i + 1].time = r[0].KG1LH_data.xta[r[1]].time
+    #     data.KG1LH_data.xta[i + 1].data = r[0].KG1LH_data.xta[r[1]].data
     #
     # #
     # #
@@ -1192,63 +1201,63 @@ def main(shot_no, code,read_uid, write_uid, test=False):
     plot = True
 
     if plot:
-        for chan in channels:
-        # chan = 3
+        # for chan in channels:
+        chan = 3
 
-            #loading JETPPF data to use for comparison
+        #loading JETPPF data to use for comparison
 
-            kg1v_lid3, dummy = getdata(shot_no, 'KG1V', 'LID' + str(chan))
-            kg1l_lid3, dummy = getdata(shot_no, 'KG1l', 'LID'+str(chan))
-            kg1l_lad3, dummy = getdata(shot_no, 'KG1l', 'LAD'+str(chan))
-            kg1l_len3, dummy = getdata(shot_no, 'KG1l', 'LEN'+str(chan))
-            kg1l_xtan3, dummy = getdata(shot_no, 'KG1l', 'xta'+str(chan))
-
-
-            plt.figure()
-
-            plt.subplot(4, 1, 1)
-            plt.plot(kg1l_lid3['time'],kg1l_lid3['data'],label='lid_jetppf')
-            plt.plot(kg1v_lid3['time'],kg1v_lid3['data'],label='KG1V_lid_jetppf')
-            plt.plot(data.KG1LH_data.lid[chan].time, data.KG1LH_data.lid[chan].data,
-                     label='kg1l_lid_original_MT', marker='o', linestyle='-.',
-                     linewidth=linewidth,
-                     markersize=markersize)
-            plt.plot(data.KG1LH_data1.lid[chan].time, data.KG1LH_data1.lid[chan].data,label='kg1l_lid_rollingmean_MT', marker = 'v', linestyle=':', linewidth=linewidth,
-                                     markersize=markersize)
-
-            plt.plot(data.KG1LH_data2.lid[chan].time, data.KG1LH_data2.lid[chan].data,label='kg1l_lid_rollingmean_pandas_MT', marker = 'p', linestyle=':', linewidth=linewidth,
-                                     markersize=markersize)
-            plt.legend(loc=0, prop={'size': 8})
-            #
-            #
-            #
-            plt.subplot(4, 1, 2)
-            plt.plot(kg1l_lad3['time'], kg1l_lad3['data'], label='lad_jetppf')
-            plt.plot(data.KG1LH_data.lad[chan].time, data.KG1LH_data.lad[chan].data,
-                     label='kg1l_lad_original_MT', marker='x', linestyle='-.',
-                     linewidth=linewidth,
-                     markersize=markersize)
-            plt.legend(loc=0, prop={'size': 8})
+        kg1v_lid3, dummy = getdata(shot_no, 'KG1V', 'LID' + str(chan))
+        kg1l_lid3, dummy = getdata(shot_no, 'KG1l', 'LID'+str(chan))
+        kg1l_lad3, dummy = getdata(shot_no, 'KG1l', 'LAD'+str(chan))
+        kg1l_len3, dummy = getdata(shot_no, 'KG1l', 'LEN'+str(chan))
+        kg1l_xtan3, dummy = getdata(shot_no, 'KG1l', 'xta'+str(chan))
 
 
+        plt.figure()
 
-            plt.subplot(4, 1, 3)
-            plt.plot(kg1l_xtan3['time'],kg1l_xtan3['data'],label='xtan_jetppf')
-            plt.plot(data.KG1LH_data.xta[chan].time, data.KG1LH_data.xta[chan].data,
-                     label='kg1l_xtan_original_MT', marker='o', linestyle='-.',
-                     linewidth=linewidth,
-                     markersize=markersize)
+        plt.subplot(4, 1, 1)
+        plt.plot(kg1l_lid3['time'],kg1l_lid3['data'],label='lid_jetppf')
+        plt.plot(kg1v_lid3['time'],kg1v_lid3['data'],label='KG1V_lid_jetppf')
+        plt.plot(data.KG1LH_data.lid[chan].time, data.KG1LH_data.lid[chan].data,
+                 label='kg1l_lid_original_MT', marker='o', linestyle='-.',
+                 linewidth=linewidth,
+                 markersize=markersize)
+        plt.plot(data.KG1LH_data1.lid[chan].time, data.KG1LH_data1.lid[chan].data,label='kg1l_lid_rollingmean_MT', marker = 'v', linestyle=':', linewidth=linewidth,
+                                 markersize=markersize)
 
-            plt.legend(loc=0, prop={'size': 8})
+        plt.plot(data.KG1LH_data2.lid[chan].time, data.KG1LH_data2.lid[chan].data,label='kg1l_lid_rollingmean_pandas_MT', marker = 'p', linestyle=':', linewidth=linewidth,
+                                 markersize=markersize)
+        plt.legend(loc=0, prop={'size': 8})
+        #
+        #
+        #
+        plt.subplot(4, 1, 2)
+        plt.plot(kg1l_lad3['time'], kg1l_lad3['data'], label='lad_jetppf')
+        plt.plot(data.KG1LH_data.lad[chan].time, data.KG1LH_data.lad[chan].data,
+                 label='kg1l_lad_original_MT', marker='x', linestyle='-.',
+                 linewidth=linewidth,
+                 markersize=markersize)
+        plt.legend(loc=0, prop={'size': 8})
 
 
-            plt.subplot(4, 1, 4)
-            plt.plot(kg1l_len3['time'], kg1l_len3['data'], label='len_jetppf')
-            plt.plot(data.KG1LH_data.len[chan].time, data.KG1LH_data.len[chan].data,
-                     label='kg1l_len_original_MT', marker='x', linestyle='-.',
-                     linewidth=linewidth,
-                     markersize=markersize)
-            plt.legend(loc=0, prop={'size': 8})
+
+        plt.subplot(4, 1, 3)
+        plt.plot(kg1l_xtan3['time'],kg1l_xtan3['data'],label='xtan_jetppf')
+        plt.plot(data.KG1LH_data.xta[chan].time, data.KG1LH_data.xta[chan].data,
+                 label='kg1l_xtan_original_MT', marker='o', linestyle='-.',
+                 linewidth=linewidth,
+                 markersize=markersize)
+
+        plt.legend(loc=0, prop={'size': 8})
+
+
+        plt.subplot(4, 1, 4)
+        plt.plot(kg1l_len3['time'], kg1l_len3['data'], label='len_jetppf')
+        plt.plot(data.KG1LH_data.len[chan].time, data.KG1LH_data.len[chan].data,
+                 label='kg1l_len_original_MT', marker='x', linestyle='-.',
+                 linewidth=linewidth,
+                 markersize=markersize)
+        plt.legend(loc=0, prop={'size': 8})
 
 
 
