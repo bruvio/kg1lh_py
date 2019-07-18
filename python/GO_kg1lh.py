@@ -208,6 +208,10 @@ def map_kg1_efit(arg):
     data = arg[0]
     chan = arg[1]
 
+    if data.KG1_data.global_status[chan] >3:
+        logger.warning('channel data is not good - skipping!')
+        return (data,chan)
+
     if data.code.lower()=='kg1l':
         ntefit = len(data.EFIT_data.rmag.time)
         tefit = data.EFIT_data.rmag.time
@@ -280,6 +284,11 @@ def map_kg1_efit(arg):
 def time_loop(arg):
     data = arg[0]
     chan = arg[1]
+
+    if data.KG1_data.global_status[chan] >3:
+        logger.warning('channel data is not good - skipping!')
+        return (data,chan)
+
 
     if data.code.lower() == 'kg1l':
         ntefit = len(data.EFIT_data.rmag.time)
