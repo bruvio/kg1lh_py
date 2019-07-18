@@ -113,7 +113,7 @@ def subplottimedata(*args):
 import inspect
 
 
-def plot_point(point, label):
+def plot_point(point,angle, label):
     '''
     point - Tuple (x, y)
     angle - Angle you want your end point at in degrees.
@@ -140,10 +140,15 @@ def plot_point(point, label):
     # plt.plot([endx, x], [endy, y],label=label)
 
 
-
-    xx= np.linspace(0,4,10)
-    line = math.atan2(y,x)*(xx-x)
+    plt.plot(x,y,linewidth=2)
+    xx= np.linspace(x,10,10)
+    line = angle*(xx-x) +y
     plt.plot(xx,line,label=label)
+
+
+    # yy = np.linspace(0,4,10)
+    # line = yy/math.atan2(y,x)
+    # plt.plot(line, yy, color='red',label=label)
 
 
     # fig.show()

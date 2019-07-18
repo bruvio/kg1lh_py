@@ -324,13 +324,13 @@ def time_loop(arg):
     xpt = data.r_ref[chan - 1]
     ypt = data.z_ref[chan - 1]
     angle = data.a_ref[chan - 1]
-    # delta = math.atan2(ypt,xpt)
+    delta = math.atan2(ypt,xpt)
 
     # convert to cm
     xpt = xpt * 100
     ypt = ypt * 100
 
-    delta = math.atan2(ypt, xpt)
+
 
     for IT in range(0, ntefit):
         # pdb.set_trace()
@@ -653,7 +653,7 @@ def compute_len_lad_xtan(arg):
 
     plt.figure()
 
-    plot_point((data.r_ref[chan - 1], data.z_ref[chan - 1]),
+    plot_point((data.r_ref[chan - 1], data.z_ref[chan - 1]),angle,
                'LOS ch' + str(chan))
 
     plt.legend(loc=0, prop={'size': 8})
@@ -803,15 +803,18 @@ def compute_len_lad_xtan(arg):
         nfound, r1, z1, r2, z2, r3, z3, r4, z4, ier = Flush_getIntersections(xpt,
                                                                              ypt,
                                                                              angle,
-                                                                             data.EPSF,
+                                                                             data.EPSDD,
                                                                              NPSI,
-                                                                             fx[0])
+                                                                             1)
         if ier != 0:
             logger.warning('flush error {}  in Flush_getIntersections'.format(ier))
             # return ier
         cord = math.hypot(r2 - r1, z2 - z1)
 
         logger.log(5, 'found {} intersection/s'.format(nfound))
+        # if nfound ==3:
+        #     logger.log(5, 'found {} intersection/s at {}/{} {}/{} {}/{} {}/{}'.format(nfound,r1,z1,r2,z2,r3,z3,r4,z4))
+        #     pdb.set_trace()
 
         # -----------------------------------------------------------------------
         # final results
@@ -1049,7 +1052,7 @@ def main(shot_no, code,read_uid, write_uid, test=False):
     # -------------------------------
     logging.info('reading line of sights')
     data.temp, data.r_ref, data.z_ref, data.a_ref, data.r_coord, data.z_coord, data.data_coord, data.coord_err =data.KG1_data.get_coord(data.pulse)
-
+    pdb.set_trace()
 
     # logger.debug('r_coord {}'.format(data.r_ref))
     # logger.debug('z_coord {}'.format(data.z_ref))
@@ -1137,13 +1140,13 @@ def main(shot_no, code,read_uid, write_uid, test=False):
     # pdb.set_trace()
 
     chan = 3
-    logger.info('start time loop chan {}'.format(chan))
+    logger.info('start time loop for chan. {}'.format(chan))
     start_time = time.time()
     compute_len_lad_xtan((data,chan))
     logger.info("--- {}s seconds ---".format((time.time() - start_time)))
     plt.show()
     #
-    pdb.set_trace()
+    # pdb.set_trace()
     # logger.info('start time loop')
     # start_time = time.time()
     # with Pool(10) as pool:
