@@ -7,8 +7,8 @@ Class that runs CORMAT_py GUI
 # ----------------------------
 __author__ = "Bruno Viola"
 __Name__ = "KG1L_py"
-__version__ = "0.1"
-__release__ = "0.1"
+__version__ = "0.0"
+__release__ = "0.3"
 __maintainer__ = "Bruno Viola"
 __email__ = "bruno.viola@ukaea.uk"
 __status__ = "Testing"
@@ -87,200 +87,6 @@ logger = logging.getLogger(__name__)
 # noinspection PyUnusedLocal
 
 #--------
-def map_kg1_efit_RM_pandas(arg):
-    """
-    new algorithm to filter kg1v/lid data using pandas rolling mean
-
-    the sampling windown is computed as ratio between the "old fortran" rampling and the kg1v sampling
-    :param arg:
-    :return:
-    """
-    data = arg[0]
-    chan = arg[1]
-    if data.KG1_data.global_status[chan] >3:
-        logger.warning('data is not good - skipping chan. {}!'.format(chan))
-        return (data,chan)
-
-
-    if data.code.lower()=='kg1l':
-        ntefit = len(data.EFIT_data.rmag.time)
-        time_efit = data.EFIT_data.rmag.time
-        data_efit = data.EFIT_data.rmag.data
-        data.EFIT_data.sampling_time = np.mean(np.diff(data.EFIT_data.rmag.time))
-
-    else:
-        ntefit = len(data.EFIT_data.rmag_fast.time)
-        time_efit = data.EFIT_data.rmag_fast.time
-        data_efit = data.EFIT_data.rmag_fast.data
-        data.EFIT_data.sampling_time = np.mean(np.diff(data.EFIT_data.rmag_fast.time))
-
-
-    ntkg1v = len(data.KG1_data.density[chan].time)
-    tkg1v = data.KG1_data.density[chan].time
-    tsmo = data.KG1LH_data.tsmo
-
-    sampling_time_kg1v = np.mean(np.diff(tkg1v))
-
-    rolling_mean=int(round(tsmo/sampling_time_kg1v))
-
-    # density = pd.rolling_mean(data.KG1_data.density[chan].data,rolling_mean) # soon will be deprecated!
-    density2 = pd.Series(data.KG1_data.density[chan].data).rolling(window=rolling_mean).mean()
-
-
-
-
-    data.KG1LH_data2.lid[chan] = SignalBase(data.constants)
-    data.KG1LH_data2.lid[chan].data = density2
-    data.KG1LH_data2.lid[chan].time = data.KG1_data.density[chan].time
-    dummy = data.KG1LH_data2.lid[chan].resample_signal("interp", time_efit)
-    data.KG1LH_data2.lid[chan].data = np.empty(ntefit)
-    data.KG1LH_data2.lid[chan].time = np.empty(ntefit)
-
-    data.KG1LH_data2.lid[chan].data = dummy
-    data.KG1LH_data2.lid[chan].time = time_efit
-
-
-
-
-
-
-
-
-    return (data,chan)
-
-
-
-#--------
-def map_kg1_efit_RM(arg):
-    """
-    new algorithm to filter kg1v/lid data using rolling mean
-    the sampling window is computed as ratio between the "old fortran" rampling and the kg1v sampling
-    :param arg:
-    :return:
-    """
-    data = arg[0]
-    chan = arg[1]
-    if data.KG1_data.global_status[chan] >3:
-        logger.warning('data is not good - skipping chan. {}!'.format(chan))
-        return (data,chan)
-
-    if data.code.lower()=='kg1l':
-        ntefit = len(data.EFIT_data.rmag.time)
-        time_efit = data.EFIT_data.rmag.time
-
-        data.EFIT_data.sampling_time = np.mean(np.diff(data.EFIT_data.rmag.time))
-
-    else:
-        ntefit = len(data.EFIT_data.rmag_fast.time)
-        time_efit = data.EFIT_data.rmag_fast.time
-
-        data.EFIT_data.sampling_time = np.mean(np.diff(data.EFIT_data.rmag_fast.time))
-
-
-
-    tkg1v = data.KG1_data.density[chan].time
-    tsmo = data.KG1LH_data.tsmo
-
-    sampling_time_kg1v = np.mean(np.diff(tkg1v))
-
-    rolling_mean=int(round(tsmo/sampling_time_kg1v))
-
-    cumsum_vec = np.cumsum(np.insert(data.KG1_data.density[chan].data, 0, 0))
-    density_cms = (cumsum_vec[rolling_mean:] - cumsum_vec[:-rolling_mean]) / rolling_mean
-    density1 = movingaverage(data.KG1_data.density[chan].data, rolling_mean)
-
-    data.KG1LH_data1.lid[chan] = SignalBase(data.constants)
-    data.KG1LH_data1.lid[chan].data = density1
-    data.KG1LH_data1.lid[chan].time = data.KG1_data.density[chan].time
-
-    dummy = data.KG1LH_data1.lid[chan].resample_signal("interp", time_efit)
-    data.KG1LH_data1.lid[chan].time = np.empty(ntefit)
-
-    data.KG1LH_data1.lid[chan].data = dummy
-    data.KG1LH_data1.lid[chan].time = time_efit
-
-
-
-
-    return (data,chan)
-
-
-#--------
-def map_kg1_efit(arg):
-    """
-    original algorithm used in kg1l fortran code to filter kg1v/lid data
-    :param arg:
-    :return:
-    """
-    data = arg[0]
-    chan = arg[1]
-
-    if data.KG1_data.global_status[chan] >3:
-        logger.warning('data is not good - skipping chan. {}!'.format(chan))
-        return (data,chan)
-
-    if data.code.lower()=='kg1l':
-        ntefit = len(data.EFIT_data.rmag.time)
-        time_efit = data.EFIT_data.rmag.time
-        data.EFIT_data.sampling_time = np.mean(np.diff(data.EFIT_data.rmag.time))
-
-    else:
-        ntefit = len(data.EFIT_data.rmag_fast.time)
-        time_efit = data.EFIT_data.rmag_fast.time
-        data.EFIT_data.sampling_time = np.mean(np.diff(data.EFIT_data.rmag_fast.time))
-
-    density = np.zeros(ntefit)
-    tsmo = data.KG1LH_data.tsmo
-
-
-
-    for it in range(0, ntefit):
-
-        sum = np.zeros(8)
-
-        nsum = 0
-
-        tmin = 1000.0
-
-        jmin = 1
-
-        # in principle they can be different (?!)
-        ntkg1v = len(data.KG1_data.density[chan].time)
-        tkg1v = data.KG1_data.density[chan].time
-
-        for jj in range(0, ntkg1v):
-            tdif = abs(tkg1v[jj] - time_efit[it])
-
-            if (tdif < tmin):
-                tmin = tdif
-                jmin = jj
-            if (tkg1v[jj] >= time_efit[it] + tsmo):
-                break
-            if (tkg1v[jj] > time_efit[it] - tsmo):
-                sum[chan - 1] = sum[chan - 1] + \
-                                data.KG1_data.density[chan].data[jj]
-                nsum = nsum + 1
-        if nsum > 0:
-            density[it] = sum[chan - 1] / float(nsum)
-        else:
-            density[it] = data.KG1_data.density[chan].data[jmin]
-
-
-
-
-
-
-    data.KG1LH_data.lid[chan] = SignalBase(data.constants)
-    data.KG1LH_data.lid[chan].data = density
-    data.KG1LH_data.lid[chan].time = time_efit
-
-    dummy = data.KG1LH_data.lid[chan].resample_signal("interp", time_efit)
-    data.KG1LH_data.lid[chan].time = np.empty(ntefit)
-
-    data.KG1LH_data.lid[chan].data = dummy
-    data.KG1LH_data.lid[chan].time = time_efit
-
-    return (data,chan)
 
 
 #--------
@@ -289,7 +95,7 @@ def time_loop(arg):
     chan = arg[1]
 
     if data.KG1_data.global_status[chan] >3:
-        logger.warning('channel data is not good - skipping!')
+        logger.warning('channel data is not good - skipping ch. {}!'.format(chan))
         return (data,chan)
 
 
@@ -304,6 +110,7 @@ def time_loop(arg):
         time_efit = data.EFIT_data.rmag_fast.time
         data.EFIT_data.sampling_time = np.mean(
             np.diff(data.EFIT_data.rmag_fast.time))
+
 
 
     density = []
@@ -328,8 +135,14 @@ def time_loop(arg):
 
 
 
+
+
     for IT in range(0, ntefit):
-        # pdb.set_trace()
+
+        TIMEM = time_efit[IT]
+
+
+
         sum = np.zeros(8)
 
         nsum = 0
@@ -343,6 +156,7 @@ def time_loop(arg):
         # in principle they can be different (?!)
         ntkg1v = len(data.KG1_data.density[chan].time)
         tkg1v = data.KG1_data.density[chan].time
+        logger.debug('map kg1v data onto efit time vector (Fortran algorithm)\n')
 
         for jj in range(0, ntkg1v):
             tdif = abs(tkg1v[jj] - time_efit[IT])
@@ -361,7 +175,15 @@ def time_loop(arg):
         else:
             density.append(data.KG1_data.density[chan].data[jmin])
 
-        TIMEM = time_efit[IT]
+
+
+
+
+
+
+
+        logger.debug('computing lad/len/xtan \n')
+
         dtime = float(TIMEM)
 
         t, ier = flushinit(15, data.pulse, dtime, lunget=12, iseq=0,
@@ -458,12 +280,13 @@ def time_loop(arg):
         # ----------------------------------------------------------------------
 
         NPSI = 1  # look for one surface
+        psimax = 1 # value of psi at the last closed surface
         nfound, r1, z1, r2, z2, r3, z3, r4, z4, ier = Flush_getIntersections(xpt,
                                                                              ypt,
                                                                              angle,
-                                                                             data.EPSDD,
+                                                                             data.EPSF,
                                                                              NPSI,
-                                                                             fx[0])
+                                                                             psimax)
         if ier != 0:
             logger.warning('flush error {}  in Flush_getIntersections'.format(ier))
             # return ier
@@ -486,9 +309,7 @@ def time_loop(arg):
 
         xtan[IT] = fTan1
 
-
-
-
+    logger.debug('map kg1v data onto efit time vector (Pandas rolling mean algorithm)\n')
 
 
 
@@ -509,7 +330,8 @@ def time_loop(arg):
     data.KG1LH_data2.lid[chan].data = dummy
     data.KG1LH_data2.lid[chan].time = time_efit
 
-
+    logger.debug(
+        'map kg1v data onto efit time vector (rolling mean algorithm)\n')
 
     rolling_mean=int(round(tsmo/sampling_time_kg1v))
 
@@ -563,203 +385,6 @@ def time_loop(arg):
 # ----------------------------
 
 
-#--------
-def compute_len_lad_xtan(arg):
-    data = arg[0]
-    chan = arg[1]
-
-    length = []
-    xtan = []
-    lad = []
-
-    if data.KG1_data.global_status[chan] >3:
-        logger.warning('data is not good - skipping chan. {}!'.format(chan))
-        return (data,chan)
-
-
-    if data.code.lower()=='kg1l':
-        ntefit = len(data.EFIT_data.rmag.time)
-        time_efit = data.EFIT_data.rmag.time
-        data.EFIT_data.sampling_time = np.mean(np.diff(data.EFIT_data.rmag.time))
-
-    else:
-        ntefit = len(data.EFIT_data.rmag_fast.time)
-        time_efit = data.EFIT_data.rmag_fast.time
-        data.EFIT_data.sampling_time = np.mean(np.diff(data.EFIT_data.rmag_fast.time))
-
-
-    xpt = data.r_ref[chan - 1]
-    ypt = data.z_ref[chan - 1]
-    angle = data.a_ref[chan - 1]
-
-    #convert to cm
-    xpt = xpt*100
-    ypt = ypt*100
-
-
-    density = data.KG1LH_data.lid[chan].data
-
-    #time loop
-    for IT in range(0,ntefit):
-        TIMEM = time_efit[IT]
-        dtime = float(TIMEM)
-        #init for each time point
-        t, ier = flushinit(15, data.pulse, dtime, lunget=12, iseq=0,
-                           uid='JETPPF', dda='EFIT', lunmsg=0)
-        if ier != 0:
-            logger.warning('flush error {} in flushinit'.format(ier))
-            # return ier
-
-        logger.log(5, '************* Time = {}s'.format(TIMEM))
-
-
-
-        # look for xpoint
-        iflsep, rx, zx, fx, ier = flush_getXpoint()
-
-        if ier != 0:
-            logger.warning('flush error {} in flush_getXpoint'.format(ier))
-            # return ier #all flush error return have been commented out as that generates issues (in case of errors) in the output of the map function used for MT
-        logger.log(5,
-                   'Time {}s; iflsep {}; rx {}; zx {}; fx {}; ier {} '.format(TIMEM,
-                                                                              iflsep,
-                                                                              rx,
-                                                                              zx,
-                                                                              fx,
-                                                                              ier))
-
-        if int(iflsep) == 0:
-            logger.log(5, 'iflsep is {}'.format(iflsep))
-            logger.debug('Time {}s; NO X-point found'.format(TIMEM))
-            psimax = data.psim1
-            logger.log(5, 'psimax is {}'.format(psimax))
-            iskb = 1
-            logger.log(5, 'psimax is {}'.format(psimax))
-        else:
-            logger.log(5,'iflsep is {}'.format(iflsep))
-            logger.debug('Time {}s; X-point plasma'.format(TIMEM))
-
-            #probably all this is useless!
-
-            # if int(iflsep) == 1:
-            #
-            #      logger.log(5,'found {} X-point '.format(iflsep))
-            #      psimax = data.psim1
-            #      logger.log(5,'psimax is {}'.format(psimax))
-            #      if fx[0] >= data.psim1:
-            #           logger.log(5,'fx is {}'.format(fx))
-            #           iskb = 1
-            #           logger.log(5,'iskb is {}'.format(iskb))
-            #      else:
-            #           iskb = 0
-            #           logger.log(5,'iskb is {}'.format(iskb))
-            #           growth = (data.psim1 / fx[0]) - 1
-            #           logger.log(5,'growth is {}'.format(growth))
-            # else:
-
-            psimax = data.psim1 * fx[0]
-            # psimax = 1
-
-            iskb = 0
-
-            # growth = data.psim1 - 1
-            growth = fx[0] - 1
-
-            logger.log(5, 'psimax is {}'.format(psimax))
-            logger.log(5, 'growth is {}'.format(growth))
-            logger.log(5, 'iflsep is {}'.format(iflsep))
-            logger.log(5, 'iskb is {}'.format(iskb))
-
-        volume_m3, ier = Flush_getVolume(1)
-
-        # if ier != 0:
-        #     logger.warning('flush error {} in Flush_getVolume'.format(ier))
-        #     return ier
-
-        #
-        if iskb != 1:
-            logger.log(5, 'iskb is {}'.format(iskb))
-            ier = flush_blowUp(growth, volume_m3)
-            logger.log(5, 'blowup error {}'.format(ier))
-
-        #end of useless stuff? to be checked!
-
-
-
-        # -----------------------------------------------------------------------
-        # FIND PSI AT TANGENT FLUX SURFACE (to make FLUL2 quicker)
-        # -----------------------------------------------------------------------
-        rTan1,zTan1, fTan1, ier  = Flush_GetTangentFlux(xpt,ypt,angle, data.EPSDD)
-        if ier != 0:
-            logger.warning('flush error {} in Flush_GetTangentFlux'.format(ier))
-            # return ier
-
-        logger.log(5, 'get tangent flux output is rTan {}, zTan {}, fTan {}'.format(
-            rTan1, zTan1, fTan1))
-
-        if ier != 0:
-            logger.warning('flush error {}  in FlushGetTangentFlux'.format(ier))
-            # return ier
-
-        #
-        # ----------------------------------------------------------------------
-        # FIND INTERSECTION POINTS WITH PLASMA BOUNDARY
-        # ----------------------------------------------------------------------
-
-        NPSI = 1  # look for one surface
-        nfound, r1, z1, r2, z2, r3, z3, r4, z4, ier = Flush_getIntersections(xpt,
-                                                                             ypt,
-                                                                             angle,
-                                                                             data.EPSF,
-                                                                             NPSI,
-                                                                             1)
-
-        if ier != 0:
-            logger.warning('flush error {}  in Flush_getIntersections'.format(ier))
-            # return ier
-        cord = math.hypot(r2 - r1, z2 - z1)
-
-        logger.log(5, 'found {} intersection/s'.format(nfound))
-
-        # -----------------------------------------------------------------------
-        # final results
-        # -----------------------------------------------------------------------
-        if cord < 0:
-            cord = abs(cord)
-        # length[IT] = cord / 100.0  # conversion from cm to m
-        length.append(cord / 100.0)  # conversion from cm to m
-
-        logger.debug('cord length for channel {} is {}'.format(chan, length[IT]))
-        # length[IT] = cord # conversion from cm to m
-        if (length[IT] > 0.0):
-            # lad[IT] = density[IT] / length[IT]
-            lad.append(density[IT] / length[IT])
-        else:
-            # lad[IT] = 0.0
-            lad.append(0.0)
-
-        # xtan[IT] = fTan1
-        xtan.append(fTan1)
-
-    #
-    data.KG1LH_data.lad[chan] = SignalBase(data.constants)
-    data.KG1LH_data.lad[chan].data = lad
-
-    data.KG1LH_data.lad[chan].time = time_efit
-#
-    data.KG1LH_data.len[chan] = SignalBase(data.constants)
-    data.KG1LH_data.len[chan].data = length
-
-    data.KG1LH_data.len[chan].time = time_efit
-#
-    data.KG1LH_data.xta[chan] = SignalBase(data.constants)
-    data.KG1LH_data.xta[chan].data = xtan
-
-    data.KG1LH_data.xta[chan].time = time_efit
-    #
-    return (data, chan)
-
-
 # ----------------------------
 
 
@@ -770,11 +395,13 @@ def main(shot_no, code,read_uid, write_uid, test=False):
     C kg1v. Other outputs are the tangent flux surface
     C and the distance to the edge divided by the chord length (curvature
     C of the edge for channel 4).
-    :param shot_no:
-    :param code:
-    :param read_uid:
-    :param write_uid:
-    :param test:
+    :param shot_no:shot number to be processed
+    :param code: KG1L or KG1H
+    :param read_uid: UID for reading PPFs
+    :param write_uid: UID for writing PPFs
+    :param test: Set to True for testing mode, meaning the following:
+                     - If write_uid is given and it is NOT JETPPF then a PPF will be written.
+
     :return:
     '''
 
@@ -843,6 +470,8 @@ def main(shot_no, code,read_uid, write_uid, test=False):
     logger.info(' copying to local user profile \n')
     logger.log(5, 'we are in %s', cwd)
 
+    cwd = os.getcwd()
+    pathlib.Path(cwd + os.sep + 'figures').mkdir(parents=True, exist_ok=True)
     # -------------------------------
     # Read  config data.
     # -------------------------------
@@ -967,89 +596,46 @@ def main(shot_no, code,read_uid, write_uid, test=False):
 
 
     # -------------------------------
-    # 4a. map kg1v data onto efit time vector (Fortran algorithm)
+    # 4. start time loop
     # pdb.set_trace()
     # -------------------------------
+    if data.code.lower() == 'kg1l':
+        logger.info('running KG1L\n')
+    else:
+        logger.info('running KG1H \n')
 
 
-    #
-    # # #
-    logger.info('start mapping kg1v data onto efit time vector')
+
+    logger.info('Starting time loop')
     start_time = time.time()
     with Pool(10) as pool:
-        results = pool.map(map_kg1_efit, [(data, chan) for chan in channels])
-    logger.info("--- {}s seconds ---".format((time.time() - start_time)))
-    for i,res in enumerate(results):
-
-        if len(res[0].KG1LH_data.lid.keys()) !=0:
-            data.KG1LH_data.lid[i+1] = SignalBase(data.constants)
-            data.KG1LH_data.lid[i+1].time = res[0].KG1LH_data.lid[res[1]].time
-            data.KG1LH_data.lid[i+1].data = res[0].KG1LH_data.lid[res[1]].data
-        else:
-            continue
-
-
-    # -------------------------------
-    # 4b. map kg1v data onto efit time vector (rolling mean algorithm)
-    # pdb.set_trace()
-    # -------------------------------
-    logger.info('start mapping kg1v data onto efit time vector - using rolling mean')
-    start_time = time.time()
-    with Pool(10) as pool:
-        results = pool.map(map_kg1_efit_RM, [(data, chan) for chan in channels])
-    logger.info("--- {}s seconds ---".format((time.time() - start_time)))
-
-    for i,res in enumerate(results):
-
-        if len(res[0].KG1LH_data1.lid.keys()) !=0:
-            data.KG1LH_data1.lid[i+1] = SignalBase(data.constants)
-            data.KG1LH_data1.lid[i+1].time = res[0].KG1LH_data1.lid[res[1]].time
-            data.KG1LH_data1.lid[i+1].data = res[0].KG1LH_data1.lid[res[1]].data
-        else:
-            continue
-    # -------------------------------
-    # 4c. map kg1v data onto efit time vector (Pandas rolling mean algorithm)
-    # pdb.set_trace()
-    # -------------------------------
-
-    logger.info('start mapping kg1v data onto efit time vector - using pandas rolling mean')
-    start_time = time.time()
-    with Pool(10) as pool:
-        results = pool.map(map_kg1_efit_RM_pandas,
+        results = pool.map(time_loop,
                            [(data, chan) for chan in channels])
     logger.info("--- {}s seconds ---".format((time.time() - start_time)))
-
+    # pdb.set_trace()
     for i, res in enumerate(results):
-        if len(res[0].KG1LH_data2.lid.keys()) != 0:
+        if len(res[0].KG1LH_data.lid.keys()) != 0:
+            data.KG1LH_data.lid[i + 1] = SignalBase(data.constants)
+            data.KG1LH_data.lid[i + 1].time = res[0].KG1LH_data.lid[res[1]].time
+            data.KG1LH_data.lid[i + 1].data = res[0].KG1LH_data.lid[res[1]].data
+
+            data.KG1LH_data1.lid[i + 1] = SignalBase(data.constants)
+            data.KG1LH_data1.lid[i + 1].time = res[0].KG1LH_data1.lid[res[1]].time
+            data.KG1LH_data1.lid[i + 1].data = res[0].KG1LH_data1.lid[res[1]].data
+
             data.KG1LH_data2.lid[i + 1] = SignalBase(data.constants)
             data.KG1LH_data2.lid[i + 1].time = res[0].KG1LH_data2.lid[res[1]].time
             data.KG1LH_data2.lid[i + 1].data = res[0].KG1LH_data2.lid[res[1]].data
-        else:
-            continue
 
 
-
-    # -------------------------------
-    # 5. start time loop
-    # pdb.set_trace()
-    # -------------------------------
-
-
-    logger.info('start time loop')
-    start_time = time.time()
-    with Pool(10) as pool:
-        results = pool.map(compute_len_lad_xtan,
-                           [(data, chan) for chan in channels])
-    logger.info("--- {}s seconds ---".format((time.time() - start_time)))
-
-    for i, res in enumerate(results):
-        if len(res[0].KG1LH_data.lad.keys()) != 0:
             data.KG1LH_data.lad[i + 1] = SignalBase(data.constants)
             data.KG1LH_data.lad[i + 1].time = res[0].KG1LH_data.lad[res[1]].time
             data.KG1LH_data.lad[i + 1].data = res[0].KG1LH_data.lad[res[1]].data
+
             data.KG1LH_data.len[i + 1] = SignalBase(data.constants)
             data.KG1LH_data.len[i + 1].time = res[0].KG1LH_data.len[res[1]].time
             data.KG1LH_data.len[i + 1].data = res[0].KG1LH_data.len[res[1]].data
+
             data.KG1LH_data.xta[i + 1] = SignalBase(data.constants)
             data.KG1LH_data.xta[i + 1].time = res[0].KG1LH_data.xta[res[1]].time
             data.KG1LH_data.xta[i + 1].data = res[0].KG1LH_data.xta[res[1]].data
@@ -1064,13 +650,13 @@ def main(shot_no, code,read_uid, write_uid, test=False):
 
 
     # -------------------------------
-    # 6. plot data
+    # 5. plot data
     # pdb.set_trace()
     # -------------------------------
 
 
-    plot= True
-    # plot=False
+    plot = True
+    #plot=False
 
     if plot:
         for chan in channels:
@@ -1133,12 +719,197 @@ def main(shot_no, code,read_uid, write_uid, test=False):
 
 
 
+                plt.savefig(cwd + os.sep + 'figures/' + data.code +'_'+ str(data.pulse) + 'ch_' + str(chan) + '_comparisons.png', dpi=300)
 
 
 
 
     if plot:
         plt.show(block=True)
+
+#    with open('./data.pkl', 'wb') as f:
+#            pickle.dump(
+#                [data], f)
+#    f.close()
+
+
+
+#    with open('./data.pkl','rb') as f:  # Python 3: open(..., 'rb')
+#        [data] = pickle.load(f)
+#    f.close()	
+    # -------------------------------
+    # 7. writing PPFs
+    #pdb.set_trace()
+    # -------------------------------
+
+    # logging.info('start writing PPFs')
+    if (write_uid != "" and not test) or (test and write_uid.upper() != "JETPPF" and write_uid != ""):
+        logger.info("\n             Writing PPF with UID {}".format(write_uid))
+
+        err = open_ppf(data.pulse, write_uid)
+
+        if err != 0:
+            logger.error('failed to open ppf')
+            return 67
+
+        itref_kg1v = -1
+        dda = data.code.upper()
+        return_code = 0
+
+        for chan in data.KG1LH_data.lid.keys():
+
+            dtype_lid = "LID{}".format(chan)
+            comment = "DATA FROM KG1 CHANNEL {}".format(chan)
+
+            write_err, itref_written = write_ppf(data.pulse, dda,
+                                                 dtype_lid,
+                                                 data.KG1LH_data.lid[
+                                                     chan].data,
+                                                 time=
+                                                 data.KG1LH_data.lid[
+                                                     chan].time,
+                                                 comment=comment,
+                                                 unitd='M-2', unitt='SEC',
+                                                 itref=itref_kg1v,
+                                                 nt=len(
+                                                     data.KG1LH_data.lid[
+                                                         chan].time),
+                                                 status=
+                                                 data.KG1_data.status[
+                                                     chan],
+                                                 global_status=
+                                                 data.KG1_data.global_status[
+                                                     chan])
+        for chan in data.KG1LH_data.lad.keys():
+            dtype_lid = "LAD{}".format(chan)
+            comment = "Line Average Density CHANNEL {}".format(chan)
+
+            if write_err != 0:
+                logger.error(
+                    "Failed to write {}/{}. Errorcode {}".format(dda, dtype_lid,
+                                                                 write_err))
+                break
+
+            write_err, itref_written = write_ppf(data.pulse, dda,
+                                                 dtype_lid,
+                                                 data.KG1LH_data.lad[
+                                                     chan].data,
+                                                 time=
+                                                 data.KG1LH_data.lad[
+                                                     chan].time,
+                                                 comment=comment,
+                                                 unitd='M-3', unitt='SEC',
+                                                 itref=itref_kg1v,
+                                                 nt=len(
+                                                     data.KG1LH_data.lad[
+                                                         chan].time),
+                                                 status=
+                                                 data.KG1_data.status[
+                                                     chan],
+                                                 global_status=
+                                                 data.KG1_data.global_status[
+                                                     chan])
+            if write_err != 0:
+                logger.error(
+                    "Failed to write {}/{}. Errorcode {}".format(dda, dtype_lid,
+                                                                 write_err))
+                break
+        for chan in data.KG1LH_data.len.keys():
+            dtype_lid = "LEN{}".format(chan)
+            comment = "CORD LENGTH KG1 CHANNEL {}".format(chan)
+
+            write_err, itref_written = write_ppf(data.pulse, dda,
+                                                 dtype_lid,
+                                                 data.KG1LH_data.len[
+                                                     chan].data,
+                                                 time=
+                                                 data.KG1LH_data.len[
+                                                     chan].time,
+                                                 comment=comment,
+                                                 unitd='M', unitt='SEC',
+                                                 itref=itref_kg1v,
+                                                 nt=len(
+                                                     data.KG1LH_data.len[
+                                                         chan].time),
+                                                 status=
+                                                 data.KG1_data.status[
+                                                     chan],
+                                                 global_status=
+                                                 data.KG1_data.global_status[
+                                                     chan])
+            if write_err != 0:
+                logger.error(
+                    "Failed to write {}/{}. Errorcode {}".format(dda, dtype_lid,
+                                                                 write_err))
+                break
+        
+        for chan in data.KG1LH_data.xta.keys():
+            dtype_lid = "XTA{}".format(chan)
+            
+            comment = "Tangent flux lid{} ".format(chan)
+
+            write_err, itref_written = write_ppf(data.pulse, dda,
+                                                 dtype_lid,
+                                                 data.KG1LH_data.xta[
+                                                     chan].data,
+                                                 time=
+                                                 data.KG1LH_data.xta[
+                                                     chan].time,
+                                                 comment=comment,
+                                                 unitd='  ', unitt='SEC',
+                                                 itref=itref_kg1v,
+                                                 nt=len(
+                                                     data.KG1LH_data.xta[
+                                                         chan].time),
+                                                 status=
+                                                 data.KG1_data.status[
+                                                     chan],
+                                                 global_status=
+                                                 data.KG1_data.global_status[
+                                                     chan])
+
+            if write_err != 0:
+                logger.error(
+                    "Failed to write {}/{}. Errorcode {}".format(dda, dtype_lid,
+                                                                 write_err))
+                break
+
+        mode = "smoothing time  kg1 {}".format(data.KG1LH_data.tsmo)
+        dtype_mode = "TSMO"
+        comment = mode
+        write_err, itref_written = write_ppf(data.pulse, dda, dtype_mode,
+                                            np.array([data.KG1LH_data.tsmo]),
+                                             time=np.array([0]),
+                                             comment=comment, unitd="SEC ",
+                                             unitt=" ", itref=-1, nt=1,
+                                             status=None)
+
+        mode = "Generated by {}".format(write_uid)
+        dtype_mode = "MODE"
+        comment = mode
+        write_err, itref_written = write_ppf(data.pulse, dda, dtype_mode,
+                                             np.array([1]),
+                                             time=np.array([0]),
+                                             comment=comment, unitd=" ",
+                                             unitt=" ", itref=-1, nt=1,
+                                             status=None)
+
+        if write_err != 0:
+            logger.error('failed to write ppf')
+            return 67
+        else:
+
+            err = close_ppf(data.pulse, write_uid,
+                            data.constants.code_version)
+
+        if err != 0:
+            logger.error('failed to close ppf')
+            return 67
+
+
+
+    else:
+        logger.info("No PPF was written. UID given was {}, test: {}".format(write_uid, test))
 
 
 

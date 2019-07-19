@@ -35,8 +35,8 @@ class KG1LData(SignalBase):
         self.len = {}
         self.xta = {}
         self.tsmo = None
+        self.type = {}
 
 
 
         # ------------------------
-
