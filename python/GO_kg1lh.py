@@ -99,18 +99,18 @@ def map_kg1_efit_RM_pandas(arg):
     chan = arg[1]
 
     if data.code.lower()=='kg1l':
-        ntefit = len(data.EFIT_data.rmag.time)
-        tefit = data.EFIT_data.rmag.time
+        ntime_efit = len(data.EFIT_data.rmag.time)
+        time_efit = data.EFIT_data.rmag.time
         data_efit = data.EFIT_data.rmag.data
         data.EFIT_data.sampling_time = np.mean(np.diff(data.EFIT_data.rmag.time))
 
     else:
-        ntefit = len(data.EFIT_data.rmag_fast.time)
-        tefit = data.EFIT_data.rmag_fast.time
+        ntime_efit = len(data.EFIT_data.rmag_fast.time)
+        time_efit = data.EFIT_data.rmag_fast.time
         data_efit = data.EFIT_data.rmag_fast.data
         data.EFIT_data.sampling_time = np.mean(np.diff(data.EFIT_data.rmag_fast.time))
 
-    # density = np.zeros(ntefit)
+    # density = np.zeros(ntime_efit)
     ntkg1v = len(data.KG1_data.density[chan].time)
     tkg1v = data.KG1_data.density[chan].time
     tsmo = data.KG1LH_data.tsmo
@@ -128,12 +128,12 @@ def map_kg1_efit_RM_pandas(arg):
     data.KG1LH_data2.lid[chan] = SignalBase(data.constants)
     data.KG1LH_data2.lid[chan].data = density2
     data.KG1LH_data2.lid[chan].time = data.KG1_data.density[chan].time
-    dummy = data.KG1LH_data2.lid[chan].resample_signal("interp", tefit)
-    data.KG1LH_data2.lid[chan].data = np.empty(ntefit)
-    data.KG1LH_data2.lid[chan].time = np.empty(ntefit)
+    dummy = data.KG1LH_data2.lid[chan].resample_signal("interp", time_efit)
+    data.KG1LH_data2.lid[chan].data = np.empty(ntime_efit)
+    data.KG1LH_data2.lid[chan].time = np.empty(ntime_efit)
 
     data.KG1LH_data2.lid[chan].data = dummy
-    data.KG1LH_data2.lid[chan].time = tefit
+    data.KG1LH_data2.lid[chan].time = time_efit
 
 
 
@@ -158,18 +158,18 @@ def map_kg1_efit_RM(arg):
     chan = arg[1]
 
     if data.code.lower()=='kg1l':
-        ntefit = len(data.EFIT_data.rmag.time)
-        tefit = data.EFIT_data.rmag.time
+        ntime_efit = len(data.EFIT_data.rmag.time)
+        time_efit = data.EFIT_data.rmag.time
         data_efit = data.EFIT_data.rmag.data
         data.EFIT_data.sampling_time = np.mean(np.diff(data.EFIT_data.rmag.time))
 
     else:
-        ntefit = len(data.EFIT_data.rmag_fast.time)
-        tefit = data.EFIT_data.rmag_fast.time
+        ntime_efit = len(data.EFIT_data.rmag_fast.time)
+        time_efit = data.EFIT_data.rmag_fast.time
         data_efit = data.EFIT_data.rmag_fast.data
         data.EFIT_data.sampling_time = np.mean(np.diff(data.EFIT_data.rmag_fast.time))
 
-    # density = np.zeros(ntefit)
+    # density = np.zeros(ntime_efit)
     ntkg1v = len(data.KG1_data.density[chan].time)
     tkg1v = data.KG1_data.density[chan].time
     tsmo = data.KG1LH_data.tsmo
@@ -185,12 +185,12 @@ def map_kg1_efit_RM(arg):
     data.KG1LH_data1.lid[chan] = SignalBase(data.constants)
     data.KG1LH_data1.lid[chan].data = density1
     data.KG1LH_data1.lid[chan].time = data.KG1_data.density[chan].time
-    # data.KG1LH_data.lid[chan].time = tefit
-    dummy = data.KG1LH_data1.lid[chan].resample_signal("interp", tefit)
-    data.KG1LH_data1.lid[chan].time = np.empty(ntefit)
+    # data.KG1LH_data.lid[chan].time = time_efit
+    dummy = data.KG1LH_data1.lid[chan].resample_signal("interp", time_efit)
+    data.KG1LH_data1.lid[chan].time = np.empty(ntime_efit)
 
     data.KG1LH_data1.lid[chan].data = dummy
-    data.KG1LH_data1.lid[chan].time = tefit
+    data.KG1LH_data1.lid[chan].time = time_efit
 
 
 
@@ -209,29 +209,29 @@ def map_kg1_efit(arg):
     chan = arg[1]
 
     if data.KG1_data.global_status[chan] >3:
-        logger.warning('channel data is not good - skipping!')
+        logger.warning('channel data is not good - skipping ch {}!'.format(chan))
         return (data,chan)
 
     if data.code.lower()=='kg1l':
-        ntefit = len(data.EFIT_data.rmag.time)
-        tefit = data.EFIT_data.rmag.time
+        ntime_efit = len(data.EFIT_data.rmag.time)
+        time_efit = data.EFIT_data.rmag.time
         data_efit = data.EFIT_data.rmag.data
         data.EFIT_data.sampling_time = np.mean(np.diff(data.EFIT_data.rmag.time))
 
     else:
-        ntefit = len(data.EFIT_data.rmag_fast.time)
-        tefit = data.EFIT_data.rmag_fast.time
+        ntime_efit = len(data.EFIT_data.rmag_fast.time)
+        time_efit = data.EFIT_data.rmag_fast.time
         data_efit = data.EFIT_data.rmag_fast.data
         data.EFIT_data.sampling_time = np.mean(np.diff(data.EFIT_data.rmag_fast.time))
 
-    density = np.zeros(ntefit)
+    density = np.zeros(ntime_efit)
     ntkg1v = len(data.KG1_data.density[chan].time)
     tkg1v = data.KG1_data.density[chan].time
     tsmo = data.KG1LH_data.tsmo
 
 
 
-    for it in range(0, ntefit):
+    for it in range(0, ntime_efit):
         # pdb.set_trace()
         sum = np.zeros(8)
 
@@ -246,14 +246,14 @@ def map_kg1_efit(arg):
         tkg1v = data.KG1_data.density[chan].time
 
         for jj in range(0, ntkg1v):
-            tdif = abs(tkg1v[jj] - tefit[it])
+            tdif = abs(tkg1v[jj] - time_efit[it])
 
             if (tdif < tmin):
                 tmin = tdif
                 jmin = jj
-            if (tkg1v[jj] >= tefit[it] + tsmo):
+            if (tkg1v[jj] >= time_efit[it] + tsmo):
                 break
-            if (tkg1v[jj] > tefit[it] - tsmo):
+            if (tkg1v[jj] > time_efit[it] - tsmo):
                 sum[chan - 1] = sum[chan - 1] + \
                                 data.KG1_data.density[chan].data[jj]
                 nsum = nsum + 1
@@ -269,10 +269,10 @@ def map_kg1_efit(arg):
 
     data.KG1LH_data.lid[chan] = SignalBase(data.constants)
     data.KG1LH_data.lid[chan].data = density
-    data.KG1LH_data.lid[chan].time = data.KG1_data.density[chan].time
-    # data.KG1LH_data.lid[chan].time = tefit
+    data.KG1LH_data.lid[chan].time = time_efit
+    # data.KG1LH_data.lid[chan].time = time_efit
     dummy = data.KG1LH_data.lid[chan].resample_signal("interp", time_efit)
-    data.KG1LH_data.lid[chan].time = np.empty(ntefit)
+    data.KG1LH_data.lid[chan].time = np.empty(ntime_efit)
 
     data.KG1LH_data.lid[chan].data = dummy
     data.KG1LH_data.lid[chan].time = time_efit
@@ -291,14 +291,14 @@ def time_loop(arg):
 
 
     if data.code.lower() == 'kg1l':
-        ntefit = len(data.EFIT_data.rmag.time)
+        ntime_efit = len(data.EFIT_data.rmag.time)
         data_efit = data.EFIT_data.rmag.data
         time_efit = data.EFIT_data.rmag.time
         data.EFIT_data.sampling_time = np.mean(
             np.diff(data.EFIT_data.rmag.time))
 
     else:
-        ntefit = len(data.EFIT_data.rmag_fast.time)
+        ntime_efit = len(data.EFIT_data.rmag_fast.time)
         data_efit = data.EFIT_data.rmag_fast.data
         time_efit = data.EFIT_data.rmag_fast.time
         data.EFIT_data.sampling_time = np.mean(
@@ -317,9 +317,9 @@ def time_loop(arg):
     # xtan = np.empty(len(data.KG1LH_data.lid[chan].time))
     # lad = np.empty(len(data.KG1LH_data.lid[chan].time))
 
-    length = np.zeros(ntefit)
-    xtan = np.zeros(ntefit)
-    lad = np.zeros(ntefit)
+    length = np.zeros(ntime_efit)
+    xtan = np.zeros(ntime_efit)
+    lad = np.zeros(ntime_efit)
 
     xpt = data.r_ref[chan - 1]
     ypt = data.z_ref[chan - 1]
@@ -332,7 +332,7 @@ def time_loop(arg):
 
 
 
-    for IT in range(0, ntefit):
+    for IT in range(0, ntime_efit):
         # pdb.set_trace()
         sum = np.zeros(8)
 
@@ -500,6 +500,7 @@ def time_loop(arg):
         # ----------------------------------------------------------------------
 
         NPSI = 1  # look for one surface
+        psimax 
         # nfound, r1, z1, r2, z2, r3, z3, r4, z4, ier = Flush_getIntersections(xpt,
         #                                                                      ypt,
         #                                                                      delta,
@@ -511,7 +512,7 @@ def time_loop(arg):
                                                                              angle,
                                                                              data.EPSF,
                                                                              NPSI,
-                                                                             fx[0])
+                                                                             psimax)
         if ier != 0:
             logger.warning('flush error {}  in Flush_getIntersections'.format(ier))
             # return ier
@@ -551,9 +552,9 @@ def time_loop(arg):
     data.KG1LH_data2.lid[chan] = SignalBase(data.constants)
     data.KG1LH_data2.lid[chan].data = density2
     data.KG1LH_data2.lid[chan].time = data.KG1_data.density[chan].time
-    # data.KG1LH_data.lid[chan].time = tefit
+    # data.KG1LH_data.lid[chan].time = time_efit
     dummy = data.KG1LH_data2.lid[chan].resample_signal("interp", time_efit)
-    data.KG1LH_data2.lid[chan].time = np.empty(ntefit)
+    data.KG1LH_data2.lid[chan].time = np.empty(ntime_efit)
 
     data.KG1LH_data2.lid[chan].data = dummy
     data.KG1LH_data2.lid[chan].time = time_efit
@@ -571,9 +572,9 @@ def time_loop(arg):
     data.KG1LH_data1.lid[chan] = SignalBase(data.constants)
     data.KG1LH_data1.lid[chan].data = density1
     data.KG1LH_data1.lid[chan].time = data.KG1_data.density[chan].time
-    # data.KG1LH_data.lid[chan].time = tefit
+    # data.KG1LH_data.lid[chan].time = time_efit
     dummy = data.KG1LH_data1.lid[chan].resample_signal("interp", time_efit)
-    data.KG1LH_data1.lid[chan].time = np.empty(ntefit)
+    data.KG1LH_data1.lid[chan].time = np.empty(ntime_efit)
 
     data.KG1LH_data1.lid[chan].data = dummy
     data.KG1LH_data1.lid[chan].time = time_efit
@@ -627,13 +628,13 @@ def compute_len_lad_xtan(arg):
 
 
     if data.code.lower()=='kg1l':
-        ntefit = len(data.EFIT_data.rmag.time)
+        ntime_efit = len(data.EFIT_data.rmag.time)
         data_efit = data.EFIT_data.rmag.data
         time_efit = data.EFIT_data.rmag.time
         data.EFIT_data.sampling_time = np.mean(np.diff(data.EFIT_data.rmag.time))
 
     else:
-        ntefit = len(data.EFIT_data.rmag_fast.time)
+        ntime_efit = len(data.EFIT_data.rmag_fast.time)
         data_efit = data.EFIT_data.rmag_fast.data
         time_efit = data.EFIT_data.rmag_fast.time
         data.EFIT_data.sampling_time = np.mean(np.diff(data.EFIT_data.rmag_fast.time))
@@ -651,14 +652,14 @@ def compute_len_lad_xtan(arg):
 
     density = data.KG1LH_data.lid[chan].data
 
-    plt.figure()
+#    plt.figure()
 
-    plot_point((data.r_ref[chan - 1], data.z_ref[chan - 1]),angle,
-               'LOS ch' + str(chan))
+#    plot_point((data.r_ref[chan - 1], data.z_ref[chan - 1]),angle,
+#              'LOS ch' + str(chan))
 
-    plt.legend(loc=0, prop={'size': 8})
+#    plt.legend(loc=0, prop={'size': 8})
 
-    for IT in range(0,ntefit):
+    for IT in range(0,ntime_efit):
         TIMEM = time_efit[IT]
         dtime = float(TIMEM)
 
@@ -670,12 +671,12 @@ def compute_len_lad_xtan(arg):
 
         logger.log(5, '************* Time = {}s'.format(TIMEM))
 
-        r, z, ier = Flush_getClosedFluxSurface(data.psim1, nPoints=360)
-        r[:] = [x / 100 for x in r]
-        z[:] = [x / 100 for x in z]
+#        r, z, ier = Flush_getClosedFluxSurface(data.psim1, nPoints=360)
+#        r[:] = [x / 100 for x in r]
+#        z[:] = [x / 100 for x in z]
         # flux, ier = Flush_getlcfsFlux()
         # logger.debug('lcfsFlux is {}'.format(flux))
-        plt.scatter(r,z,c='b')
+#        plt.scatter(r,z,c='b')
 
         # if ier != 0:
         #     logger.warning('flush error {} in Flush_getClosedFluxSurface'.format(ier))
@@ -803,7 +804,7 @@ def compute_len_lad_xtan(arg):
         nfound, r1, z1, r2, z2, r3, z3, r4, z4, ier = Flush_getIntersections(xpt,
                                                                              ypt,
                                                                              angle,
-                                                                             data.EPSDD,
+                                                                             data.EPSF,
                                                                              NPSI,
                                                                              1)
         if ier != 0:
@@ -1052,7 +1053,7 @@ def main(shot_no, code,read_uid, write_uid, test=False):
     # -------------------------------
     logging.info('reading line of sights')
     data.temp, data.r_ref, data.z_ref, data.a_ref, data.r_coord, data.z_coord, data.data_coord, data.coord_err =data.KG1_data.get_coord(data.pulse)
-    pdb.set_trace()
+    #pdb.set_trace()
 
     # logger.debug('r_coord {}'.format(data.r_ref))
     # logger.debug('z_coord {}'.format(data.z_ref))
@@ -1077,8 +1078,8 @@ def main(shot_no, code,read_uid, write_uid, test=False):
 
 
 
-    # test=True
-    test=False
+    test=True
+    #test=False
     if test:
     #
         logger.info('start mapping kg1v data onto efit time vector')
@@ -1088,9 +1089,12 @@ def main(shot_no, code,read_uid, write_uid, test=False):
         logger.info("--- {}s seconds ---".format((time.time() - start_time)))
         # pdb.set_trace()
         for i,r in enumerate(results):
-            data.KG1LH_data.lid[i+1] = SignalBase(data.constants)
-            data.KG1LH_data.lid[i+1].time = r[0].KG1LH_data.lid[r[1]].time
-            data.KG1LH_data.lid[i+1].data = r[0].KG1LH_data.lid[r[1]].data
+            if len(r[0].KG1LH_data.lid.keys()) != 0:
+                data.KG1LH_data.lid[i+1] = SignalBase(data.constants)
+                data.KG1LH_data.lid[i+1].time = r[0].KG1LH_data.lid[r[1]].time
+                data.KG1LH_data.lid[i+1].data = r[0].KG1LH_data.lid[r[1]].data
+            else:
+                continue
         #
         #
         logger.info('start mapping kg1v data onto efit time vector - using rolling mean')
@@ -1100,9 +1104,12 @@ def main(shot_no, code,read_uid, write_uid, test=False):
         logger.info("--- {}s seconds ---".format((time.time() - start_time)))
 
         for i,r in enumerate(results):
-            data.KG1LH_data1.lid[i+1] = SignalBase(data.constants)
-            data.KG1LH_data1.lid[i+1].time = r[0].KG1LH_data1.lid[r[1]].time
-            data.KG1LH_data1.lid[i+1].data = r[0].KG1LH_data1.lid[r[1]].data
+            if len(r[0].KG1LH_data1.lid.keys()) != 0:
+                data.KG1LH_data1.lid[i+1] = SignalBase(data.constants)
+                data.KG1LH_data1.lid[i+1].time = r[0].KG1LH_data1.lid[r[1]].time
+                data.KG1LH_data1.lid[i+1].data = r[0].KG1LH_data1.lid[r[1]].data
+            else:
+                continue
 
         logger.info('start mapping kg1v data onto efit time vector - using pandas rolling mean')
         start_time = time.time()
@@ -1112,9 +1119,12 @@ def main(shot_no, code,read_uid, write_uid, test=False):
         logger.info("--- {}s seconds ---".format((time.time() - start_time)))
 
         for i, r in enumerate(results):
-            data.KG1LH_data2.lid[i + 1] = SignalBase(data.constants)
-            data.KG1LH_data2.lid[i + 1].time = r[0].KG1LH_data2.lid[r[1]].time
-            data.KG1LH_data2.lid[i + 1].data = r[0].KG1LH_data2.lid[r[1]].data
+            if len(r[0].KG1LH_data.lid.keys()) != 0:
+                data.KG1LH_data2.lid[i + 1] = SignalBase(data.constants)
+                data.KG1LH_data2.lid[i + 1].time = r[0].KG1LH_data2.lid[r[1]].time
+                data.KG1LH_data2.lid[i + 1].data = r[0].KG1LH_data2.lid[r[1]].data
+            else:
+                continue
 
         logger.info("\n             dumping data to pickle.\n")
         with open('./test_data.pkl', 'wb') as f:
@@ -1194,7 +1204,7 @@ def main(shot_no, code,read_uid, write_uid, test=False):
     linewidth = 0.5
     markersize = 1
 
-    # pdb.set_trace()
+    pdb.set_trace()
 
 
 
