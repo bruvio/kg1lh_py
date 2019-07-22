@@ -8,7 +8,7 @@ Class that runs CORMAT_py GUI
 __author__ = "Bruno Viola"
 __Name__ = "KG1L_py"
 __version__ = "0.0"
-__release__ = "0.3"
+__release__ = "0.4"
 __maintainer__ = "Bruno Viola"
 __email__ = "bruno.viola@ukaea.uk"
 __status__ = "Testing"
@@ -98,18 +98,32 @@ def time_loop(arg):
         logger.warning('channel data is not good - skipping ch. {}!'.format(chan))
         return (data,chan)
 
-
-    if data.code.lower() == 'kg1l':
-        ntefit = len(data.EFIT_data.rmag.time)
+    if data.code.lower()=='kg1l':
+        ntime_efit = len(data.EFIT_data.rmag.time)
         time_efit = data.EFIT_data.rmag.time
-        data.EFIT_data.sampling_time = np.mean(
-            np.diff(data.EFIT_data.rmag.time))
+        data_efit = data.EFIT_data.rmag.data
+        ntefit = len(time_efit)
+        data.EFIT_data.sampling_time = np.mean(np.diff(data.EFIT_data.rmag.time))
+        ntkg1v = len(data.KG1_data.density[chan].time)
+        tkg1v = data.KG1_data.density[chan].time
+        sampling_time_kg1v = np.mean(np.diff(tkg1v))
+        tsmo = data.KG1LH_data.tsmo
+        rolling_mean = int(round(tsmo/sampling_time_kg1v))
 
     else:
-        ntefit = len(data.EFIT_data.rmag_fast.time)
+        ntime_efit = len(data.EFIT_data.rmag_fast.time)
         time_efit = data.EFIT_data.rmag_fast.time
-        data.EFIT_data.sampling_time = np.mean(
-            np.diff(data.EFIT_data.rmag_fast.time))
+        data_efit = data.EFIT_data.rmag_fast.data
+        ntefit=len(time_efit)
+        data.EFIT_data.sampling_time = np.mean(np.diff(data.EFIT_data.rmag_fast.time))
+        ntkg1v = len(data.KG1_data.density[chan].time)
+        tkg1v = data.KG1_data.density[chan].time
+        sampling_time_kg1v = np.mean(np.diff(tkg1v))
+        tsmo = data.KG1LH_data.tsmo
+        rolling_mean = int(round(sampling_time_kg1v / tsmo))
+        data.EPSF = data.EPSF/100
+        data.EPSDD = data.EPSDD/100
+
 
 
 
@@ -156,7 +170,7 @@ def time_loop(arg):
         # in principle they can be different (?!)
         ntkg1v = len(data.KG1_data.density[chan].time)
         tkg1v = data.KG1_data.density[chan].time
-        logger.debug('map kg1v data onto efit time vector (Fortran algorithm)\n')
+        logger.log(5,'map kg1v data onto efit time vector (Fortran algorithm)\n')
 
         for jj in range(0, ntkg1v):
             tdif = abs(tkg1v[jj] - time_efit[IT])
@@ -182,7 +196,7 @@ def time_loop(arg):
 
 
 
-        logger.debug('computing lad/len/xtan \n')
+        logger.log(5,'computing lad/len/xtan \n')
 
         dtime = float(TIMEM)
 
@@ -300,7 +314,7 @@ def time_loop(arg):
         if cord < 0:
             cord = abs(cord)
         length[IT] = cord / 100.0  # conversion from cm to m
-        logger.debug('cord length for channel {} is {}'.format(chan, length[IT]))
+        logger.log(5,'cord length for channel {} is {}'.format(chan, length[IT]))
         # length[IT] = cord # conversion from cm to m
         if (length[IT] > 0.0):
             lad[IT] = density[IT] / length[IT]
@@ -309,13 +323,12 @@ def time_loop(arg):
 
         xtan[IT] = fTan1
 
-    logger.debug('map kg1v data onto efit time vector (Pandas rolling mean algorithm)\n')
+
+
+    logger.log(5,'map kg1v data onto efit time vector (Pandas rolling mean algorithm)\n')
 
 
 
-    sampling_time_kg1v = np.mean(np.diff(tkg1v))
-
-    rolling_mean=int(round(tsmo/sampling_time_kg1v))
 
     density2 = pd.Series(data.KG1_data.density[chan].data).rolling(
         window=rolling_mean).mean()
@@ -330,10 +343,10 @@ def time_loop(arg):
     data.KG1LH_data2.lid[chan].data = dummy
     data.KG1LH_data2.lid[chan].time = time_efit
 
-    logger.debug(
+    logger.log(5,
         'map kg1v data onto efit time vector (rolling mean algorithm)\n')
 
-    rolling_mean=int(round(tsmo/sampling_time_kg1v))
+
 
     # cumsum_vec = np.cumsum(np.insert(data.KG1_data.density[chan].data, 0, 0))
     # density = (cumsum_vec[rolling_mean:] - cumsum_vec[:-rolling_mean]) / rolling_mean
@@ -389,7 +402,7 @@ def time_loop(arg):
 
 
 
-def main(shot_no, code,read_uid, write_uid, test=False):
+def main(shot_no, code,read_uid, write_uid, number_of_channels,test=False):
     '''
     Program to calculate the line averaged density for all channels of
     C kg1v. Other outputs are the tangent flux surface
@@ -407,16 +420,16 @@ def main(shot_no, code,read_uid, write_uid, test=False):
 
     data = SimpleNamespace()
     data.pulse = shot_no
-    channels=np.arange(0, 8) + 1
+    channels=np.arange(0, number_of_channels) + 1
 
     # C-----------------------------------------------------------------------
     # C constants
     # C-----------------------------------------------------------------------
 
     data.psim1 = 1.00
-    data.EPSDD = 0.1                           # accuracy for flul1
-    data.EPSF = 0.00001  # value recommended in FLUSH documentation
-    #this two values have been copied from the fortran code (not tested what happens when accuracies change)
+    data.EPSDD = 0.1                           # accuracy for gettangents
+    data.EPSF = 0.00001                         # accuracy for getIntersections
+    #this two values have been copied from the fortran code
 
     # C-----------------------------------------------------------------------
     # C set smoothing time
@@ -427,7 +440,7 @@ def main(shot_no, code,read_uid, write_uid, test=False):
         tsmo = 0.025
     else:
         tsmo = 1.0e-4
-#this two values have been copied from the fortran code (not tested what happens when accuracies change)
+#this two values have been copied from the fortran code
 
     # ----------------------------
     #
@@ -477,7 +490,7 @@ def main(shot_no, code,read_uid, write_uid, test=False):
     # -------------------------------
     logger.info(" Reading in constants. \n")
     # test_logger()
-    # raise SystemExit
+
 
     try:
         data.constants = Consts("consts.ini", __version__)
@@ -659,16 +672,17 @@ def main(shot_no, code,read_uid, write_uid, test=False):
     #plot=False
 
     if plot:
+        dda = data.code.upper()
         for chan in channels:
             if chan in data.KG1LH_data.lid.keys():
 
             #loading JETPPF data to use for comparison
 
                 kg1v_lid3, dummy = getdata(shot_no, 'KG1V', 'LID' + str(chan))
-                kg1l_lid3, dummy = getdata(shot_no, 'KG1l', 'LID'+str(chan))
-                kg1l_lad3, dummy = getdata(shot_no, 'KG1l', 'LAD'+str(chan))
-                kg1l_len3, dummy = getdata(shot_no, 'KG1l', 'LEN'+str(chan))
-                kg1l_xtan3, dummy = getdata(shot_no, 'KG1l', 'xta'+str(chan))
+                kg1l_lid3, dummy = getdata(shot_no, dda, 'LID'+str(chan))
+                kg1l_lad3, dummy = getdata(shot_no, dda, 'LAD'+str(chan))
+                kg1l_len3, dummy = getdata(shot_no, dda, 'LEN'+str(chan))
+                kg1l_xtan3, dummy = getdata(shot_no, dda, 'xta'+str(chan))
 
 
                 plt.figure()
@@ -677,13 +691,13 @@ def main(shot_no, code,read_uid, write_uid, test=False):
                 plt.plot(kg1l_lid3['time'],kg1l_lid3['data'],label='lid_jetppf')
                 plt.plot(kg1v_lid3['time'],kg1v_lid3['data'],label='KG1V_lid_jetppf')
                 plt.plot(data.KG1LH_data.lid[chan].time, data.KG1LH_data.lid[chan].data,
-                         label='kg1l_lid_original_MT', marker='o', linestyle='-.',
+                         label=dda+'_lid_original_MT', marker='o', linestyle='-.',
                          linewidth=linewidth,
                          markersize=markersize)
-                plt.plot(data.KG1LH_data1.lid[chan].time, data.KG1LH_data1.lid[chan].data,label='kg1l_lid_rollingmean_MT', marker = 'v', linestyle=':', linewidth=linewidth,
+                plt.plot(data.KG1LH_data1.lid[chan].time, data.KG1LH_data1.lid[chan].data,label=dda+'_lid_rollingmean_MT', marker = 'v', linestyle=':', linewidth=linewidth,
                                          markersize=markersize)
 
-                plt.plot(data.KG1LH_data2.lid[chan].time, data.KG1LH_data2.lid[chan].data,label='kg1l_lid_rollingmean_pandas_MT', marker = 'p', linestyle=':', linewidth=linewidth,
+                plt.plot(data.KG1LH_data2.lid[chan].time, data.KG1LH_data2.lid[chan].data,label=dda+'_lid_rollingmean_pandas_MT', marker = 'p', linestyle=':', linewidth=linewidth,
                                          markersize=markersize)
                 plt.legend(loc=0, prop={'size': 8})
                 #
@@ -692,7 +706,7 @@ def main(shot_no, code,read_uid, write_uid, test=False):
                 plt.subplot(4, 1, 2)
                 plt.plot(kg1l_lad3['time'], kg1l_lad3['data'], label='lad_jetppf')
                 plt.plot(data.KG1LH_data.lad[chan].time, data.KG1LH_data.lad[chan].data,
-                         label='kg1l_lad_original_MT', marker='x', linestyle='-.',
+                         label=dda+'_lad_original_MT', marker='x', linestyle='-.',
                          linewidth=linewidth,
                          markersize=markersize)
                 plt.legend(loc=0, prop={'size': 8})
@@ -702,7 +716,7 @@ def main(shot_no, code,read_uid, write_uid, test=False):
                 plt.subplot(4, 1, 3)
                 plt.plot(kg1l_xtan3['time'],kg1l_xtan3['data'],label='xtan_jetppf')
                 plt.plot(data.KG1LH_data.xta[chan].time, data.KG1LH_data.xta[chan].data,
-                         label='kg1l_xtan_original_MT', marker='o', linestyle='-.',
+                         label=dda+'_xtan_original_MT', marker='o', linestyle='-.',
                          linewidth=linewidth,
                          markersize=markersize)
 
@@ -712,7 +726,7 @@ def main(shot_no, code,read_uid, write_uid, test=False):
                 plt.subplot(4, 1, 4)
                 plt.plot(kg1l_len3['time'], kg1l_len3['data'], label='len_jetppf')
                 plt.plot(data.KG1LH_data.len[chan].time, data.KG1LH_data.len[chan].data,
-                         label='kg1l_len_original_MT', marker='x', linestyle='-.',
+                         label=dda+'_len_original_MT', marker='x', linestyle='-.',
                          linewidth=linewidth,
                          markersize=markersize)
                 plt.legend(loc=0, prop={'size': 8})
@@ -727,22 +741,13 @@ def main(shot_no, code,read_uid, write_uid, test=False):
     if plot:
         plt.show(block=True)
 
-#    with open('./data.pkl', 'wb') as f:
-#            pickle.dump(
-#                [data], f)
-#    f.close()
 
-
-
-#    with open('./data.pkl','rb') as f:  # Python 3: open(..., 'rb')
-#        [data] = pickle.load(f)
-#    f.close()	
     # -------------------------------
     # 7. writing PPFs
     #pdb.set_trace()
     # -------------------------------
 
-    # logging.info('start writing PPFs')
+    logging.info('start writing PPFs')
     if (write_uid != "" and not test) or (test and write_uid.upper() != "JETPPF" and write_uid != ""):
         logger.info("\n             Writing PPF with UID {}".format(write_uid))
 
@@ -937,9 +942,13 @@ if __name__ == "__main__":
     parser.add_argument("-d", "--debug", type=int,
                         help="Debug level. 0: Error, 1: Warning, 2: Info, 3: Debug, 4: Debug Plus",
                         default=2)
+    parser.add_argument("-ch", "--number_of_channels", type=int,
+                        help="Number of channels to process",
+                        default=8)
     parser.add_argument("-t", "--test",
                         help="""Run in test mode. In this mode code will run and if -uw=JETPPF then no PPF will be written, to avoid
                             over-writing validated data.""", default=False)
+
 
 
     args = parser.parse_args(sys.argv[1:])
@@ -956,15 +965,11 @@ if __name__ == "__main__":
     logging.addLevelName(5, "DEBUG_PLUS")
 
     logger = logging.getLogger(__name__)
-    # logging.basicConfig(
-    #     # format='%(asctime)s,%(msecs)d %(levelname)-8s [%(filename)s:%(lineno)d] %(message)s',
-    #     format='%(levelname)-8s [%(filename)s:%(lineno)d] %(message)s',
-    #     # datefmt='%d-%m-%Y:%H:%M:%S',
-    #     level=logging.DEBUG)
+
     if args.uid_write == "":
         logger.warning("No write UID was given: no PPF will be written.")
 
 
 
     # Call the main code
-    main(args.pulse, args.code,args.uid_read, args.uid_write, test=args.test)
+    main(args.pulse, args.code,args.uid_read, args.uid_write, args.number_of_channels, args.test)
