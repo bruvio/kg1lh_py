@@ -8,7 +8,7 @@ Class that runs CORMAT_py GUI
 __author__ = "Bruno Viola"
 __Name__ = "KG1L_py"
 __version__ = "0.0"
-__release__ = "0.4"
+__release__ = "0.5"
 __maintainer__ = "Bruno Viola"
 __email__ = "bruno.viola@ukaea.uk"
 __status__ = "Testing"
@@ -583,7 +583,7 @@ def time_loop(arg):
 
 
 
-def main(shot_no, code,read_uid, write_uid, number_of_channels,test=False):
+def main(shot_no, code,read_uid, write_uid, number_of_channels,algorithm,test=False):
     '''
     Program to calculate the line averaged density for all channels of
     C kg1v. Other outputs are the tangent flux surface
@@ -798,49 +798,52 @@ def main(shot_no, code,read_uid, write_uid, number_of_channels,test=False):
         # 4. mapping kg1v data onto efit time vector
         # pdb.set_trace()
         # -------------------------------
-    # logger.info('start mapping kg1v data onto efit time vector')
-    # start_time = time.time()
-    # with Pool(10) as pool:
-    #     results = pool.map(map_kg1_efit, [(data, chan) for chan in channels])
-    # logger.info("--- {}s seconds ---".format((time.time() - start_time)))
-    # # pdb.set_trace()
-    # for i,r in enumerate(results):
-    #     if len(r[0].KG1LH_data.lid.keys()) != 0:
-    #         data.KG1LH_data.lid[i+1] = SignalBase(data.constants)
-    #         data.KG1LH_data.lid[i+1].time = r[0].KG1LH_data.lid[r[1]].time
-    #         data.KG1LH_data.lid[i+1].data = r[0].KG1LH_data.lid[r[1]].data
-    #     else:
-    #         continue
+    if algorithm.lower() =='fortran':
+        logger.info('start mapping kg1v data onto efit time vector')
+        start_time = time.time()
+        with Pool(10) as pool:
+            results = pool.map(map_kg1_efit, [(data, chan) for chan in channels])
+        logger.info("--- {}s seconds ---".format((time.time() - start_time)))
+        # pdb.set_trace()
+        for i,r in enumerate(results):
+            if len(r[0].KG1LH_data.lid.keys()) != 0:
+                data.KG1LH_data.lid[i+1] = SignalBase(data.constants)
+                data.KG1LH_data.lid[i+1].time = r[0].KG1LH_data.lid[r[1]].time
+                data.KG1LH_data.lid[i+1].data = r[0].KG1LH_data.lid[r[1]].data
+            else:
+                continue
     #
     #
-    logger.info('start mapping kg1v data onto efit time vector - using rolling mean')
-    start_time = time.time()
-    with Pool(10) as pool:
-        results = pool.map(map_kg1_efit_RM, [(data, chan) for chan in channels])
-    logger.info("--- {}s seconds ---".format((time.time() - start_time)))
+    elif algorithm.lower()=='rolling_mean':
+        logger.info('start mapping kg1v data onto efit time vector - using rolling mean')
+        start_time = time.time()
+        with Pool(10) as pool:
+            results = pool.map(map_kg1_efit_RM, [(data, chan) for chan in channels])
+        logger.info("--- {}s seconds ---".format((time.time() - start_time)))
 
-    for i,r in enumerate(results):
-        if len(r[0].KG1LH_data.lid.keys()) != 0:
-            data.KG1LH_data.lid[i+1] = SignalBase(data.constants)
-            data.KG1LH_data.lid[i+1].time = r[0].KG1LH_data.lid[r[1]].time
-            data.KG1LH_data.lid[i+1].data = r[0].KG1LH_data.lid[r[1]].data
-        else:
-            continue
+        for i,r in enumerate(results):
+            if len(r[0].KG1LH_data.lid.keys()) != 0:
+                data.KG1LH_data.lid[i+1] = SignalBase(data.constants)
+                data.KG1LH_data.lid[i+1].time = r[0].KG1LH_data.lid[r[1]].time
+                data.KG1LH_data.lid[i+1].data = r[0].KG1LH_data.lid[r[1]].data
+            else:
+                continue
+    elif algorithm.lower()=='rolling_mean_pandas':
 
-    # logger.info('start mapping kg1v data onto efit time vector - using pandas rolling mean')
-    # start_time = time.time()
-    # with Pool(10) as pool:
-    #     results = pool.map(map_kg1_efit_RM_pandas,
-    #                        [(data, chan) for chan in channels])
-    # logger.info("--- {}s seconds ---".format((time.time() - start_time)))
-    #
-    # for i, r in enumerate(results):
-    #     if len(r[0].KG1LH_data.lid.keys()) != 0:
-    #         data.KG1LH_data.lid[i + 1] = SignalBase(data.constants)
-    #         data.KG1LH_data.lid[i + 1].time = r[0].KG1LH_data.lid[r[1]].time
-    #         data.KG1LH_data.lid[i + 1].data = r[0].KG1LH_data.lid[r[1]].data
-    #     else:
-    #         continue
+        logger.info('start mapping kg1v data onto efit time vector - using pandas rolling mean')
+        start_time = time.time()
+        with Pool(10) as pool:
+            results = pool.map(map_kg1_efit_RM_pandas,
+                               [(data, chan) for chan in channels])
+        logger.info("--- {}s seconds ---".format((time.time() - start_time)))
+
+        for i, r in enumerate(results):
+            if len(r[0].KG1LH_data.lid.keys()) != 0:
+                data.KG1LH_data.lid[i + 1] = SignalBase(data.constants)
+                data.KG1LH_data.lid[i + 1].time = r[0].KG1LH_data.lid[r[1]].time
+                data.KG1LH_data.lid[i + 1].data = r[0].KG1LH_data.lid[r[1]].data
+            else:
+                continue
 
 
 #################################################
@@ -923,6 +926,8 @@ def main(shot_no, code,read_uid, write_uid, number_of_channels,test=False):
     #plot=False
 
     if plot:
+        logging.info('plotting data and comparison with Fortran code')
+        # logging.info('plotting data')
         dda = data.code.upper()
         for chan in channels:
             if chan in data.KG1LH_data.lid.keys():
@@ -1193,6 +1198,9 @@ if __name__ == "__main__":
     parser.add_argument("-ch", "--number_of_channels", type=int,
                         help="Number of channels to process",
                         default=8)
+    parser.add_argument("-a", "--algorithm",
+                        help="algorithm to be used to filter kg1 lid",
+                        default='rolling_mean')
     parser.add_argument("-t", "--test",
                         help="""Run in test mode. In this mode code will run and if -uw=JETPPF then no PPF will be written, to avoid
                             over-writing validated data.""", default=False)
@@ -1220,4 +1228,4 @@ if __name__ == "__main__":
 
 
     # Call the main code
-    main(args.pulse, args.code,args.uid_read, args.uid_write, args.number_of_channels, args.test)
+    main(args.pulse, args.code,args.uid_read, args.uid_write, args.number_of_channels,args.algorithm, args.test)
