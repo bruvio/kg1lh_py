@@ -10,7 +10,7 @@ shot,user,date,seq
 
 import logging
 import pickle
-
+import pdb
 from ppf import ppfgo, ppfuid, ppfopn, pdstd
 from ppf import ppfwri_ihdat, ppfwri_irdat, ppfwri
 from ppf import ppfwri_tbsf_ref_set, ppfwri_tbsf_set
@@ -104,7 +104,7 @@ def write_ppf(shot_no, dda, dtype, data, time=None,
 
     if nt is None:
         nt = len(time)
-
+    	
     if len(data) != nt:
         logger.error("Could not write {}/{}: data and time vectors are different lengths".format(dda, dtype))
         return 1, -1
@@ -114,12 +114,12 @@ def write_ppf(shot_no, dda, dtype, data, time=None,
     logger.log(5, ( "Using itref {}".format(itref)))
 
     data_type = 'F'
-    if (data.dtype == 'int32' or data.dtype == 'int64'):
-        data_type = 'I'
+#    if (data.dtype == 'int32' or data.dtype == 'int64'):
+#        data_type = 'I'
 
     time_type = 'F'
-    if (time.dtype == 'int32' or  data.dtype == 'int64'):
-        time_type = 'I'
+#    if (time.dtype == 'int32' or  data.dtype == 'int64'):
+#        time_type = 'I'
 
     if global_status is None:
         global_status = 0

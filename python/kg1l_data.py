@@ -19,7 +19,7 @@ __author__ = "B. VIOLA"
 # ----------------------------
 
 
-class KG1LData:
+class KG1LData(SignalBase):
 
     # ------------------------
     def __init__(self, constants):
@@ -35,8 +35,8 @@ class KG1LData:
         self.len = {}
         self.xta = {}
         self.tsmo = None
+        self.type = {}
 
 
 
         # ------------------------
-

@@ -19,7 +19,7 @@ __author__ = "B. VIOLA"
 # ----------------------------
 
 
-class EFITData:
+class EFITData(SignalBase):
 
     # ------------------------
     def __init__(self, constants):
@@ -61,6 +61,7 @@ class EFITData:
             self.rmag = efit_signal
         else:
             logger.error('no EFIT/RMAG data!')
+            return 30
 
 
         node_name = self.constants.efit_fast
@@ -78,3 +79,5 @@ class EFITData:
             self.rmag_fast = efit_signal
         else:
             logger.error('no EHTR/RMAG data!')
+            return 30
+        return 0

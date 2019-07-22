@@ -1,3 +1,6 @@
+import math
+import numpy as np
+import matplotlib.pyplot as plt
 from multiprocessing.pool import ThreadPool
 from threading import Thread
 from ppf import *
@@ -109,6 +112,35 @@ def subplottimedata(*args):
 
 import inspect
 
+
+def plot_point(point, angle, length,label):
+    '''
+    point - Tuple (x, y)
+    angle - Angle you want your end point at in degrees.
+    length - Length of the line you want to plot.
+
+    Will plot the line on a 10 x 10 plot.
+    '''
+
+    # unpack the first point
+    x, y = point
+
+    # find the end point
+    # endy = length * math.sin(math.radians(angle))
+    endy = -length * math.sin(math.degrees(angle))
+    # endx = length * math.cos(math.radians(angle))
+    endx = -length * math.cos(math.degrees(angle))
+
+    # plot the points
+    # fig = plt.figure()
+    # ax = plt.subplot(111)
+    # ax.set_ylim([0, 10])  # set the bounds to be 10, 10
+    # ax.set_xlim([0, 10])
+    # plt.plot([x, endx], [y, endy],label=label)
+    plt.plot([endx, x], [endy, y],label=label)
+
+
+    # fig.show()
 
 def retrieve_name(var):
         """
