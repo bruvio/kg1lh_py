@@ -125,15 +125,15 @@ def map_kg1_efit_RM_pandas(arg):
 
 
 
-    data.KG1LH_data2.lid[chan] = SignalBase(data.constants)
-    data.KG1LH_data2.lid[chan].data = density2
-    data.KG1LH_data2.lid[chan].time = data.KG1_data.density[chan].time
-    dummy = data.KG1LH_data2.lid[chan].resample_signal("interp", time_efit)
-    data.KG1LH_data2.lid[chan].data = np.empty(ntime_efit)
-    data.KG1LH_data2.lid[chan].time = np.empty(ntime_efit)
+    data.KG1LH_data.lid[chan] = SignalBase(data.constants)
+    data.KG1LH_data.lid[chan].data = density2
+    data.KG1LH_data.lid[chan].time = data.KG1_data.density[chan].time
+    dummy = data.KG1LH_data.lid[chan].resample_signal("interp", time_efit)
+    data.KG1LH_data.lid[chan].data = np.empty(ntime_efit)
+    data.KG1LH_data.lid[chan].time = np.empty(ntime_efit)
 
-    data.KG1LH_data2.lid[chan].data = dummy
-    data.KG1LH_data2.lid[chan].time = time_efit
+    data.KG1LH_data.lid[chan].data = dummy
+    data.KG1LH_data.lid[chan].time = time_efit
 
 
 
@@ -182,15 +182,15 @@ def map_kg1_efit_RM(arg):
     density_cms = (cumsum_vec[rolling_mean:] - cumsum_vec[:-rolling_mean]) / rolling_mean
     density1 = movingaverage(data.KG1_data.density[chan].data, rolling_mean)
 
-    data.KG1LH_data1.lid[chan] = SignalBase(data.constants)
-    data.KG1LH_data1.lid[chan].data = density1
-    data.KG1LH_data1.lid[chan].time = data.KG1_data.density[chan].time
+    data.KG1LH_data.lid[chan] = SignalBase(data.constants)
+    data.KG1LH_data.lid[chan].data = density1
+    data.KG1LH_data.lid[chan].time = data.KG1_data.density[chan].time
     # data.KG1LH_data.lid[chan].time = time_efit
-    dummy = data.KG1LH_data1.lid[chan].resample_signal("interp", time_efit)
-    data.KG1LH_data1.lid[chan].time = np.empty(ntime_efit)
+    dummy = data.KG1LH_data.lid[chan].resample_signal("interp", time_efit)
+    data.KG1LH_data.lid[chan].time = np.empty(ntime_efit)
 
-    data.KG1LH_data1.lid[chan].data = dummy
-    data.KG1LH_data1.lid[chan].time = time_efit
+    data.KG1LH_data.lid[chan].data = dummy
+    data.KG1LH_data.lid[chan].time = time_efit
 
 
 
@@ -1078,83 +1078,94 @@ def main(shot_no, code,read_uid, write_uid, test=False):
 
 
 
-    test=True
-    #test=False
-    if test:
+    # test=True
+    # test=False
+    # if test:
+    # #
+    #     # logger.info('start mapping kg1v data onto efit time vector')
+    #     # start_time = time.time()
+    #     # with Pool(10) as pool:
+    #     #     results = pool.map(map_kg1_efit, [(data, chan) for chan in channels])
+    #     # logger.info("--- {}s seconds ---".format((time.time() - start_time)))
+    #     # # pdb.set_trace()
+    #     # for i,r in enumerate(results):
+    #     #     if len(r[0].KG1LH_data.lid.keys()) != 0:
+    #     #         data.KG1LH_data.lid[i+1] = SignalBase(data.constants)
+    #     #         data.KG1LH_data.lid[i+1].time = r[0].KG1LH_data.lid[r[1]].time
+    #     #         data.KG1LH_data.lid[i+1].data = r[0].KG1LH_data.lid[r[1]].data
+    #     #     else:
+    #     #         continue
+    #     #
+    #     #
+    #     logger.info('start mapping kg1v data onto efit time vector - using rolling mean')
+    #     start_time = time.time()
+    #     with Pool(10) as pool:
+    #         results = pool.map(map_kg1_efit_RM, [(data, chan) for chan in channels])
+    #     logger.info("--- {}s seconds ---".format((time.time() - start_time)))
     #
-        logger.info('start mapping kg1v data onto efit time vector')
-        start_time = time.time()
-        with Pool(10) as pool:
-            results = pool.map(map_kg1_efit, [(data, chan) for chan in channels])
-        logger.info("--- {}s seconds ---".format((time.time() - start_time)))
-        # pdb.set_trace()
-        for i,r in enumerate(results):
-            if len(r[0].KG1LH_data.lid.keys()) != 0:
-                data.KG1LH_data.lid[i+1] = SignalBase(data.constants)
-                data.KG1LH_data.lid[i+1].time = r[0].KG1LH_data.lid[r[1]].time
-                data.KG1LH_data.lid[i+1].data = r[0].KG1LH_data.lid[r[1]].data
-            else:
-                continue
-        #
-        #
-        logger.info('start mapping kg1v data onto efit time vector - using rolling mean')
-        start_time = time.time()
-        with Pool(10) as pool:
-            results = pool.map(map_kg1_efit_RM, [(data, chan) for chan in channels])
-        logger.info("--- {}s seconds ---".format((time.time() - start_time)))
+    #     for i,r in enumerate(results):
+    #         if len(r[0].KG1LH_data1.lid.keys()) != 0:
+    #             data.KG1LH_data.lid[i+1] = SignalBase(data.constants)
+    #             data.KG1LH_data.lid[i+1].time = r[0].KG1LH_data1.lid[r[1]].time
+    #             data.KG1LH_data.lid[i+1].data = r[0].KG1LH_data1.lid[r[1]].data
+    #         else:
+    #             continue
+    #
+    #     # logger.info('start mapping kg1v data onto efit time vector - using pandas rolling mean')
+    #     # start_time = time.time()
+    #     # with Pool(10) as pool:
+    #     #     results = pool.map(map_kg1_efit_RM_pandas,
+    #     #                        [(data, chan) for chan in channels])
+    #     # logger.info("--- {}s seconds ---".format((time.time() - start_time)))
+    #     #
+    #     # for i, r in enumerate(results):
+    #     #     if len(r[0].KG1LH_data.lid.keys()) != 0:
+    #     #         data.KG1LH_data2.lid[i + 1] = SignalBase(data.constants)
+    #     #         data.KG1LH_data2.lid[i + 1].time = r[0].KG1LH_data2.lid[r[1]].time
+    #     #         data.KG1LH_data2.lid[i + 1].data = r[0].KG1LH_data2.lid[r[1]].data
+    #     #     else:
+    #     #         continue
+    #
+    #     logger.info("\n             dumping data to pickle.\n")
+    #     with open('./test_data.pkl', 'wb') as f:
+    #         pickle.dump(
+    #             [data.EFIT_data, data.KG1_data,
+    #              data.KG1LH_data,data.KG1LH_data1,data.KG1LH_data2], f)
+    #     f.close()
+    # else:
+    #     logger.info("\n             loading data from pickle.\n")
+    #     with open('./test_data.pkl',
+    #               # with open('./test_data_kg1l.pkl',
+    #               # with open('./test_data_kg1l_cm.pkl',
+    #               'rb') as f:
+    #         [data.EFIT_data, data.KG1_data,
+    #          data.KG1LH_data, data.KG1LH_data1, data.KG1LH_data2] = pickle.load(
+    #             f)
+    #     f.close()
 
-        for i,r in enumerate(results):
-            if len(r[0].KG1LH_data1.lid.keys()) != 0:
-                data.KG1LH_data1.lid[i+1] = SignalBase(data.constants)
-                data.KG1LH_data1.lid[i+1].time = r[0].KG1LH_data1.lid[r[1]].time
-                data.KG1LH_data1.lid[i+1].data = r[0].KG1LH_data1.lid[r[1]].data
-            else:
-                continue
 
-        logger.info('start mapping kg1v data onto efit time vector - using pandas rolling mean')
-        start_time = time.time()
-        with Pool(10) as pool:
-            results = pool.map(map_kg1_efit_RM_pandas,
-                               [(data, chan) for chan in channels])
-        logger.info("--- {}s seconds ---".format((time.time() - start_time)))
 
-        for i, r in enumerate(results):
-            if len(r[0].KG1LH_data.lid.keys()) != 0:
-                data.KG1LH_data2.lid[i + 1] = SignalBase(data.constants)
-                data.KG1LH_data2.lid[i + 1].time = r[0].KG1LH_data2.lid[r[1]].time
-                data.KG1LH_data2.lid[i + 1].data = r[0].KG1LH_data2.lid[r[1]].data
-            else:
-                continue
 
-        logger.info("\n             dumping data to pickle.\n")
-        with open('./test_data.pkl', 'wb') as f:
-            pickle.dump(
-                [data.EFIT_data, data.KG1_data,
-                 data.KG1LH_data,data.KG1LH_data1,data.KG1LH_data2], f)
-        f.close()
-    else:
-        logger.info("\n             loading data from pickle.\n")
-        with open('./test_data.pkl',
-                  # with open('./test_data_kg1l.pkl',
-                  # with open('./test_data_kg1l_cm.pkl',
-                  'rb') as f:
-            [data.EFIT_data, data.KG1_data,
-             data.KG1LH_data, data.KG1LH_data1, data.KG1LH_data2] = pickle.load(
-                f)
-        f.close()
+    chan = 3
+    logger.info(
+        'start mapping kg1v data onto efit time vector - using rolling mean')
+
+    start_time = time.time()
+    map_kg1_efit_RM((data,chan))
+    logger.info("--- {}s seconds ---".format((time.time() - start_time)))
 
 
     # -------------------------------
     # 5. start time loop
     # -------------------------------
-    # pdb.set_trace()
+    pdb.set_trace()
 
     chan = 3
     logger.info('start time loop for chan. {}'.format(chan))
     start_time = time.time()
     compute_len_lad_xtan((data,chan))
     logger.info("--- {}s seconds ---".format((time.time() - start_time)))
-    plt.show()
+
     #
     # pdb.set_trace()
     # logger.info('start time loop')
@@ -1204,7 +1215,7 @@ def main(shot_no, code,read_uid, write_uid, test=False):
     linewidth = 0.5
     markersize = 1
 
-    pdb.set_trace()
+    # pdb.set_trace()
 
 
 
@@ -1235,11 +1246,11 @@ def main(shot_no, code,read_uid, write_uid, test=False):
                  label='kg1l_lid_original_MT', marker='o', linestyle='-.',
                  linewidth=linewidth,
                  markersize=markersize)
-        plt.plot(data.KG1LH_data1.lid[chan].time, data.KG1LH_data1.lid[chan].data,label='kg1l_lid_rollingmean_MT', marker = 'v', linestyle=':', linewidth=linewidth,
-                                 markersize=markersize)
-
-        plt.plot(data.KG1LH_data2.lid[chan].time, data.KG1LH_data2.lid[chan].data,label='kg1l_lid_rollingmean_pandas_MT', marker = 'p', linestyle=':', linewidth=linewidth,
-                                 markersize=markersize)
+        # plt.plot(data.KG1LH_data1.lid[chan].time, data.KG1LH_data1.lid[chan].data,label='kg1l_lid_rollingmean_MT', marker = 'v', linestyle=':', linewidth=linewidth,
+        #                          markersize=markersize)
+        #
+        # plt.plot(data.KG1LH_data2.lid[chan].time, data.KG1LH_data2.lid[chan].data,label='kg1l_lid_rollingmean_pandas_MT', marker = 'p', linestyle=':', linewidth=linewidth,
+        #                          markersize=markersize)
         plt.legend(loc=0, prop={'size': 8})
         #
         #
