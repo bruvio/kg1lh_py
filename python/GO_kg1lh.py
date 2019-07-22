@@ -103,21 +103,22 @@ def map_kg1_efit_RM_pandas(arg):
         time_efit = data.EFIT_data.rmag.time
         data_efit = data.EFIT_data.rmag.data
         data.EFIT_data.sampling_time = np.mean(np.diff(data.EFIT_data.rmag.time))
+        ntkg1v = len(data.KG1_data.density[chan].time)
+        tkg1v = data.KG1_data.density[chan].time
+        tsmo = data.KG1LH_data.tsmo
+        rolling_mean = int(round(tsmo/sampling_time_kg1v))
 
     else:
         ntime_efit = len(data.EFIT_data.rmag_fast.time)
         time_efit = data.EFIT_data.rmag_fast.time
         data_efit = data.EFIT_data.rmag_fast.data
         data.EFIT_data.sampling_time = np.mean(np.diff(data.EFIT_data.rmag_fast.time))
+        ntkg1v = len(data.KG1_data.density[chan].time)
+        tkg1v = data.KG1_data.density[chan].time
+        tsmo = data.KG1LH_data.tsmo
+        rolling_mean = int(round(sampling_time_kg1v / tsmo))
 
-    # density = np.zeros(ntime_efit)
-    ntkg1v = len(data.KG1_data.density[chan].time)
-    tkg1v = data.KG1_data.density[chan].time
-    tsmo = data.KG1LH_data.tsmo
 
-    sampling_time_kg1v = np.mean(np.diff(tkg1v))
-
-    rolling_mean=int(round(tsmo/sampling_time_kg1v))
 
     # density = pd.rolling_mean(data.KG1_data.density[chan].data,rolling_mean)
     density2 = pd.Series(data.KG1_data.density[chan].data).rolling(window=rolling_mean).mean()
@@ -162,21 +163,26 @@ def map_kg1_efit_RM(arg):
         time_efit = data.EFIT_data.rmag.time
         data_efit = data.EFIT_data.rmag.data
         data.EFIT_data.sampling_time = np.mean(np.diff(data.EFIT_data.rmag.time))
+        ntkg1v = len(data.KG1_data.density[chan].time)
+        tkg1v = data.KG1_data.density[chan].time
+        sampling_time_kg1v = np.mean(np.diff(tkg1v))
+        tsmo = data.KG1LH_data.tsmo
+        rolling_mean = int(round(tsmo/sampling_time_kg1v))
 
     else:
         ntime_efit = len(data.EFIT_data.rmag_fast.time)
         time_efit = data.EFIT_data.rmag_fast.time
         data_efit = data.EFIT_data.rmag_fast.data
         data.EFIT_data.sampling_time = np.mean(np.diff(data.EFIT_data.rmag_fast.time))
+        ntkg1v = len(data.KG1_data.density[chan].time)
+        tkg1v = data.KG1_data.density[chan].time
+        sampling_time_kg1v = np.mean(np.diff(tkg1v))
+        tsmo = data.KG1LH_data.tsmo
+        rolling_mean = int(round(sampling_time_kg1v / tsmo))
 
-    # density = np.zeros(ntime_efit)
-    ntkg1v = len(data.KG1_data.density[chan].time)
-    tkg1v = data.KG1_data.density[chan].time
-    tsmo = data.KG1LH_data.tsmo
 
-    sampling_time_kg1v = np.mean(np.diff(tkg1v))
 
-    rolling_mean=int(round(tsmo/sampling_time_kg1v))
+
 
     cumsum_vec = np.cumsum(np.insert(data.KG1_data.density[chan].data, 0, 0))
     density_cms = (cumsum_vec[rolling_mean:] - cumsum_vec[:-rolling_mean]) / rolling_mean
@@ -938,6 +944,8 @@ def main(shot_no, code,read_uid, write_uid, test=False):
     logger.info(' copying to local user profile \n')
     logger.log(5, 'we are in %s', cwd)
 
+    pathlib.Path(cwd + os.sep + 'figures').mkdir(parents=True,
+                                                 exist_ok=True)
     # -------------------------------
     # Read  config data.
     # -------------------------------
@@ -1227,14 +1235,14 @@ def main(shot_no, code,read_uid, write_uid, test=False):
     if plot:
         # for chan in channels:
         chan = 3
-
+        dda = data.code.upper()
         #loading JETPPF data to use for comparison
 
         kg1v_lid3, dummy = getdata(shot_no, 'KG1V', 'LID' + str(chan))
-        kg1l_lid3, dummy = getdata(shot_no, 'KG1l', 'LID'+str(chan))
-        kg1l_lad3, dummy = getdata(shot_no, 'KG1l', 'LAD'+str(chan))
-        kg1l_len3, dummy = getdata(shot_no, 'KG1l', 'LEN'+str(chan))
-        kg1l_xtan3, dummy = getdata(shot_no, 'KG1l', 'xta'+str(chan))
+        kg1l_lid3, dummy = getdata(shot_no, dda, 'LID'+str(chan))
+        kg1l_lad3, dummy = getdata(shot_no, dda, 'LAD'+str(chan))
+        kg1l_len3, dummy = getdata(shot_no, dda, 'LEN'+str(chan))
+        kg1l_xtan3, dummy = getdata(shot_no, dda, 'xta'+str(chan))
 
 
         plt.figure()
@@ -1243,7 +1251,7 @@ def main(shot_no, code,read_uid, write_uid, test=False):
         plt.plot(kg1l_lid3['time'],kg1l_lid3['data'],label='lid_jetppf')
         plt.plot(kg1v_lid3['time'],kg1v_lid3['data'],label='KG1V_lid_jetppf')
         plt.plot(data.KG1LH_data.lid[chan].time, data.KG1LH_data.lid[chan].data,
-                 label='kg1l_lid_original_MT', marker='o', linestyle='-.',
+                 label=dda+'_lid_original_MT', marker='o', linestyle='-.',
                  linewidth=linewidth,
                  markersize=markersize)
         # plt.plot(data.KG1LH_data1.lid[chan].time, data.KG1LH_data1.lid[chan].data,label='kg1l_lid_rollingmean_MT', marker = 'v', linestyle=':', linewidth=linewidth,
@@ -1258,7 +1266,7 @@ def main(shot_no, code,read_uid, write_uid, test=False):
         plt.subplot(4, 1, 2)
         plt.plot(kg1l_lad3['time'], kg1l_lad3['data'], label='lad_jetppf')
         plt.plot(data.KG1LH_data.lad[chan].time, data.KG1LH_data.lad[chan].data,
-                 label='kg1l_lad_original_MT', marker='x', linestyle='-.',
+                 label=dda+'_lad_original_MT', marker='x', linestyle='-.',
                  linewidth=linewidth,
                  markersize=markersize)
         plt.legend(loc=0, prop={'size': 8})
@@ -1268,7 +1276,7 @@ def main(shot_no, code,read_uid, write_uid, test=False):
         plt.subplot(4, 1, 3)
         plt.plot(kg1l_xtan3['time'],kg1l_xtan3['data'],label='xtan_jetppf')
         plt.plot(data.KG1LH_data.xta[chan].time, data.KG1LH_data.xta[chan].data,
-                 label='kg1l_xtan_original_MT', marker='o', linestyle='-.',
+                 label=dda+'_xtan_original_MT', marker='o', linestyle='-.',
                  linewidth=linewidth,
                  markersize=markersize)
 
@@ -1278,13 +1286,14 @@ def main(shot_no, code,read_uid, write_uid, test=False):
         plt.subplot(4, 1, 4)
         plt.plot(kg1l_len3['time'], kg1l_len3['data'], label='len_jetppf')
         plt.plot(data.KG1LH_data.len[chan].time, data.KG1LH_data.len[chan].data,
-                 label='kg1l_len_original_MT', marker='x', linestyle='-.',
+                 label=dda+'_len_original_MT', marker='x', linestyle='-.',
                  linewidth=linewidth,
                  markersize=markersize)
         plt.legend(loc=0, prop={'size': 8})
 
 
 
+        plt.savefig('./figures/' + dda + '_comparison_ch_'+str(chan)+'.png', format='png', dpi=100)
 
 
 
