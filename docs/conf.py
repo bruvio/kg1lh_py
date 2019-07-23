@@ -41,15 +41,15 @@ sys.path.insert(0, os.path.abspath('../python'))
 #print(os.path.abspath('../../'))
 
 
-from Cormat_main import __version__
-from Cormat_main import __release__
-from Cormat_main import __author__
-from Cormat_main import __Name__
+from GO_kg1lh import __version__
+from GO_kg1lh import __release__
+from GO_kg1lh import __author__
+from GO_kg1lh import __Name__
 
 
-from Cormat_main import __maintainer__
-from Cormat_main import __email__
-from Cormat_main import __status__
+from GO_kg1lh import __maintainer__
+from GO_kg1lh import __email__
+from GO_kg1lh import __status__
 
 
 #sys.path.append(os.path.join(os.path.dirname(__name__), '..')) 
@@ -238,7 +238,7 @@ html_show_sphinx = True
 #html_search_scorer = 'scorer.js'
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'CORMATpyGUI'
+htmlhelp_basename = 'KG1LH_py'
 
 # -- Options for LaTeX output ---------------------------------------------
 
@@ -260,7 +260,7 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    (master_doc, 'CORMATpyGUI.tex', 'CORMATpy  GUI Documentation',
+    (master_doc, 'KG1LH_py.tex', 'KG1LH_{py}  Documentation',
      __author__, 'manual'),
 ]
 
@@ -290,7 +290,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    (master_doc, 'kg1toolsgui', 'Kg1 Tools GUI Documentation',
+    (master_doc, 'kg1lh_py', 'KG1LH_{py} Documentation',
      [__author__], 1)
 ]
 
@@ -304,8 +304,8 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    (master_doc, 'Kg1ToolsGUI', 'Kg1 Tools GUI Documentation',
-     __author__, 'Kg1ToolsGUI', 'One line description of project.',
+    (master_doc, 'kg1lh_py', 'KG1LH_{py} Documentation',
+     __author__, 'kg1lh_py', 'One line description of project.',
      'Miscellaneous'),
 ]
 
