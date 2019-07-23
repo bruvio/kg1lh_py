@@ -13,6 +13,10 @@ import shutil
 logger = logging.getLogger(__name__)
 
 def test_logger():
+    """
+    function to test logger
+    :return:
+    """
     logger.info('info')
     logger.debug('debug')
     logger.warning('warn')
@@ -20,6 +24,13 @@ def test_logger():
     logger.log(5, "debug plus")
 
 def reconnect(signal, newhandler=None, oldhandler=None):
+    """
+    function used to connect a signal to a different handler
+    :param signal:
+    :param newhandler:
+    :param oldhandler:
+    :return:
+    """
     while True:
         try:
             if oldhandler is not None:
@@ -39,9 +50,21 @@ def is_empty(any_structure):
 
         return True
 def are_eq(a, b):
+    """
+    checks if two lists are equal
+    :param a:
+    :param b:
+    :return:
+    """
     return set(a) == set(b) and len(a) == len(b)
 
 def autoscale_data(ax, data):
+    """
+    autoscale plot
+    :param ax:
+    :param data:
+    :return:
+    """
     ax.set_ylim(min(data),
                 max(data))
 # def find_nearest(array,value):
@@ -130,7 +153,11 @@ def find_within_range(array,minvalue,maxvalue):
 
 
 def pyqt_set_trace():
-    '''Set a tracepoint in the Python debugger that works with Qt'''
+    """
+    Set a tracepoint in the Python debugger that works with Qt
+    :return:
+    """
+
     from PyQt4.QtCore import pyqtRemoveInputHook
     import pdb
     import sys
@@ -144,6 +171,8 @@ def pyqt_set_trace():
     debugger.interaction(users_frame, None)
 
 def norm(data):
+    """normalise data
+    """
     return (data)/(max(data)-min(data))
 
 def normalise(signal, kg1_signal, dis_time):
