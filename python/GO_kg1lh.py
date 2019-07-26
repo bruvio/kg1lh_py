@@ -992,7 +992,7 @@ def main(shot_no, code,read_uid, write_uid, number_of_channels,algorithm,plot,te
     # -------------------------------
 
 
-    plot = True
+    # plot = True
     #plot=False
 
     if plot:
@@ -1017,11 +1017,11 @@ def main(shot_no, code,read_uid, write_uid, number_of_channels,algorithm,plot,te
 
                     plt.figure()
 
-                    plt.subplot(4, 1, 1)
-                    plt.plot(kg1l_lid3['time'],kg1l_lid3['data'],label='lid_jetppf')
-                    plt.plot(kg1v_lid3['time'],kg1v_lid3['data'],label='KG1V_lid_jetppf')
+                    ax_1= plt.subplot(4, 1, 1)
+                    plt.plot(kg1l_lid3['time'],kg1l_lid3['data'],label='lid_jetppf_ch'+ str(chan))
+                    plt.plot(kg1v_lid3['time'],kg1v_lid3['data'],label='KG1V_lid_jetppf_ch'+ str(chan))
                     plt.plot(data.KG1LH_data.lid[chan].time, data.KG1LH_data.lid[chan].data,
-                             label=dda+'_lid_original_MT', marker='o', linestyle='-.',
+                             label=dda+'_lid_original_MT_ch'+ str(chan), marker='o', linestyle='-.',
                              linewidth=linewidth,
                              markersize=markersize)
                     # plt.plot(data.KG1LH_data1.lid[chan].time, data.KG1LH_data1.lid[chan].data,label=dda+'_lid_rollingmean_MT', marker = 'v', linestyle=':', linewidth=linewidth,
@@ -1034,28 +1034,28 @@ def main(shot_no, code,read_uid, write_uid, number_of_channels,algorithm,plot,te
                     plt.legend(loc=0, prop={'size': 8})
 
 
-                    plt.subplot(4, 1, 2)
-                    plt.plot(kg1l_lad3['time'], kg1l_lad3['data'], label='lad_jetppf')
+                    plt.subplot(4, 1, 2,sharex=ax_1)
+                    plt.plot(kg1l_lad3['time'], kg1l_lad3['data'], label='lad_jetppf_ch'+ str(chan))
                     plt.plot(data.KG1LH_data.lad[chan].time, data.KG1LH_data.lad[chan].data,
-                             label=dda+'_lad_original_MT', marker='x', linestyle='-.',
+                             label=dda+'_lad_original_MT_ch'+ str(chan), marker='x', linestyle='-.',
                              linewidth=linewidth,
                              markersize=markersize)
                     plt.legend(loc=0, prop={'size': 8})
 
-                    plt.subplot(4, 1, 3)
-                    plt.plot(kg1l_xtan3['time'],kg1l_xtan3['data'],label='xtan_jetppf')
+                    plt.subplot(4, 1, 3,sharex=ax_1)
+                    plt.plot(kg1l_xtan3['time'],kg1l_xtan3['data'],label='xtan_jetppf_ch'+ str(chan))
                     plt.plot(data.KG1LH_data.xta[chan].time, data.KG1LH_data.xta[chan].data,
-                             label=dda+'_xtan_original_MT', marker='o', linestyle='-.',
+                             label=dda+'_xtan_original_MT_ch'+ str(chan), marker='o', linestyle='-.',
                              linewidth=linewidth,
                              markersize=markersize)
 
                     plt.legend(loc=0, prop={'size': 8})
 
 
-                    plt.subplot(4, 1, 4)
-                    plt.plot(kg1l_len3['time'], kg1l_len3['data'], label='len_jetppf')
+                    plt.subplot(4, 1, 4,sharex=ax_1)
+                    plt.plot(kg1l_len3['time'], kg1l_len3['data'], label='len_jetppf_ch'+ str(chan))
                     plt.plot(data.KG1LH_data.len[chan].time, data.KG1LH_data.len[chan].data,
-                             label=dda+'_len_original_MT', marker='x', linestyle='-.',
+                             label=dda+'_len_original_MT_ch'+ str(chan), marker='x', linestyle='-.',
                              linewidth=linewidth,
                              markersize=markersize)
                     plt.legend(loc=0, prop={'size': 8})

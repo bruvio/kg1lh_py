@@ -8,3 +8,8 @@ shot: 92121 user: bviola date: 2019-07-22 seq: 428 written by: bviola
 shot: 92121 user: bviola date: 2019-07-23 seq: 429 written by: bviola
 shot: 92121 user: bviola date: 2019-07-23 seq: 430 written by: bviola
 shot: 92121 user: bviola date: 2019-07-23 seq: 431 written by: bviola
+shot: 94314 user: bviola date: 2019-07-26 seq: 72 written by: bviola
+shot: 94316 user: bviola date: 2019-07-26 seq: 95 written by: bviola
+shot: 94314 user: jetppf date: 2019-07-26 seq: 81 written by: bviola
+shot: 94316 user: jetppf date: 2019-07-26 seq: 87 written by: bviola
+shot: 94318 user: jetppf date: 2019-07-26 seq: 81 written by: bviola
