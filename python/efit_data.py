@@ -36,7 +36,7 @@ class EFITData(SignalBase):
 
         # ------------------------
 
-    def read_data(self, shot_no, read_uid="JETPPF"):
+    def read_data(self, shot_no,code, read_uid="JETPPF"):
         """
         Read in efit (RMAG)
 
@@ -60,8 +60,9 @@ class EFITData(SignalBase):
 
             self.rmag = efit_signal
         else:
-            logger.error('no EFIT/RMAG data!')
-            return 30
+            if code.lower() == 'kg1l':
+                logger.error('no EFIT/RMAG data!')
+                return 30
 
 
         node_name = self.constants.efit_fast
@@ -78,6 +79,7 @@ class EFITData(SignalBase):
 
             self.rmag_fast = efit_signal
         else:
-            logger.error('no EHTR/RMAG data!')
-            return 30
+            if code.lower() == 'kg1h':
+                logger.error('no EHTR/RMAG data!')
+                return 30
         return 0

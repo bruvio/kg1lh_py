@@ -801,7 +801,7 @@ def main(shot_no, code,read_uid, write_uid, number_of_channels,algorithm,plot,te
     # -------------------------------
     try:
         data.EFIT_data = EFITData(data.constants)
-        ier = data.EFIT_data.read_data(data.pulse)
+        ier = data.EFIT_data.read_data(data.pulse,code)
     except:
         logger.error('could not read EFIT data')
         return 30
