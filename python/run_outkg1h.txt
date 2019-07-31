@@ -1,0 +1,12 @@
+shot: 94314 user: JETPPF date: 2019-07-31 seq: 85 written by: bviola
+shot: 94316 user: JETPPF date: 2019-07-31 seq: 91 written by: bviola
+shot: 94318 user: JETPPF date: 2019-07-31 seq: 84 written by: bviola
+shot: 94319 user: JETPPF date: 2019-07-31 seq: 91 written by: bviola
+shot: 94320 user: JETPPF date: 2019-07-31 seq: 92 written by: bviola
+shot: 94321 user: JETPPF date: 2019-07-31 seq: 85 written by: bviola
+shot: 94315 user: JETPPF date: 2019-07-31 seq: 92 written by: bviola
+shot: 94325 user: JETPPF date: 2019-07-31 seq: 89 written by: bviola
+shot: 94326 user: JETPPF date: 2019-07-31 seq: 83 written by: bviola
+shot: 94442 user: JETPPF date: 2019-07-31 seq: 77 written by: bviola
+shot: 94446 user: JETPPF date: 2019-07-31 seq: 77 written by: bviola
+shot: 94323 user: JETPPF date: 2019-07-31 seq: 91 written by: bviola
