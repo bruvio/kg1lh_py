@@ -44,10 +44,6 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 from consts import Consts
 # from find_disruption import find_disruption
-from PyQt4 import QtCore, QtGui
-
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
 from kg1_ppf_data import Kg1PPFData
 
 from library import * #containing useful function
@@ -66,8 +62,6 @@ from signal_base import SignalBase
 import inspect
 import fileinput
 import cProfile, pstats, io
-from pycallgraph import PyCallGraph
-from pycallgraph.output import GraphvizOutput
 import inspect
 from  ppf import *
 from scipy import signal
@@ -634,7 +628,7 @@ def main(shot_no, code,read_uid, write_uid, number_of_channels,algorithm,plot,te
 # C-----------------------------------------------------------------------
 
     try:
-        logger.info('\tStart KG1L/H \n')
+        logger.info('\n \tStart KG1L/H \n')
         logger.info(
             '\t {} \n'.format(datetime.datetime.today().strftime('%Y-%m-%d')))
         cwd = os.getcwd()
@@ -656,11 +650,11 @@ def main(shot_no, code,read_uid, write_uid, number_of_channels,algorithm,plot,te
         chain1 = '/common/chain1/kg1/'
         if code.lower()=='kg1l':
             extract_history(
-                workfold + '/run_out.txt',
+                workfold + '/run_out'+code.lower()+'.txt',
                 chain1 + 'kg1l_out.txt')
         else:
             extract_history(
-                workfold + '/run_out.txt',
+                workfold + '/run_out'+code.lower()+'.txt',
                 chain1 + 'kg1h_out.txt')
 
 
@@ -1247,7 +1241,7 @@ def main(shot_no, code,read_uid, write_uid, number_of_channels,algorithm,plot,te
 
 
         err = close_ppf(data.pulse, write_uid,
-                            data.constants.code_version)
+                            data.constants.code_version,code)
 
         if err != 0:
             logger.error('failed to close ppf')
@@ -1263,7 +1257,7 @@ def main(shot_no, code,read_uid, write_uid, number_of_channels,algorithm,plot,te
 
 
     logger.info("\n             Finished.\n")
-    logger.info("--- {}s seconds ---".format((time.time() - code_start_time)))
+    logger.info("--- {}s seconds --- \n \n \n \n ".format((time.time() - code_start_time)))
     if plot:
         plt.show(block=True)
     return return_code
