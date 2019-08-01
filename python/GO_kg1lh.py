@@ -754,6 +754,7 @@ def main(shot_no, code,read_uid, write_uid, number_of_channels,algorithm,plot,te
         return 20
 
     else:
+        # pdb.set_trace()
         #checking if all channels are available
         avail =0
         for chan in data.KG1_data.density.keys():
