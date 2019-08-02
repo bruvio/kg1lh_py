@@ -1283,14 +1283,17 @@ if __name__ == "__main__":
                         help="Debug level. 0: Error, 1: Warning, 2: Info, 3: Debug, 4: Debug Plus",
                         default=2)
     parser.add_argument("-ch", "--number_of_channels", type=int,
-                        help="Number of channels to process",
+                        help="Number of channels to process: 1 to 8",
                         default=8)
     parser.add_argument("-a", "--algorithm",
-                        help="algorithm to be used to filter kg1 lid",
+                        help="algorithm to be used to filter kg1 lid. User cab choose between: "
+                             "- rolling_mean "
+                             "- rolling_mean_pandas "
+                             "- fortran",
                         default='rolling_mean')
 
     parser.add_argument("-pl", "--plot",
-                        help="plot data",
+                        help="plot data: True or False",
                         default=False)
 
     parser.add_argument("-t", "--test",

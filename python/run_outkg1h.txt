@@ -13,3 +13,7 @@ shot: 94323 user: JETPPF date: 2019-07-31 seq: 91 written by: bviola
 shot: 94324 user: JETPPF date: 2019-07-31 seq: 85 written by: bviola
 shot: 94516 user: jetppf date: 2019-07-31 seq: 77 written by: bviola
 shot: 94516 user: jetppf date: 2019-08-01 seq: 80 written by: bviola
+shot: 94566 user: jetppf date: 2019-08-02 seq: 72 written by: bviola
+shot: 94567 user: jetppf date: 2019-08-02 seq: 74 written by: bviola
+shot: 94564 user: jetppf date: 2019-08-02 seq: 75 written by: bviola
+shot: 94563 user: jetppf date: 2019-08-02 seq: 71 written by: bviola
