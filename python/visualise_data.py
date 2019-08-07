@@ -77,7 +77,7 @@ dda = code
 #
 # channels=np.arange(0, 8) + 1
 #
-shot_no = 92121
+shot_no = 88280
 for chan in channels:
     plt.figure()
 
