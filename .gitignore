@@ -112,3 +112,9 @@ venv.bak/
 #folders
 python/figures
 batch
+run_kg1l.sh
+run_kg1h.sh
+sub_run_kg1l.cmd
+sub_run_kg1h.cmd
+suballkg1l.sh
+suballkg1h.sh
