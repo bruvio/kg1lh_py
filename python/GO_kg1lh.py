@@ -8,7 +8,7 @@ Class that runs CORMAT_py GUI
 __author__ = "Bruno Viola"
 __Name__ = "KG1L_py"
 __version__ = "1.0"
-__release__ = "0.0"
+__release__ = "1.0"
 __maintainer__ = "Bruno Viola"
 __email__ = "bruno.viola@ukaea.uk"
 __status__ = "Testing"
