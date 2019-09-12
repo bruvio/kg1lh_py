@@ -188,7 +188,7 @@ def map_kg1_efit_RM(arg):
 
 
 
-
+    # pdb.set_trace()
     cumsum_vec = np.cumsum(np.insert(data.KG1_data.density[chan].data, 0, 0))
     density_cms = (cumsum_vec[rolling_mean:] - cumsum_vec[:-rolling_mean]) / rolling_mean
     density1 = movingaverage(data.KG1_data.density[chan].data, rolling_mean)
@@ -598,6 +598,7 @@ def main(shot_no, code,read_uid, write_uid, number_of_channels,algorithm,plot,te
 
     data = SimpleNamespace()
     data.pulse = shot_no
+
     channels=np.arange(0, number_of_channels) + 1
 
     # C-----------------------------------------------------------------------
@@ -794,7 +795,15 @@ def main(shot_no, code,read_uid, write_uid, number_of_channels,algorithm,plot,te
         return 21
 
     
-    
+    #check if channels are not available
+    channels_real = []
+    for chan in data.KG1_data.density.keys():
+        channels_real.append(chan) # channels available
+    if number_of_channels ==8:
+        if len(channels) != len(channels_real):
+            channels = np.asarray(channels_real)
+
+
     
 
     # -------------------------------
@@ -859,7 +868,6 @@ def main(shot_no, code,read_uid, write_uid, number_of_channels,algorithm,plot,te
             with Pool(10) as pool:
                 results = pool.map(map_kg1_efit, [(data, chan) for chan in channels])
             logger.info("--- {}s seconds ---".format((time.time() - start_time)))
-            # pdb.set_trace()
             for i,r in enumerate(results):
                 if len(r[0].KG1LH_data.lid.keys()) != 0:
                     data.KG1LH_data.lid[i+1] = SignalBase(data.constants)
@@ -879,7 +887,7 @@ def main(shot_no, code,read_uid, write_uid, number_of_channels,algorithm,plot,te
             with Pool(10) as pool:
                 results = pool.map(map_kg1_efit_RM, [(data, chan) for chan in channels])
             logger.info("--- {}s seconds ---".format((time.time() - start_time)))
-
+            # pdb.set_trace()
             for i,r in enumerate(results):
                 if len(r[0].KG1LH_data.lid.keys()) != 0:
                     data.KG1LH_data.lid[i+1] = SignalBase(data.constants)
