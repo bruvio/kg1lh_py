@@ -43,7 +43,7 @@ def make_scripts(shots, code):
                 shot, code)
             f_out.write(call_command)
             f_out.write('sleep 5\n')
-        f_out.write("cd /u/bviola/work/Python/KG1L-KG1H/batch\n")
+        f_out.write("cd /u/bviola/work/Python/KG1L-KG1H\n")
     # Change file permission so can be used by batch
     make_exec([filename])
 
@@ -55,10 +55,10 @@ def make_scripts(shots, code):
         f_out.write(script_to_run)
         f_out.write("# @ input = /dev/null\n")
         f_out.write(
-            "# @ output = /u/bviola/work/Python/KG1L-KG1H/batch/ll_" + filename_prefix + ".out\n")
+            "# @ output = /u/bviola/work/Python/KG1L-KG1H/python/ll_" + filename_prefix + ".out\n")
         f_out.write(
-            "# @ error = /u/bviola/work/Python/KG1L-KG1H/batch/ll_" + filename_prefix + ".err\n")
-        f_out.write("# @ initialdir = /u/bviola/work/Python/KG1L-KG1H/batch\n")
+            "# @ error = /u/bviola/work/Python/KG1L-KG1H/python/ll_" + filename_prefix + ".err\n")
+        f_out.write("# @ initialdir = /u/bviola/work/Python/KG1L-KG1H/python\n")
         f_out.write("# @ notify_user = bviola\n")
         f_out.write("# @ notification = complete\n")
         f_out.write("# @ queue\n")
@@ -86,7 +86,10 @@ if __name__ == "__main__":
         # make_scripts(
         #   [88280, 94502, 94503, 94527],code)
 
-        make_scripts(
-            [94886, 94887, 94888, 94889, 94890, 94891, 94892, 94893, 94894,
-             94895, 94896, 94897, 95128, 95099, 95100, 87587, 81883, 93896,
-             95089, 95090, 95091, 95092, 95093, 95094, 95097, 95098], code)
+        # make_scripts(
+        #     [94886, 94887, 94888, 94889, 94890, 94891, 94892, 94893, 94894,
+        #      94895, 94896, 94897, 95128, 95099, 95100, 87587, 81883, 93896,
+        #      95089, 95090, 95091, 95092, 95093, 95094, 95097, 95098], code)
+        # make_scripts([94908,94910],code)
+        # make_scripts([94904,94721,94777,94721,94903,94905,94906,94907,94908,94910],code)
+        make_scripts([94726,94722,94723,94725,94727],code)
