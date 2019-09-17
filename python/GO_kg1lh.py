@@ -94,6 +94,7 @@ def map_kg1_efit_RM_pandas(arg):
     """
     data = arg[0] # struct containing all data
     chan = arg[1] # channel to analyse
+    # pdb.set_trace()
     if data.KG1_data.global_status[chan] >3:
         logger.warning('channel data is not good - skipping ch. {}!'.format(chan))
         return (data,chan)
@@ -124,6 +125,7 @@ def map_kg1_efit_RM_pandas(arg):
 
     # density = pd.rolling_mean(data.KG1_data.density[chan].data,rolling_mean)
     density2 = pd.Series(data.KG1_data.density[chan].data).rolling(window=rolling_mean).mean()
+    density2.fillna(0,inplace=True)
 
 
 
@@ -131,12 +133,17 @@ def map_kg1_efit_RM_pandas(arg):
     data.KG1LH_data.lid[chan] = SignalBase(data.constants)
     data.KG1LH_data.lid[chan].data = density2
     data.KG1LH_data.lid[chan].time = data.KG1_data.density[chan].time
-    dummy = data.KG1LH_data.lid[chan].resample_signal("interp", time_efit)
+    if data.interp_method == 'interp':
+        dummy, dummy_time = data.KG1LH_data.lid[chan].resample_signal(
+            data.interp_method, time_efit)
+    if data.interp_method == 'interp_ZPS':
+        dummy,dummy_time = data.KG1LH_data.lid[chan].resample_signal(data.interp_method, time_efit)
+
     data.KG1LH_data.lid[chan].data = np.empty(ntime_efit)
     data.KG1LH_data.lid[chan].time = np.empty(ntime_efit)
 
     data.KG1LH_data.lid[chan].data = dummy
-    data.KG1LH_data.lid[chan].time = time_efit
+    data.KG1LH_data.lid[chan].time = dummy_time
 
 
 
@@ -197,11 +204,16 @@ def map_kg1_efit_RM(arg):
     data.KG1LH_data.lid[chan].data = density1
     data.KG1LH_data.lid[chan].time = data.KG1_data.density[chan].time
     # data.KG1LH_data.lid[chan].time = time_efit
-    dummy = data.KG1LH_data.lid[chan].resample_signal("interp", time_efit)
+    if data.interp_method == 'interp':
+        dummy, dummy_time = data.KG1LH_data.lid[chan].resample_signal(
+            data.interp_method, time_efit)
+    if data.interp_method == 'interp_ZPS':
+        dummy,dummy_time = data.KG1LH_data.lid[chan].resample_signal(data.interp_method, time_efit)
+
     data.KG1LH_data.lid[chan].time = np.empty(ntime_efit)
 
     data.KG1LH_data.lid[chan].data = dummy
-    data.KG1LH_data.lid[chan].time = time_efit
+    data.KG1LH_data.lid[chan].time = dummy_time
 
 
 
@@ -282,11 +294,15 @@ def map_kg1_efit(arg):
     data.KG1LH_data.lid[chan].data = density
     data.KG1LH_data.lid[chan].time = time_efit
     # data.KG1LH_data.lid[chan].time = time_efit
-    dummy = data.KG1LH_data.lid[chan].resample_signal("interp", time_efit)
+    if data.interp_method == 'interp':
+        dummy, dummy_time = data.KG1LH_data.lid[chan].resample_signal(
+            data.interp_method, time_efit)
+    if data.interp_method == 'interp_ZPS':
+        dummy,dummy_time = data.KG1LH_data.lid[chan].resample_signal(data.interp_method, time_efit)
     data.KG1LH_data.lid[chan].time = np.empty(ntime_efit)
 
     data.KG1LH_data.lid[chan].data = dummy
-    data.KG1LH_data.lid[chan].time = time_efit
+    data.KG1LH_data.lid[chan].time = dummy_time
 
     return (data,chan)
 
@@ -311,7 +327,7 @@ def time_loop(arg):
 
     if data.code.lower()=='kg1l':
         ntime_efit = len(data.EFIT_data.rmag.time)
-        time_efit = data.EFIT_data.rmag.time
+        time_efit = data.KG1LH_data.lid[chan].time
         data_efit = data.EFIT_data.rmag.data
         ntefit = len(time_efit)
         data.EFIT_data.sampling_time = np.mean(np.diff(data.EFIT_data.rmag.time))
@@ -323,7 +339,7 @@ def time_loop(arg):
 
     else:
         ntime_efit = len(data.EFIT_data.rmag_fast.time)
-        time_efit = data.EFIT_data.rmag_fast.time
+        time_efit = data.KG1LH_data.lid[chan].time
         data_efit = data.EFIT_data.rmag_fast.data
         ntefit=len(time_efit)
         data.EFIT_data.sampling_time = np.mean(np.diff(data.EFIT_data.rmag_fast.time))
@@ -546,7 +562,7 @@ def time_loop(arg):
 
 
 
-def main(shot_no, code,read_uid, write_uid, number_of_channels,algorithm,plot,test=False):
+def main(shot_no, code,read_uid, write_uid, number_of_channels,algorithm,interp_method,plot,test=False):
     '''
     Program to calculate the line averaged density for all channels of
     C kg1v. Other outputs are the tangent flux surface
@@ -558,6 +574,7 @@ def main(shot_no, code,read_uid, write_uid, number_of_channels,algorithm,plot,te
     :param write_uid: UID for writing PPFs
     :param number_of_channels: number of channel to process (testing purposes only)
     :param algorithm: choose what algorithm to use for density filtering
+    :param interp_method: choose what algorithm to use to resample signal.
     :param plot: True if user wants to plot data
     :param test: Set to True for testing mode, meaning the following:
                      - If write_uid is given and it is NOT JETPPF then a PPF will be written.
@@ -600,6 +617,7 @@ def main(shot_no, code,read_uid, write_uid, number_of_channels,algorithm,plot,te
     data.pulse = shot_no
 
     channels=np.arange(0, number_of_channels) + 1
+    data.interp_method = interp_method
 
     # C-----------------------------------------------------------------------
     # C constants
@@ -859,7 +877,15 @@ def main(shot_no, code,read_uid, write_uid, number_of_channels,algorithm,plot,te
 
         # -------------------------------
         # 4. mapping kg1v data onto efit time vector
-        # pdb.set_trace()
+
+
+    # pdb.set_trace()
+    data,chan = map_kg1_efit_RM_pandas((data,4))
+    # pdb.set_trace()
+
+
+
+
         # -------------------------------
     if algorithm.lower() =='fortran':
         try:
@@ -922,7 +948,7 @@ def main(shot_no, code,read_uid, write_uid, number_of_channels,algorithm,plot,te
 #################################################
     # -------------------------------
     # 5. TIME LOOP
-    # pdb.set_trace()
+
     # -------------------------------
     try:
         if data.code.lower() == 'kg1l':
@@ -1299,6 +1325,9 @@ if __name__ == "__main__":
                              "- rolling_mean_pandas "
                              "- fortran",
                         default='rolling_mean')
+    parser.add_argument("-i","--interp_method", help=" algorithm to be used to resample KG1 data on EFIT timebase, choose between: "
+                        "- interp "
+                        "- interp_ZPS",default='interp')
 
     parser.add_argument("-pl", "--plot",
                         help="plot data: True or False",
@@ -1331,4 +1360,4 @@ if __name__ == "__main__":
 
 
     # Call the main code
-    main(args.pulse, args.code,args.uid_read, args.uid_write, args.number_of_channels,args.algorithm, args.plot,args.test)
+    main(args.pulse, args.code,args.uid_read, args.uid_write, args.number_of_channels,args.algorithm, args.interp_method, args.plot,args.test)

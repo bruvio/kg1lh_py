@@ -11,7 +11,7 @@ from scipy import signal
 # from getdat import getdat, getsca
 from getdat import *
 from ppf import ppfgo, ppfget, ppfssr, ppfuid
-
+import pdb
 from wv_denoise import wv_denoise
 
 logger = logging.getLogger(__name__)
@@ -236,8 +236,9 @@ class SignalBase():
         :param resample_method: method to use
         :return: numpy array of resampled data
         """
+        # pdb.set_trace()
         if resample_method == "interp":
-            return np.interp(new_time, self.time, self.data)
+            return np.interp(new_time, self.time, self.data), new_time
         if resample_method =='zeropadding':
             # zero padding procedure
             M = len(self.time)
@@ -277,6 +278,45 @@ class SignalBase():
             resSig = decimate_ZP(newsig, ratioMN + 1, zero_phase=True)
             return resSig,resTime
 
+        if resample_method == "interp_ZPS":
+            ###
+            # pdb.set_trace()
+            N = len(self.time)
+            M = len(new_time)
+            ratioMN = int(N / M)
+            # Out[5]: 4
+            # ratioMN+1
+            # increase vector so to have integer ratio between signals
+            # (ratioMN+1)*M
+            # Out[7]: 150195
+            # number of point to add  to increase vector size so to have integer ratio between signals
+            points = (ratioMN + 1) * M - N
+            # Out[8]: 20200
+            # In[7]: np.mean(np.diff(time_efit))
+            # Out[9]: 0.00019999998
+            # newtime base
+            dt = np.mean(np.diff(self.time))
+            ttt = np.arange(points + 1)[1:] * dt
+            # In[10]: len(ttt)
+            # Out[12]: 20200
+            ttt = np.arange(points + 1)[1:] * dt + self.time[-1]
+            # newtime=np.concatenate(time_efit, ttt)
+
+            newtime = np.concatenate((self.time, ttt))
+            resTime = newtime[::ratioMN + 1]
+            # newtime.size
+            # Out[17]: 150195
+            # newtime.size/5
+            # Out[18]: 30039.0
+            xxx = np.zeros(points)
+            newsig = np.concatenate((self.data, xxx))
+            # In[19]: newsig.size
+            # Out[21]: 150195
+            # In[20]: newsig.size/5
+            # Out[22]: 30039.0
+            #            resSig = signal.decimate(newsig, ratioMN + 1)
+            resSig = decimate_ZP(newsig, ratioMN + 1, zero_phase=True)
+            return resSig, resTime
 
 
         else:
