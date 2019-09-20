@@ -69,12 +69,15 @@ import numpy as np
 import matplotlib.pyplot as plt
 from utility import *
 import pandas as pd
+import gc
 
 
 
 
-sys.path.append('../../')
-from eg_python_tools.my_flush import *
+
+# sys.path.append('../../')
+# from eg_python_tools.my_flush import *
+from my_flush import *
 # qm = QtGui.QMessageBox
 # qm_permanent = QtGui.QMessageBox
 plt.rcParams["savefig.directory"] = os.chdir(os.getcwd())
@@ -83,6 +86,14 @@ logger = logging.getLogger(__name__)
 # noinspection PyUnusedLocal
 
 #--------
+import ast
+
+def arg_as_list(s):
+    v = ast.literal_eval(s)
+    if type(v) is not list:
+        raise argparse.ArgumentTypeError("Argument \"%s\" is not a list" % (s))
+    return v
+
 #--------
 def map_kg1_efit_RM_pandas(arg):
     """
@@ -562,7 +573,7 @@ def time_loop(arg):
 
 
 
-def main(shot_no, code,read_uid, write_uid, number_of_channels,algorithm,interp_method,plot,test=False):
+def main(shot_no, code,read_uid, write_uid, list_of_channels,algorithm,interp_method,plot,test=False):
     '''
     Program to calculate the line averaged density for all channels of
     C kg1v. Other outputs are the tangent flux surface
@@ -572,7 +583,7 @@ def main(shot_no, code,read_uid, write_uid, number_of_channels,algorithm,interp_
     :param code: KG1L or KG1H
     :param read_uid: UID for reading PPFs
     :param write_uid: UID for writing PPFs
-    :param number_of_channels: number of channel to process (testing purposes only)
+    :param list_of_channels: list of channel to process (testing purposes only)
     :param algorithm: choose what algorithm to use for density filtering
     :param interp_method: choose what algorithm to use to resample signal.
     :param plot: True if user wants to plot data
@@ -616,7 +627,10 @@ def main(shot_no, code,read_uid, write_uid, number_of_channels,algorithm,interp_
     data = SimpleNamespace()
     data.pulse = shot_no
 
-    channels=np.arange(0, number_of_channels) + 1
+    processes = len(list_of_channels)
+    # channels=np.arange(0, len(list_of_channels) + 1
+    channels=list_of_channels
+    pdb.set_trace()
     data.interp_method = interp_method
 
     # C-----------------------------------------------------------------------
@@ -735,8 +749,8 @@ def main(shot_no, code,read_uid, write_uid, number_of_channels,algorithm,interp_
 
 
         data.KG1LH_data = KG1LData(data.constants)
-        data.KG1LH_data1 = KG1LData(data.constants)
-        data.KG1LH_data2 = KG1LData(data.constants)
+        #data.KG1LH_data1 = KG1LData(data.constants)
+        #data.KG1LH_data2 = KG1LData(data.constants)
 
         data.KG1LH_data.tsmo = tsmo
 
@@ -817,7 +831,7 @@ def main(shot_no, code,read_uid, write_uid, number_of_channels,algorithm,interp_
     channels_real = []
     for chan in data.KG1_data.density.keys():
         channels_real.append(chan) # channels available
-    if number_of_channels ==8:
+    if len(list_of_channels) ==8:
         if len(channels) != len(channels_real):
             channels = np.asarray(channels_real)
 
@@ -891,7 +905,7 @@ def main(shot_no, code,read_uid, write_uid, number_of_channels,algorithm,interp_
         try:
             logger.info('start mapping kg1v data onto efit time vector')
             start_time = time.time()
-            with Pool(10) as pool:
+            with Pool(processes) as pool:
                 results = pool.map(map_kg1_efit, [(data, chan) for chan in channels])
             logger.info("--- {}s seconds ---".format((time.time() - start_time)))
             for i,r in enumerate(results):
@@ -910,7 +924,7 @@ def main(shot_no, code,read_uid, write_uid, number_of_channels,algorithm,interp_
         try:
             logger.info('start mapping kg1v data onto efit time vector - using rolling mean')
             start_time = time.time()
-            with Pool(10) as pool:
+            with Pool(processes) as pool:
                 results = pool.map(map_kg1_efit_RM, [(data, chan) for chan in channels])
             logger.info("--- {}s seconds ---".format((time.time() - start_time)))
             # pdb.set_trace()
@@ -929,7 +943,7 @@ def main(shot_no, code,read_uid, write_uid, number_of_channels,algorithm,interp_
         try:
             logger.info('start mapping kg1v data onto efit time vector - using pandas rolling mean')
             start_time = time.time()
-            with Pool(10) as pool:
+            with Pool(processes) as pool:
                 results = pool.map(map_kg1_efit_RM_pandas,
                                    [(data, chan) for chan in channels])
             logger.info("--- {}s seconds ---".format((time.time() - start_time)))
@@ -983,7 +997,7 @@ def main(shot_no, code,read_uid, write_uid, number_of_channels,algorithm,interp_
 
         logger.info('Starting time loop')
         start_time = time.time()
-        with Pool(10) as pool:
+        with Pool(processes) as pool:
             results = pool.map(time_loop,
                                [(data, chan) for chan in channels])
         logger.info("--- {}s seconds ---".format((time.time() - start_time)))
@@ -1295,6 +1309,7 @@ def main(shot_no, code,read_uid, write_uid, number_of_channels,algorithm,interp_
     logger.info("--- {}s seconds --- \n \n \n \n ".format((time.time() - code_start_time)))
     if plot:
         plt.show(block=True)
+    gc.collect()
     return return_code
 
 if __name__ == "__main__":
@@ -1316,9 +1331,7 @@ if __name__ == "__main__":
     parser.add_argument("-d", "--debug", type=int,
                         help="Debug level. 0: Error, 1: Warning, 2: Info, 3: Debug, 4: Debug Plus",
                         default=2)
-    parser.add_argument("-ch", "--number_of_channels", type=int,
-                        help="Number of channels to process: 1 to 8",
-                        default=8)
+    parser.add_argument('-ch', '--list_of_channels',type=arg_as_list,default=[1,2,3,4,5,6,7,8])
     parser.add_argument("-a", "--algorithm",
                         help="algorithm to be used to filter kg1 lid. User cab choose between: "
                              "- rolling_mean "
@@ -1360,4 +1373,4 @@ if __name__ == "__main__":
 
 
     # Call the main code
-    main(args.pulse, args.code,args.uid_read, args.uid_write, args.number_of_channels,args.algorithm, args.interp_method, args.plot,args.test)
+    main(args.pulse, args.code,args.uid_read, args.uid_write, args.list_of_channels,args.algorithm, args.interp_method, args.plot,args.test)
