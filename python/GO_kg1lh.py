@@ -201,7 +201,7 @@ def map_kg1_efit_RM(arg):
     density1 = movingaverage(data.KG1_data.density[chan].data, rolling_mean)
 
     data.KG1LH_data.lid[chan] = SignalBase(data.constants)
-    data.KG1LH_data.lid[chan].data = density1
+    data.KG1LH_data.lid[chan].data =  data.KG1_data.density[chan].data #density1
     data.KG1LH_data.lid[chan].time = data.KG1_data.density[chan].time
     # data.KG1LH_data.lid[chan].time = time_efit
     if data.interp_method == 'interp':
@@ -315,8 +315,8 @@ def time_loop(arg):
 
 
 
-    :param arg: 
-    :return: 
+    :param arg:
+    :return:
     """
     data = arg[0] # struct containing all data
     chan = arg[1] # channel to analyse
@@ -327,7 +327,7 @@ def time_loop(arg):
 
     if data.code.lower()=='kg1l':
         ntime_efit = len(data.EFIT_data.rmag.time)
-        time_efit = data.KG1LH_data.lid[chan].time
+        time_efit = data.EFIT_data.rmag.time#data.KG1LH_data.lid[chan].time
         data_efit = data.EFIT_data.rmag.data
         ntefit = len(time_efit)
         data.EFIT_data.sampling_time = np.mean(np.diff(data.EFIT_data.rmag.time))
@@ -339,7 +339,7 @@ def time_loop(arg):
 
     else:
         ntime_efit = len(data.EFIT_data.rmag_fast.time)
-        time_efit = data.KG1LH_data.lid[chan].time
+        time_efit = data.EFIT_data.rmag_fast.time#data.KG1LH_data.lid[chan].time
         data_efit = data.EFIT_data.rmag_fast.data
         ntefit=len(time_efit)
         data.EFIT_data.sampling_time = np.mean(np.diff(data.EFIT_data.rmag_fast.time))
@@ -348,9 +348,6 @@ def time_loop(arg):
         sampling_time_kg1v = np.mean(np.diff(tkg1v))
         tsmo = data.KG1LH_data.tsmo
         rolling_mean = int(round(sampling_time_kg1v / tsmo))
-        data.EPSF = data.EPSF/10
-        data.EPSDD = data.EPSDD/100
-
 
 
 
@@ -387,7 +384,7 @@ def time_loop(arg):
 
         dtime = float(TIMEM)
 
-        t, ier = flushinit(15, data.pulse, dtime, lunget=12, iseq=0,
+        t, ier = flushinit(15, data.pulse, TIMEM, lunget=12, iseq=0,
                            uid='JETPPF', dda='EFIT', lunmsg=0)
         if ier != 0:
             logger.warning('flush error {} in flushinit'.format(ier))
@@ -752,15 +749,15 @@ def main(shot_no, code,read_uid, write_uid, number_of_channels,algorithm,interp_
     except:
         logger.error('error during INIT')
         return 5
-    
+
 
     # -------------------------------
     # 2. Read in KG1 data
     # -------------------------------
     try:
         data.KG1_data = Kg1PPFData(data.constants, data.pulse)
-    
-    
+
+
 
         success = data.KG1_data.read_data(data.pulse,
                                            read_uid=read_uid)
@@ -791,7 +788,7 @@ def main(shot_no, code,read_uid, write_uid, number_of_channels,algorithm,interp_
 
 
 
-    
+
     # at least one channel has to be flagged/validated
     try:
         status_flags=[]
@@ -812,7 +809,7 @@ def main(shot_no, code,read_uid, write_uid, number_of_channels,algorithm,interp_
         logger.error('error reading status flags')
         return 21
 
-    
+
     #check if channels are not available
     channels_real = []
     for chan in data.KG1_data.density.keys():
@@ -822,7 +819,7 @@ def main(shot_no, code,read_uid, write_uid, number_of_channels,algorithm,interp_
             channels = np.asarray(channels_real)
 
 
-    
+
 
     # -------------------------------
     # 2. Read in EFIT data
@@ -834,7 +831,7 @@ def main(shot_no, code,read_uid, write_uid, number_of_channels,algorithm,interp_
         logger.error('could not read EFIT data')
         return 30
 
-    
+
     if ier !=0:
         logger.error('error reading EFIT data')
         return 30
@@ -948,7 +945,7 @@ def main(shot_no, code,read_uid, write_uid, number_of_channels,algorithm,interp_
 #################################################
     # -------------------------------
     # 5. TIME LOOP
-
+    # pdb.set_trace()
     # -------------------------------
     try:
         if data.code.lower() == 'kg1l':
@@ -966,17 +963,17 @@ def main(shot_no, code,read_uid, write_uid, number_of_channels,algorithm,interp_
 
         else:
             logger.info('running KG1H \n')
-            ntime_efit = len(data.EFIT_data.rmag.time)
-            time_efit = data.EFIT_data.rmag.time
-            data_efit = data.EFIT_data.rmag.data
+            ntime_efit = len(data.EFIT_data.rmag_fast.time)
+            time_efit = data.EFIT_data.rmag_fast.time
+            data_efit = data.EFIT_data.rmag_fast.data
             ntefit = len(time_efit)
-            data.EFIT_data.sampling_time = np.mean(np.diff(data.EFIT_data.rmag.time))
+            data.EFIT_data.sampling_time = np.mean(np.diff(data.EFIT_data.rmag_fast.time))
             ntkg1v = len(data.KG1_data.density[chan].time)
             tkg1v = data.KG1_data.density[chan].time
             sampling_time_kg1v = np.mean(np.diff(tkg1v))
             rolling_mean = int(round(sampling_time_kg1v / tsmo))
-            data.EPSF = data.EPSF/100 # accuracy for getIntersections
-            data.EPSDD = data.EPSDD/10000# accuracy for gettangents
+            data.EPSF = data.EPSF/10
+            data.EPSDD = data.EPSDD/10000
 
 
 
@@ -1210,10 +1207,10 @@ def main(shot_no, code,read_uid, write_uid, number_of_channels,algorithm,interp_
                     "Failed to write {}/{}. Errorcode {}".format(dda, dtype_lid,
                                                                  write_err))
                 return 67
-        
+
         for chan in data.KG1LH_data.xta.keys():
             dtype_lid = "XTA{}".format(chan)
-            
+
             comment = "Tangent flux lid{} ".format(chan)
 
             write_err, itref_written = write_ppf(data.pulse, dda,
@@ -1295,6 +1292,10 @@ def main(shot_no, code,read_uid, write_uid, number_of_channels,algorithm,interp_
     logger.info("--- {}s seconds --- \n \n \n \n ".format((time.time() - code_start_time)))
     if plot:
         plt.show(block=True)
+
+
+    del data
+
     return return_code
 
 if __name__ == "__main__":
