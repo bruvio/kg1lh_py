@@ -325,30 +325,33 @@ def time_loop(arg):
         logger.warning('channel data is not good - skipping ch. {}!'.format(chan))
         return (data,chan)
 
-    if data.code.lower()=='kg1l':
+    if data.code.lower() == 'kg1l':
         ntime_efit = len(data.EFIT_data.rmag.time)
-        time_efit = data.EFIT_data.rmag.time#data.KG1LH_data.lid[chan].time
+        time_efit = data.EFIT_data.rmag.time
         data_efit = data.EFIT_data.rmag.data
         ntefit = len(time_efit)
-        data.EFIT_data.sampling_time = np.mean(np.diff(data.EFIT_data.rmag.time))
+        data.EFIT_data.sampling_time = np.mean(
+            np.diff(data.EFIT_data.rmag.time))
         ntkg1v = len(data.KG1_data.density[chan].time)
         tkg1v = data.KG1_data.density[chan].time
         sampling_time_kg1v = np.mean(np.diff(tkg1v))
-        tsmo = data.KG1LH_data.tsmo
-        rolling_mean = int(round(tsmo/sampling_time_kg1v))
+
+        rolling_mean = int(round(tsmo / sampling_time_kg1v))
 
     else:
         ntime_efit = len(data.EFIT_data.rmag_fast.time)
-        time_efit = data.EFIT_data.rmag_fast.time#data.KG1LH_data.lid[chan].time
+        time_efit = data.EFIT_data.rmag_fast.time
         data_efit = data.EFIT_data.rmag_fast.data
-        ntefit=len(time_efit)
-        data.EFIT_data.sampling_time = np.mean(np.diff(data.EFIT_data.rmag_fast.time))
+        ntefit = len(time_efit)
+        data.EFIT_data.sampling_time = np.mean(
+            np.diff(data.EFIT_data.rmag_fast.time))
         ntkg1v = len(data.KG1_data.density[chan].time)
         tkg1v = data.KG1_data.density[chan].time
         sampling_time_kg1v = np.mean(np.diff(tkg1v))
         tsmo = data.KG1LH_data.tsmo
         rolling_mean = int(round(sampling_time_kg1v / tsmo))
-
+        data.EPSF = data.EPSF / 100000
+        data.EPSDD = data.EPSDD / 100000
 
 
     density = data.KG1LH_data.lid[chan].data
@@ -531,22 +534,22 @@ def time_loop(arg):
 
     data.KG1LH_data.lid[chan] = SignalBase(data.constants)
     data.KG1LH_data.lid[chan].data = density
-    data.KG1LH_data.lid[chan].time = time_efit
+    data.KG1LH_data.lid[chan].time = [float(i) for i in time_efit]
     #
     data.KG1LH_data.lad[chan] = SignalBase(data.constants)
-    data.KG1LH_data.lad[chan].data = lad
+    data.KG1LH_data.lad[chan].data = [float(i) for i in lad]
 
-    data.KG1LH_data.lad[chan].time = time_efit
+    data.KG1LH_data.lad[chan].time = [float(i) for i in time_efit]
     #
     data.KG1LH_data.len[chan] = SignalBase(data.constants)
-    data.KG1LH_data.len[chan].data = length
+    data.KG1LH_data.len[chan].data = [float(i) for i in length]
 
-    data.KG1LH_data.len[chan].time = time_efit
+    data.KG1LH_data.len[chan].time = [float(i) for i in time_efit]
     #
     data.KG1LH_data.xta[chan] = SignalBase(data.constants)
-    data.KG1LH_data.xta[chan].data = xtan
+    data.KG1LH_data.xta[chan].data = [float(i) for i in xtan]
 
-    data.KG1LH_data.xta[chan].time = time_efit
+    data.KG1LH_data.xta[chan].time = [float(i) for i in time_efit]
 
 
 
@@ -621,8 +624,8 @@ def main(shot_no, code,read_uid, write_uid, number_of_channels,algorithm,interp_
     # C-----------------------------------------------------------------------
 
     data.psim1 = 1.00
-    data.EPSDD = 0.1                           # accuracy for gettangents
-    data.EPSF = 0.00001                         # accuracy for getIntersections
+    data.EPSDD = float(0.01)                           # accuracy for gettangents
+    data.EPSF = float(0.00001)                         # accuracy for getIntersections
     #this two values have been copied from the fortran code
 
     # C-----------------------------------------------------------------------
@@ -630,9 +633,10 @@ def main(shot_no, code,read_uid, write_uid, number_of_channels,algorithm,interp_
     # C-----------------------------------------------------------------------
 
     if (code.lower() == 'kg1l'):
-
+        logger.info('running KG1L \n')
         tsmo = 0.025
     else:
+        logger.info('running KG1H \n')
         tsmo = 1.0e-4
 #this two values have been copied from the fortran code
 
@@ -679,6 +683,7 @@ def main(shot_no, code,read_uid, write_uid, number_of_channels,algorithm,interp_
 
         cwd = os.getcwd()
         pathlib.Path(cwd + os.sep + 'figures').mkdir(parents=True, exist_ok=True)
+        pathlib.Path(cwd + os.sep + 'saved').mkdir(parents=True, exist_ok=True)
         # -------------------------------
         # Read  config data.
         # -------------------------------
@@ -870,8 +875,11 @@ def main(shot_no, code,read_uid, write_uid, number_of_channels,algorithm,interp_
         logger.error('error reading cords coordinates')
         return 22
 
-
-
+    logger.info(' saving pulse data to {}\n'.format('saved'))
+    with open('./saved/data_'+str(shot_no)+'.pkl', 'wb') as f:
+        pickle.dump(
+            [data], f)
+    f.close()
         # -------------------------------
         # 4. mapping kg1v data onto efit time vector
 
@@ -948,36 +956,6 @@ def main(shot_no, code,read_uid, write_uid, number_of_channels,algorithm,interp_
     # pdb.set_trace()
     # -------------------------------
     try:
-        if data.code.lower() == 'kg1l':
-            logger.info('running KG1L\n')
-            ntime_efit = len(data.EFIT_data.rmag.time)
-            time_efit = data.EFIT_data.rmag.time
-            data_efit = data.EFIT_data.rmag.data
-            ntefit = len(time_efit)
-            data.EFIT_data.sampling_time = np.mean(np.diff(data.EFIT_data.rmag.time))
-            ntkg1v = len(data.KG1_data.density[chan].time)
-            tkg1v = data.KG1_data.density[chan].time
-            sampling_time_kg1v = np.mean(np.diff(tkg1v))
-            tsmo = data.KG1LH_data.tsmo
-            rolling_mean = int(round(tsmo/sampling_time_kg1v))
-
-        else:
-            logger.info('running KG1H \n')
-            ntime_efit = len(data.EFIT_data.rmag_fast.time)
-            time_efit = data.EFIT_data.rmag_fast.time
-            data_efit = data.EFIT_data.rmag_fast.data
-            ntefit = len(time_efit)
-            data.EFIT_data.sampling_time = np.mean(np.diff(data.EFIT_data.rmag_fast.time))
-            ntkg1v = len(data.KG1_data.density[chan].time)
-            tkg1v = data.KG1_data.density[chan].time
-            sampling_time_kg1v = np.mean(np.diff(tkg1v))
-            rolling_mean = int(round(sampling_time_kg1v / tsmo))
-            data.EPSF = data.EPSF/10
-            data.EPSDD = data.EPSDD/10000
-
-
-
-
         logger.info('Starting time loop')
         start_time = time.time()
         with Pool(10) as pool:
@@ -1009,7 +987,7 @@ def main(shot_no, code,read_uid, write_uid, number_of_channels,algorithm,interp_
         return 24
 
 
-
+    # data,chan = time_loop((data,3))
 
 
     # -------------------------------
