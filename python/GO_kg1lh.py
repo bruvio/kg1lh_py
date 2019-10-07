@@ -131,7 +131,11 @@ def map_kg1_efit_RM_pandas(arg):
 
 
     data.KG1LH_data.lid[chan] = SignalBase(data.constants)
-    data.KG1LH_data.lid[chan].data = density2
+    if data.code.lower() == 'kg1l':
+        data.KG1LH_data.lid[chan].data =  density2
+    else:
+        data.KG1LH_data.lid[chan].data =  data.KG1_data.density[chan].data
+    # data.KG1LH_data.lid[chan].data = density2
     data.KG1LH_data.lid[chan].time = data.KG1_data.density[chan].time
     if data.interp_method == 'interp':
         dummy, dummy_time = data.KG1LH_data.lid[chan].resample_signal(
@@ -201,7 +205,10 @@ def map_kg1_efit_RM(arg):
     density1 = movingaverage(data.KG1_data.density[chan].data, rolling_mean)
 
     data.KG1LH_data.lid[chan] = SignalBase(data.constants)
-    data.KG1LH_data.lid[chan].data =  data.KG1_data.density[chan].data #density1
+    if data.code.lower() == 'kg1l':
+        data.KG1LH_data.lid[chan].data =  density1
+    else:
+        data.KG1LH_data.lid[chan].data =  data.KG1_data.density[chan].data
     data.KG1LH_data.lid[chan].time = data.KG1_data.density[chan].time
     # data.KG1LH_data.lid[chan].time = time_efit
     if data.interp_method == 'interp':
@@ -350,8 +357,8 @@ def time_loop(arg):
         sampling_time_kg1v = np.mean(np.diff(tkg1v))
         tsmo = data.KG1LH_data.tsmo
         rolling_mean = int(round(sampling_time_kg1v / tsmo))
-        data.EPSF = data.EPSF / 100000
-        data.EPSDD = data.EPSDD / 100000
+        data.EPSF = float(data.EPSF / 100000)
+        data.EPSDD = float(data.EPSDD / 100000)
 
 
     density = data.KG1LH_data.lid[chan].data
@@ -648,7 +655,7 @@ def main(shot_no, code,read_uid, write_uid, number_of_channels,algorithm,interp_
 # C-----------------------------------------------------------------------
 
     try:
-        logger.info('\n \tStart KG1L/H \n')
+        # logger.info('\n \tStart KG1L/H \n')
         logger.info(
             '\t {} \n'.format(datetime.datetime.today().strftime('%Y-%m-%d')))
         cwd = os.getcwd()
