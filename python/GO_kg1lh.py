@@ -502,7 +502,7 @@ def time_loop(arg):
         if ier != 0:
             logger.warning('flush error {}  in Flush_getIntersections'.format(ier))
             # return ier
-        cord = math.hypot(r2 - r1, z2 - z1)
+        cord = float(math.hypot(r2 - r1, z2 - z1))
 
         logger.log(5, 'found {} intersection/s'.format(nfound))
 
@@ -511,11 +511,11 @@ def time_loop(arg):
         # -----------------------------------------------------------------------
         if cord < 0:
             cord = abs(cord)
-        length[IT] = cord / 100.0  # conversion from cm to m
+        length[IT] = float(cord / 100)  # conversion from cm to m
         logger.log(5,'cord length for channel {} is {}'.format(chan, length[IT]))
         # length[IT] = cord # conversion from cm to m
         if (length[IT] > 0.0):
-            lad[IT] = density[IT] / length[IT]
+            lad[IT] = float(density[IT] / length[IT])
         else:
             lad[IT] = 0.0
 
