@@ -342,7 +342,7 @@ def time_loop(arg):
         ntkg1v = len(data.KG1_data.density[chan].time)
         tkg1v = data.KG1_data.density[chan].time
         sampling_time_kg1v = np.mean(np.diff(tkg1v))
-
+        tsmo = data.KG1LH_data.tsmo
         rolling_mean = int(round(tsmo / sampling_time_kg1v))
 
     else:
