@@ -359,7 +359,7 @@ def time_loop(arg):
         rolling_mean = int(round(sampling_time_kg1v / tsmo))
         # data.EPSF = float(data.EPSF / 100000)
         # data.EPSF = float(data.EPSF )
-        data.EPSDD = float(data.EPSDD / 100000)
+        # data.EPSDD = float(data.EPSDD )
 
 
     density = data.KG1LH_data.lid[chan].data
@@ -369,9 +369,9 @@ def time_loop(arg):
 
 
 
-    length = np.zeros(ntefit)
-    xtan = np.zeros(ntefit)
-    lad = np.zeros(ntefit)
+    length = np.zeros(ntefit,dtype=float)
+    xtan = np.zeros(ntefit,dtype=float)
+    lad = np.zeros(ntefit,dtype=float)
 
     xpt = data.r_ref[chan - 1]
     ypt = data.z_ref[chan - 1]
@@ -379,8 +379,8 @@ def time_loop(arg):
 
 
     # convert to cm
-    xpt = xpt * 100
-    ypt = ypt * 100
+    xpt = float(xpt * 100.0)
+    ypt = float(ypt * 100.0)
 
 
 
@@ -509,7 +509,7 @@ def time_loop(arg):
         nfound, r1, z1, r2, z2, r3, z3, r4, z4, ier = Flush_getIntersections(xpt,
                                                                              ypt,
                                                                              angle,
-                                                                             0.0001,
+                                                                             data.EPSF,
                                                                              NPSI,
                                                                              psimax)
         if ier != 0:
@@ -524,7 +524,7 @@ def time_loop(arg):
         # -----------------------------------------------------------------------
         if cord < 0:
             cord = abs(cord)
-        length[IT] = float(cord / 100)  # conversion from cm to m
+        length[IT] = float(cord / 100.0)  # conversion from cm to m
         logger.log(5,'cord length for channel {} is {}'.format(chan, length[IT]))
         # length[IT] = cord # conversion from cm to m
         if (length[IT] > 0.0):
@@ -634,8 +634,8 @@ def main(shot_no, code,read_uid, write_uid, number_of_channels,algorithm,interp_
     # C-----------------------------------------------------------------------
 
     data.psim1 = 1.00
-    data.EPSDD = float(0.01)                           # accuracy for gettangents
-    data.EPSF = float(0.00001)                         # accuracy for getIntersections
+    data.EPSDD = float(0.0001)                           # accuracy for gettangents
+    data.EPSF = float(0.0001)                         # accuracy for getIntersections
     #this two values have been copied from the fortran code
 
     # C-----------------------------------------------------------------------
@@ -963,7 +963,8 @@ def main(shot_no, code,read_uid, write_uid, number_of_channels,algorithm,interp_
 #################################################
     # -------------------------------
     # 5. TIME LOOP
-    # pdb.set_trace()
+    pdb.set_trace()
+    print(data.EFIT_data.rmag_fast.time)
     # -------------------------------
     try:
         logger.info('Starting time loop')
