@@ -357,7 +357,8 @@ def time_loop(arg):
         sampling_time_kg1v = np.mean(np.diff(tkg1v))
         tsmo = data.KG1LH_data.tsmo
         rolling_mean = int(round(sampling_time_kg1v / tsmo))
-        data.EPSF = float(data.EPSF / 100000)
+        # data.EPSF = float(data.EPSF / 100000)
+        # data.EPSF = float(data.EPSF )
         data.EPSDD = float(data.EPSDD / 100000)
 
 
@@ -394,8 +395,10 @@ def time_loop(arg):
 
         dtime = float(TIMEM)
 
-        t, ier = flushinit(15, data.pulse, TIMEM, lunget=12, iseq=0,
-                           uid='JETPPF', dda='EFIT', lunmsg=0)
+        # t, ier = flushinit(15, data.pulse, dtime, lunget=12, iseq=0,
+        #                    uid='JETPPF', dda='EFIT', lunmsg=0)
+
+        t,ier = flushquickinit(data.pulse, dtime)
         if ier != 0:
             logger.warning('flush error {} in flushinit'.format(ier))
             # return ier
@@ -506,7 +509,7 @@ def time_loop(arg):
         nfound, r1, z1, r2, z2, r3, z3, r4, z4, ier = Flush_getIntersections(xpt,
                                                                              ypt,
                                                                              angle,
-                                                                             data.EPSF,
+                                                                             0.0001,
                                                                              NPSI,
                                                                              psimax)
         if ier != 0:
@@ -909,8 +912,8 @@ def main(shot_no, code,read_uid, write_uid, number_of_channels,algorithm,interp_
             for i,r in enumerate(results):
                 if len(r[0].KG1LH_data.lid.keys()) != 0:
                     data.KG1LH_data.lid[i+1] = SignalBase(data.constants)
-                    data.KG1LH_data.lid[i+1].time = r[0].KG1LH_data.lid[r[1]].time
-                    data.KG1LH_data.lid[i+1].data = r[0].KG1LH_data.lid[r[1]].data
+                    data.KG1LH_data.lid[i+1].time = [float(i) for i in r[0].KG1LH_data.lid[r[1]].time]#r[0].KG1LH_data.lid[r[1]].time
+                    data.KG1LH_data.lid[i+1].data = [float(i) for i in r[0].KG1LH_data.lid[r[1]].data]#r[0].KG1LH_data.lid[r[1]].data
                 else:
                     continue
         except:
@@ -929,8 +932,8 @@ def main(shot_no, code,read_uid, write_uid, number_of_channels,algorithm,interp_
             for i,r in enumerate(results):
                 if len(r[0].KG1LH_data.lid.keys()) != 0:
                     data.KG1LH_data.lid[i+1] = SignalBase(data.constants)
-                    data.KG1LH_data.lid[i+1].time = r[0].KG1LH_data.lid[r[1]].time
-                    data.KG1LH_data.lid[i+1].data = r[0].KG1LH_data.lid[r[1]].data
+                    data.KG1LH_data.lid[i+1].time = [float(i) for i in r[0].KG1LH_data.lid[r[1]].time]#r[0].KG1LH_data.lid[r[1]].time
+                    data.KG1LH_data.lid[i+1].data = [float(i) for i in r[0].KG1LH_data.lid[r[1]].data]#r[0].KG1LH_data.lid[r[1]].data
                 else:
                     continue
         except:
@@ -949,8 +952,8 @@ def main(shot_no, code,read_uid, write_uid, number_of_channels,algorithm,interp_
             for i, r in enumerate(results):
                 if len(r[0].KG1LH_data.lid.keys()) != 0:
                     data.KG1LH_data.lid[i + 1] = SignalBase(data.constants)
-                    data.KG1LH_data.lid[i + 1].time = r[0].KG1LH_data.lid[r[1]].time
-                    data.KG1LH_data.lid[i + 1].data = r[0].KG1LH_data.lid[r[1]].data
+                    data.KG1LH_data.lid[i + 1].time = [float(i) for i in r[0].KG1LH_data.lid[r[1]].time]#r[0].KG1LH_data.lid[r[1]].time
+                    data.KG1LH_data.lid[i + 1].data = [float(i) for i in r[0].KG1LH_data.lid[r[1]].data]#r[0].KG1LH_data.lid[r[1]].data
                 else:
                     continue
         except:
@@ -977,16 +980,16 @@ def main(shot_no, code,read_uid, write_uid, number_of_channels,algorithm,interp_
                 # data.KG1LH_data.lid[i + 1].data = res[0].KG1LH_data.lid[res[1]].data
 
                 data.KG1LH_data.lad[i + 1] = SignalBase(data.constants)
-                data.KG1LH_data.lad[i + 1].time = res[0].KG1LH_data.lad[res[1]].time
-                data.KG1LH_data.lad[i + 1].data = res[0].KG1LH_data.lad[res[1]].data
+                data.KG1LH_data.lad[i + 1].time = [float(i) for i in res[0].KG1LH_data.lad[res[1]].time]
+                data.KG1LH_data.lad[i + 1].data = [float(i) for i in res[0].KG1LH_data.lad[res[1]].data]#res[0].KG1LH_data.lad[res[1]].data
 
                 data.KG1LH_data.len[i + 1] = SignalBase(data.constants)
-                data.KG1LH_data.len[i + 1].time = res[0].KG1LH_data.len[res[1]].time
-                data.KG1LH_data.len[i + 1].data = res[0].KG1LH_data.len[res[1]].data
+                data.KG1LH_data.len[i + 1].time = [float(i) for i in res[0].KG1LH_data.len[res[1]].time]#res[0].KG1LH_data.len[res[1]].time
+                data.KG1LH_data.len[i + 1].data = [float(i) for i in res[0].KG1LH_data.len[res[1]].data]#res[0].KG1LH_data.len[res[1]].data
 
                 data.KG1LH_data.xta[i + 1] = SignalBase(data.constants)
-                data.KG1LH_data.xta[i + 1].time = res[0].KG1LH_data.xta[res[1]].time
-                data.KG1LH_data.xta[i + 1].data = res[0].KG1LH_data.xta[res[1]].data
+                data.KG1LH_data.xta[i + 1].time = [float(i) for i in res[0].KG1LH_data.xta[res[1]].time]#res[0].KG1LH_data.xta[res[1]].time
+                data.KG1LH_data.xta[i + 1].data = [float(i) for i in res[0].KG1LH_data.xta[res[1]].data]#res[0].KG1LH_data.xta[res[1]].data
             else:
                 continue
     except:
