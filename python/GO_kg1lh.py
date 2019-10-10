@@ -134,17 +134,17 @@ def map_kg1_efit_RM_pandas(arg):
     if data.code.lower() == 'kg1l':
         data.KG1LH_data.lid[chan].data =  density2
     else:
-        data.KG1LH_data.lid[chan].data =  data.KG1_data.density[chan].data
+        data.KG1LH_data.lid[chan].data =  [float(i) for i in data.KG1_data.density[chan].data]
     # data.KG1LH_data.lid[chan].data = density2
-    data.KG1LH_data.lid[chan].time = data.KG1_data.density[chan].time
+    data.KG1LH_data.lid[chan].time = [float(i) for i in data.KG1_data.density[chan].time]
     if data.interp_method == 'interp':
         dummy, dummy_time = data.KG1LH_data.lid[chan].resample_signal(
             data.interp_method, time_efit)
     if data.interp_method == 'interp_ZPS':
         dummy,dummy_time = data.KG1LH_data.lid[chan].resample_signal(data.interp_method, time_efit)
 
-    data.KG1LH_data.lid[chan].data = np.empty(ntime_efit)
-    data.KG1LH_data.lid[chan].time = np.empty(ntime_efit)
+    data.KG1LH_data.lid[chan].data = np.empty(ntime_efit,dtype=float)
+    data.KG1LH_data.lid[chan].time = np.empty(ntime_efit,dtype=float)
 
     data.KG1LH_data.lid[chan].data = dummy
     data.KG1LH_data.lid[chan].time = dummy_time
@@ -208,8 +208,8 @@ def map_kg1_efit_RM(arg):
     if data.code.lower() == 'kg1l':
         data.KG1LH_data.lid[chan].data =  density1
     else:
-        data.KG1LH_data.lid[chan].data =  data.KG1_data.density[chan].data
-    data.KG1LH_data.lid[chan].time = data.KG1_data.density[chan].time
+        data.KG1LH_data.lid[chan].data =  [float(i) for i in data.KG1_data.density[chan].data]
+    data.KG1LH_data.lid[chan].time = [float(i) for i in data.KG1_data.density[chan].time]
     # data.KG1LH_data.lid[chan].time = time_efit
     if data.interp_method == 'interp':
         dummy, dummy_time = data.KG1LH_data.lid[chan].resample_signal(
@@ -217,7 +217,7 @@ def map_kg1_efit_RM(arg):
     if data.interp_method == 'interp_ZPS':
         dummy,dummy_time = data.KG1LH_data.lid[chan].resample_signal(data.interp_method, time_efit)
 
-    data.KG1LH_data.lid[chan].time = np.empty(ntime_efit)
+    data.KG1LH_data.lid[chan].time = np.empty(ntime_efit,dtype=float)
 
     data.KG1LH_data.lid[chan].data = dummy
     data.KG1LH_data.lid[chan].time = dummy_time
@@ -254,7 +254,7 @@ def map_kg1_efit(arg):
         data_efit = data.EFIT_data.rmag_fast.data
         data.EFIT_data.sampling_time = np.mean(np.diff(data.EFIT_data.rmag_fast.time))
 
-    density = np.zeros(ntime_efit)
+    density = np.zeros(ntime_efit,dtype=float)
     ntkg1v = len(data.KG1_data.density[chan].time)
     tkg1v = data.KG1_data.density[chan].time
     tsmo = data.KG1LH_data.tsmo
@@ -263,7 +263,7 @@ def map_kg1_efit(arg):
 
     for it in range(0, ntime_efit):
         # pdb.set_trace()
-        sum = np.zeros(8)
+        sum = np.zeros(8,dtype=float)
 
         nsum = 0
 
@@ -306,7 +306,7 @@ def map_kg1_efit(arg):
             data.interp_method, time_efit)
     if data.interp_method == 'interp_ZPS':
         dummy,dummy_time = data.KG1LH_data.lid[chan].resample_signal(data.interp_method, time_efit)
-    data.KG1LH_data.lid[chan].time = np.empty(ntime_efit)
+    data.KG1LH_data.lid[chan].time = np.empty(ntime_efit,dtype=float)
 
     data.KG1LH_data.lid[chan].data = dummy
     data.KG1LH_data.lid[chan].time = dummy_time
@@ -515,7 +515,7 @@ def time_loop(arg):
         if ier != 0:
             logger.warning('flush error {}  in Flush_getIntersections'.format(ier))
             # return ier
-        cord = float(math.hypot(r2 - r1, z2 - z1))
+        cord = float(math.hypot(float(r2) - float(r1), float(z2) - float(z1)))
 
         logger.log(5, 'found {} intersection/s'.format(nfound))
 
@@ -963,8 +963,8 @@ def main(shot_no, code,read_uid, write_uid, number_of_channels,algorithm,interp_
 #################################################
     # -------------------------------
     # 5. TIME LOOP
-    pdb.set_trace()
-    print(data.EFIT_data.rmag_fast.time)
+    # pdb.set_trace()
+    # print(data.EFIT_data.rmag_fast.time)
     # -------------------------------
     try:
         logger.info('Starting time loop')

@@ -113,23 +113,25 @@ def write_ppf(shot_no, dda, dtype, data, time=None,
 
     logger.log(5, ( "Using itref {}".format(itref)))
 
-    data_type = 'F'
-#    if (data.dtype == 'int32' or data.dtype == 'int64'):
-#        data_type = 'I'
+    data_type = 'D'
+    # if (data.dtype == 'int32' or data.dtype == 'int64'):
+    #    data_type = 'I'
 
-    time_type = 'F'
-#    if (time.dtype == 'int32' or  data.dtype == 'int64'):
-#        time_type = 'I'
-
+    time_type = 'D'
+    # if (time.dtype == 'int32' or  data.dtype == 'int64'):
+    #    time_type = 'I'
+    #
     if global_status is None:
         global_status = 0
 
     # Create ihdat & irdat
     ihdat = ppfwri_ihdat(unitd, "", unitt, data_type, data_type, time_type, comment)
+    # ihdat = ppfwritedouble_ihdat(unitd, "", unitt, data_type, data_type, time_type, comment)
 
     logger.log(5, ( "ihdat {}".format(ihdat)))
 
     irdat = ppfwri_irdat(1, nt, refx=-1, reft=itref, user=0, system=global_status)
+    # irdat = ppfwritedouble_irdat(1, nt, refx=-1, reft=itref, user=0, system=global_status)
 
     logger.log(5, ( "irdat {}".format(irdat)))
 
@@ -146,7 +148,7 @@ def write_ppf(shot_no, dda, dtype, data, time=None,
     # Write data
     # irdat[7]=0 #generates ppf identical to KG1V code
     # irdat[8]=-1
-    iwdat, ier = ppfwri(shot_no, dda, dtype, irdat, ihdat, data, global_status, time)
+    iwdat, ier = ppfwri(shot_no, dda, dtype, irdat, ihdat, data, global_status, time, allow_double=True)
 
     logger.log(5, ( "iwdat: {}".format(iwdat)))
     logger.log(5, ( "itref for signal that was just written : {}".format(iwdat[8])))
