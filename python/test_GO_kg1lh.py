@@ -134,20 +134,20 @@ def map_kg1_efit_RM_pandas(arg):
     if data.code.lower() == 'kg1l':
         data.KG1LH_data.lid[chan].data =  density2
     else:
-        data.KG1LH_data.lid[chan].data =  [float(i) for i in data.KG1_data.density[chan].data]
+        data.KG1LH_data.lid[chan].data =  [np.float64(i) for i in data.KG1_data.density[chan].data]
     # data.KG1LH_data.lid[chan].data = density2
-    data.KG1LH_data.lid[chan].time = [float(i) for i in data.KG1_data.density[chan].time]
+    data.KG1LH_data.lid[chan].time = [np.float64(i) for i in data.KG1_data.density[chan].time]
     if data.interp_method == 'interp':
         dummy, dummy_time = data.KG1LH_data.lid[chan].resample_signal(
             data.interp_method, time_efit)
     if data.interp_method == 'interp_ZPS':
         dummy,dummy_time = data.KG1LH_data.lid[chan].resample_signal(data.interp_method, time_efit)
 
-    data.KG1LH_data.lid[chan].data = np.empty(ntime_efit,dtype=float)
-    data.KG1LH_data.lid[chan].time = np.empty(ntime_efit,dtype=float)
+    data.KG1LH_data.lid[chan].data = np.empty(ntime_efit,dtype=np.float64)
+    data.KG1LH_data.lid[chan].time = np.empty(ntime_efit,dtype=np.float64)
 
-    data.KG1LH_data.lid[chan].data = dummy
-    data.KG1LH_data.lid[chan].time = dummy_time
+    data.KG1LH_data.lid[chan].data = np.array(dummy,dtype=np.float64)
+    data.KG1LH_data.lid[chan].time = np.array(dummy_time,dtype=np.float64)
 
 
 
@@ -208,8 +208,8 @@ def map_kg1_efit_RM(arg):
     if data.code.lower() == 'kg1l':
         data.KG1LH_data.lid[chan].data =  density1
     else:
-        data.KG1LH_data.lid[chan].data =  [float(i) for i in data.KG1_data.density[chan].data]
-    data.KG1LH_data.lid[chan].time = [float(i) for i in data.KG1_data.density[chan].time]
+        data.KG1LH_data.lid[chan].data =  [np.float64(i) for i in data.KG1_data.density[chan].data]
+    data.KG1LH_data.lid[chan].time = data.KG1_data.density[chan].time#[np.float64(i) for i in data.KG1_data.density[chan].time]
     # data.KG1LH_data.lid[chan].time = time_efit
     if data.interp_method == 'interp':
         dummy, dummy_time = data.KG1LH_data.lid[chan].resample_signal(
@@ -217,10 +217,16 @@ def map_kg1_efit_RM(arg):
     if data.interp_method == 'interp_ZPS':
         dummy,dummy_time = data.KG1LH_data.lid[chan].resample_signal(data.interp_method, time_efit)
 
-    data.KG1LH_data.lid[chan].time = np.empty(ntime_efit,dtype=float)
+    if data.code.lower() == 'kg1h':
+        data.KG1LH_data.lid[chan].time = np.empty(ntime_efit,dtype=np.float64)
 
-    data.KG1LH_data.lid[chan].data = dummy
-    data.KG1LH_data.lid[chan].time = dummy_time
+        data.KG1LH_data.lid[chan].data = np.array(dummy,dtype=np.float64)
+        data.KG1LH_data.lid[chan].time = np.array(dummy_time,dtype=np.float64)
+    else:
+        data.KG1LH_data.lid[chan].time = np.empty(ntime_efit)
+
+        data.KG1LH_data.lid[chan].data = np.array(dummy)
+        data.KG1LH_data.lid[chan].time = np.array(dummy_time)
 
 
 
@@ -253,8 +259,10 @@ def map_kg1_efit(arg):
         time_efit = data.EFIT_data.rmag_fast.time
         data_efit = data.EFIT_data.rmag_fast.data
         data.EFIT_data.sampling_time = np.mean(np.diff(data.EFIT_data.rmag_fast.time))
-
-    density = np.zeros(ntime_efit,dtype=float)
+    if data.code.lower() == 'kg1h':
+        density = np.zeros(ntime_efit,dtype=np.float64)
+    else:
+        density = np.zeros(ntime_efit)
     ntkg1v = len(data.KG1_data.density[chan].time)
     tkg1v = data.KG1_data.density[chan].time
     tsmo = data.KG1LH_data.tsmo
@@ -263,7 +271,7 @@ def map_kg1_efit(arg):
 
     for it in range(0, ntime_efit):
         # pdb.set_trace()
-        sum = np.zeros(8,dtype=float)
+        sum = np.zeros(8,dtype=np.float64)
 
         nsum = 0
 
@@ -298,18 +306,27 @@ def map_kg1_efit(arg):
 
 
     data.KG1LH_data.lid[chan] = SignalBase(data.constants)
-    data.KG1LH_data.lid[chan].data = density
-    data.KG1LH_data.lid[chan].time = time_efit
+    data.KG1LH_data.lid[chan].data = np.array(density)
+    data.KG1LH_data.lid[chan].time = np.array(time_efit)
     # data.KG1LH_data.lid[chan].time = time_efit
     if data.interp_method == 'interp':
         dummy, dummy_time = data.KG1LH_data.lid[chan].resample_signal(
             data.interp_method, time_efit)
     if data.interp_method == 'interp_ZPS':
         dummy,dummy_time = data.KG1LH_data.lid[chan].resample_signal(data.interp_method, time_efit)
-    data.KG1LH_data.lid[chan].time = np.empty(ntime_efit,dtype=float)
 
-    data.KG1LH_data.lid[chan].data = dummy
-    data.KG1LH_data.lid[chan].time = dummy_time
+    if data.code.lower() == 'kg1h':
+        data.KG1LH_data.lid[chan].time = np.empty(ntime_efit, dtype=np.float64)
+
+        data.KG1LH_data.lid[chan].data = np.array(dummy, dtype=np.float64)
+        data.KG1LH_data.lid[chan].time = np.array(dummy_time, dtype=np.float64)
+    else:
+        data.KG1LH_data.lid[chan].time = np.empty(ntime_efit)
+
+        data.KG1LH_data.lid[chan].data = np.array(dummy)
+        data.KG1LH_data.lid[chan].time = np.array(dummy_time)
+
+
 
     return (data,chan)
 
@@ -344,6 +361,10 @@ def time_loop(arg):
         sampling_time_kg1v = np.mean(np.diff(tkg1v))
         tsmo = data.KG1LH_data.tsmo
         rolling_mean = int(round(tsmo / sampling_time_kg1v))
+        length = np.zeros(ntefit)
+        xtan = np.zeros(ntefit)
+        lad = np.zeros(ntefit)
+
 
     else:
         ntime_efit = len(data.EFIT_data.rmag_fast.time)
@@ -357,18 +378,22 @@ def time_loop(arg):
         sampling_time_kg1v = np.mean(np.diff(tkg1v))
         tsmo = data.KG1LH_data.tsmo
         rolling_mean = int(round(sampling_time_kg1v / tsmo))
+        # data.EPSF = float(data.EPSF / 100000)
+        # data.EPSF = float(data.EPSF )
+        # data.EPSDD = float(data.EPSDD )
+
+        length = np.zeros(ntefit, dtype=np.float64)
+        xtan = np.zeros(ntefit, dtype=np.float64)
+        lad = np.zeros(ntefit, dtype=np.float64)
 
 
-    density = data.KG1LH_data.lid[chan].data
 
 
 
 
 
 
-    length = np.zeros(ntefit,dtype=float)
-    xtan = np.zeros(ntefit,dtype=float)
-    lad = np.zeros(ntefit,dtype=float)
+
 
     xpt = data.r_ref[chan - 1]
     ypt = data.z_ref[chan - 1]
@@ -392,10 +417,10 @@ def time_loop(arg):
 
         dtime = float(TIMEM)
 
-        t, ier = flushinit(15, data.pulse, dtime, lunget=12, iseq=0,
-                           uid='JETPPF', dda='EFIT', lunmsg=0)
-        #
-        # t,ier = flushquickinit(data.pulse, dtime)
+        # t, ier = flushinit(15, data.pulse, dtime, lunget=12, iseq=0,
+        #                    uid='JETPPF', dda='EFIT', lunmsg=0)
+
+        t,ier = flushquickinit(data.pulse, dtime)
         if ier != 0:
             logger.warning('flush error {} in flushinit'.format(ier))
             # return ier
@@ -525,7 +550,7 @@ def time_loop(arg):
         logger.log(5,'cord length for channel {} is {}'.format(chan, length[IT]))
         # length[IT] = cord # conversion from cm to m
         if (length[IT] > 0.0):
-            lad[IT] = float(density[IT] / length[IT])
+            lad[IT] = float(data.KG1LH_data.lid[chan].data[IT] / length[IT])
         else:
             lad[IT] = 0.0
 
@@ -540,25 +565,46 @@ def time_loop(arg):
 
 
     data.KG1LH_data.lid[chan] = SignalBase(data.constants)
-    data.KG1LH_data.lid[chan].data = density
-    data.KG1LH_data.lid[chan].time = [float(i) for i in time_efit]
+    data.KG1LH_data.lid[chan].data = np.array(data.KG1LH_data.lid[chan].data,dtype=np.float64)
+
+
     #
     data.KG1LH_data.lad[chan] = SignalBase(data.constants)
-    data.KG1LH_data.lad[chan].data = [float(i) for i in lad]
 
-    data.KG1LH_data.lad[chan].time = [float(i) for i in time_efit]
+
+
     #
     data.KG1LH_data.len[chan] = SignalBase(data.constants)
-    data.KG1LH_data.len[chan].data = [float(i) for i in length]
 
-    data.KG1LH_data.len[chan].time = [float(i) for i in time_efit]
+
+
     #
     data.KG1LH_data.xta[chan] = SignalBase(data.constants)
-    data.KG1LH_data.xta[chan].data = [float(i) for i in xtan]
-
-    data.KG1LH_data.xta[chan].time = [float(i) for i in time_efit]
 
 
+    data.KG1LH_data.xta[chan].time = [np.float64(i) for i in time_efit]
+
+    if data.code.lower() == 'kg1h':
+        data.KG1LH_data.lad[chan].data = np.array(lad,
+                                                  dtype=np.float64)  # [float(i) for i in lad]
+        data.KG1LH_data.len[chan].data = np.array(length,
+                                                  dtype=np.float64)  # [float(i) for i in length]
+        data.KG1LH_data.xta[chan].data = np.array(xtan,
+                                                  dtype=np.float64)  # [float(i) for i in xtan]
+        data.KG1LH_data.lid[chan].time = [np.float64(i) for i in time_efit]
+        data.KG1LH_data.lad[chan].time = [np.float64(i) for i in time_efit]
+        data.KG1LH_data.len[chan].time = [np.float64(i) for i in time_efit]
+
+    else:
+        data.KG1LH_data.lad[chan].data = np.array(lad,
+                                                  dtype=np.float)  # [float(i) for i in lad]
+        data.KG1LH_data.len[chan].data = np.array(length,
+                                                  dtype=np.float)  # [float(i) for i in length]
+        data.KG1LH_data.xta[chan].data = np.array(xtan,
+                                                  dtype=np.float)  # [float(i) for i in xtan]
+        data.KG1LH_data.lid[chan].time = [np.float(i) for i in time_efit]
+        data.KG1LH_data.lad[chan].time = [np.float(i) for i in time_efit]
+        data.KG1LH_data.len[chan].time = [np.float(i) for i in time_efit]
 
     return (data, chan)
 
@@ -631,9 +677,7 @@ def main(shot_no, code,read_uid, write_uid, number_of_channels,algorithm,interp_
     # C-----------------------------------------------------------------------
 
     data.psim1 = 1.00
-    # data.EPSDD = float(0.0001)                           # accuracy for gettangents
-    # data.EPSF = float(0.0001)                         # accuracy for getIntersections
-    #this two values have been copied from the fortran code
+
 
     # C-----------------------------------------------------------------------
     # C set smoothing time
@@ -648,8 +692,8 @@ def main(shot_no, code,read_uid, write_uid, number_of_channels,algorithm,interp_
     else:
         logger.info('running KG1H \n')
         tsmo = 1.0e-4
-        data.EPSDD = float(0.0001)  # accuracy for gettangents
-        data.EPSF = float(0.0001)  # accuracy for getIntersections
+        data.EPSDD = float(0.001)  # accuracy for gettangents
+        data.EPSF = float(0.00001)  # accuracy for getIntersections
 #this two values have been copied from the fortran code
 
     # ----------------------------
@@ -1144,7 +1188,7 @@ def main(shot_no, code,read_uid, write_uid, number_of_channels,algorithm,interp_
             dtype_lid = "LAD{}".format(chan)
             comment = "Line Average Density CHANNEL {}".format(chan)
 
-
+            # pdb.set_trace()
             write_err, itref_written = write_ppf(data.pulse, dda,
                                                  dtype_lid,
                                                  data.KG1LH_data.lad[
