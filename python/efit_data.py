@@ -72,7 +72,7 @@ class EFITData(SignalBase):
 
         status = efit_signal.read_data_ppf(dda, dtype, shot_no,
                                             read_bad=True,
-                                            read_uid=read_uid)
+                                            read_uid=read_uid, use_64bit=True)
 
         if efit_signal.data is not None:
             # Keep points where there is ip

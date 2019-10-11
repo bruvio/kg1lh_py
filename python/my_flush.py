@@ -82,10 +82,10 @@ def flushinit(igo, ishot, time, lunget=0, iseq=0, uid='JETPPF', dda='EFIT', lunm
     
 lib_flush.fluqax_.argtypes = [
                     POINTER(c_int),                 # nQ
-                    ndpointer(dtype=np.float64),    # q, 
-                    POINTER(c_int),                 # nOut, 
-                    ndpointer(dtype=np.float64),    # psi, 
-                    ndpointer(dtype=np.float64),    # rInner, 
+                    ndpointer(dtype=np.float64),    # q,
+                    POINTER(c_int),                 # nOut,
+                    ndpointer(dtype=np.float64),    # psi,
+                    ndpointer(dtype=np.float64),    # rInner,
                     ndpointer(dtype=np.float64),    # rOuter, ierr)
                     POINTER(c_int)]                 # ierr
 lib_flush.fluqax_.restype = None
@@ -121,9 +121,9 @@ def Flush_getPsiGivenQ(q):
     q = np.ascontiguousarray(np.atleast_1d(q),dtype=np.float64)
     nn = q.size
     print("Flush q size", nn)
-    
+
     psi = np.empty(nn, dtype=np.float64)
-    
+
     nn = c_int(nn)
     ier = c_int(0)
     lib_flush.flush_getpsigivenq_(byref(nn), q, psi, byref(ier))
@@ -151,20 +151,20 @@ lib_flush.flusu2_.restype = None
 def flusu2(nPsi, psi, npoint, npdim=0, work=None, jwork=None, lopt=2):
     psi = np.ascontiguousarray(np.atleast_1d(psi),dtype=np.float64)
     nn = psi.size
-    
+
     nPsi = c_int(nn)
     npoint = c_int(npoint)
     npdim = c_int(npdim)
-    
+
     nnpoint = max(npoint.value, npdim.value)
     r = np.zeros((nn,nnpoint))
     z = np.zeros((nn,nnpoint))
     br = np.zeros((nn,nnpoint))
     bz = np.zeros((nn,nnpoint))
-    
+
     work = np.zeros(nnpoint)
     jwork = np.zeros(nnpoint, dtype=np.int32)
-    
+
     lopt = c_int(lopt)
     ier = c_int(0)
     lib_flush.flusu2_(
@@ -202,13 +202,13 @@ def Flush_getClosedFluxSurface(flux,nPoints=360):
 # No sane way to implement it (a memory leak is the minimum one can get)
 # Flush_getFluxSurfaces(nflux, flux, accuracy, nPieces, nPoints, rSurf, zSurf, ier)
 #lib_flush.Flush_getFluxSurfaces.argtypes = [
-                    #POINTER(c_int),                 # nflux, 
-                    #ndpointer(dtype=np.float64),    # flux, 
-                    #POINTER(c_double),              # accuracy, 
-                    #POINTER(c_int),                 # nPieces, 
-                    #POINTER(c_int),                 # nPoints, 
-                    #ndpointer(dtype=np.float64),    # rSurf, 
-                    #ndpointer(dtype=np.float64),    # zSurf, 
+                    #POINTER(c_int),                 # nflux,
+                    #ndpointer(dtype=np.float64),    # flux,
+                    #POINTER(c_double),              # accuracy,
+                    #POINTER(c_int),                 # nPieces,
+                    #POINTER(c_int),                 # nPoints,
+                    #ndpointer(dtype=np.float64),    # rSurf,
+                    #ndpointer(dtype=np.float64),    # zSurf,
                     #POINTER(c_int)]                 # ier
 
 #-----------------------------------------------------------------------
@@ -386,7 +386,7 @@ def Flush_getVolume(flux):
     ier = c_int(0)
     nflux = c_int(nflux)
     lib_flush.flush_getvolume_(byref(nflux),flux, volume_cm3, byref(ier))
-    volume_m3 = volume_cm3/1e6 
+    volume_m3 = volume_cm3/1e6
     return volume_m3, ier.value
 # ##############################
 #Flush_getIntersections
@@ -417,18 +417,18 @@ def Flush_getIntersections(r, z, tht, acc,n, flux):
     flux = np.ascontiguousarray(np.atleast_1d(flux),dtype=np.float64)
     nflux = flux.size
     nfound = np.empty(nflux, dtype=c_int)
-    r1 = np.empty(nflux)
-    z1 = np.empty(nflux)
-    r2 = np.empty(nflux)
-    z2 = np.empty(nflux)
-    r3 = np.empty(nflux)
-    z3 = np.empty(nflux)
-    r4 = np.empty(nflux)
-    z4 = np.empty(nflux)
-    nflux = c_int(nflux)
+    r1 = np.empty(nflux,dtype=np.float64)
+    z1 = np.empty(nflux,dtype=np.float64)
+    r2 = np.empty(nflux,dtype=np.float64)
+    z2 = np.empty(nflux,dtype=np.float64)
+    r3 = np.empty(nflux,dtype=np.float64)
+    z3 = np.empty(nflux,dtype=np.float64)
+    r4 = np.empty(nflux,dtype=np.float64)
+    z4 = np.empty(nflux,dtype=np.float64)
+    nflux = c_int(nflux,dtype=np.float64)
     ier = c_int(0)
     lib_flush.flush_getintersections_(
-                byref(r), byref(z), byref(tht), byref(acc), 
+                byref(r), byref(z), byref(tht), byref(acc),
                 byref(nflux), flux, nfound, r1, z1, r2, z2, r3, z3, r4, z4, byref(ier))
     return nfound, r1, z1, r2, z2, r3, z3, r4, z4, ier.value
 
@@ -458,11 +458,11 @@ def Flush_writeEQDSKfile(filename, nR, nZ):
 
 
 # ##############################
-lib_flush.flush_getsplinedomainlimits_.argtypes = [ 
-                        POINTER(c_double),    # rMin, 
-                        POINTER(c_double),    # zMin, 
-                        POINTER(c_double),    # rMax, 
-                        POINTER(c_double),    # zMax, 
+lib_flush.flush_getsplinedomainlimits_.argtypes = [
+                        POINTER(c_double),    # rMin,
+                        POINTER(c_double),    # zMin,
+                        POINTER(c_double),    # rMax,
+                        POINTER(c_double),    # zMax,
                         POINTER(c_int)]       # ier)
 def Flush_getSplineDomainLimits():
     rMin = c_double(0.0)
@@ -470,14 +470,14 @@ def Flush_getSplineDomainLimits():
     rMax = c_double(0.0)
     zMax = c_double(0.0)
     ier = c_int(0)
-    lib_flush.flush_getsplinedomainlimits_(byref(rMin), byref(zMin), 
+    lib_flush.flush_getsplinedomainlimits_(byref(rMin), byref(zMin),
                                            byref(rMax), byref(zMax), byref(ier))
-    return rMin.value, zMin.value, rMax.value, zMax.value, ier.value 
+    return rMin.value, zMin.value, rMax.value, zMax.value, ier.value
 # ##############################
 # Flush_getBref (rRef, bRef, ier)
 lib_flush.flush_getbref_.argtypes = [
-                        POINTER(c_double),    # rRef, 
-                        POINTER(c_double),    # bRef, 
+                        POINTER(c_double),    # rRef,
+                        POINTER(c_double),    # bRef,
                         POINTER(c_int)]       # ier)
 
 def Flush_getBref():
@@ -518,7 +518,7 @@ def Flush_getFluxAveragedQuantities(flux, quantitiesNames):
 # ##############################
 #Flush_getlcfsFlux (lcfsFlux, ier)
 lib_flush.flush_getlcfsflux_.argtypes = [
-                        POINTER(c_double),    # lcfsFlux, 
+                        POINTER(c_double),    # lcfsFlux,
                         POINTER(c_int)]       # ier)
 def Flush_getlcfsFlux():
     lcfsFlux = c_double(0.0)
@@ -556,7 +556,7 @@ def Flush_getTangentsToSurfaces(r, z, flux, iside, accuracy, nBeams):
     iside = c_int(iside)
     ier = c_int(0)
     lib_flush.flush_gettangentstosurfaces_(
-                r, z, angle, nflux, flux, 
+                r, z, angle, nflux, flux,
                 iside, rTan, zTan, accuracy, nBeams, ier)
     return angle, rTan, zTan, ier.value
 

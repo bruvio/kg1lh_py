@@ -144,7 +144,7 @@ class Kg1PPFData(SignalBase):
         filename = self.constants.geometry_filename
 
         try:
-            raw = np.loadtxt(filename, skiprows=3)
+            raw = np.loadtxt(filename, skiprows=3,dtype=np.float64)
 
             temp = raw[:,0]
             index = np.where(temp==vv_temp)[0]

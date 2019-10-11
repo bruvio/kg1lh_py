@@ -108,7 +108,7 @@ class SignalBase():
 
 
     # ------------------------
-    def read_data_ppf(self, dda, dtype, shot_no, read_bad=False, read_uid="JETPPF", seq=0):
+    def read_data_ppf(self, dda, dtype, shot_no, read_bad=False, read_uid="JETPPF", seq=0, use_64bit=False):
         """
         Read in and store PPF data
         :param dda: DDA
@@ -138,8 +138,13 @@ class SignalBase():
         if ier != 0:
             return 0
 
-        self.data = np.array(data)
-        self.time = np.array(time)
+        if use_64bit:
+            self.data = np.array(data, dtype=np.float64)
+            self.time = np.array(time, dtype=np.float64)
+        else:
+            self.data = np.array(data)
+            self.time = np.array(time)
+
         self.ihdata = ihdata
         self.iwdata = iwdata
 

@@ -683,21 +683,33 @@ def main(shot_no, code,read_uid, write_uid, number_of_channels,algorithm,interp_
     # C set smoothing time
     # C-----------------------------------------------------------------------
 
+    # if (code.lower() == 'kg1l'):
+    #     logger.info('running KG1L \n')
+    #     tsmo = 0.025
+    #     data.EPSDD = float(0.01)  # accuracy for gettangents
+    #     data.EPSF = float(0.0001)  # accuracy for getIntersections
+    #     # this two values have been copied from the fortran code
+    # else:
+    #     logger.info('running KG1H \n')
+    #     tsmo = 1.0e-4
+    #     data.EPSDD = float(0.001)  # accuracy for gettangents
+    #     data.EPSF = float(0.00001)  # accuracy for getIntersections
+#this two values have been copied from the fortran code
+
+    # ----------------------------
+#
     if (code.lower() == 'kg1l'):
         logger.info('running KG1L \n')
         tsmo = 0.025
         data.EPSDD = float(0.01)  # accuracy for gettangents
-        data.EPSF = float(0.0001)  # accuracy for getIntersections
+        data.EPSF = float(0.001)  # accuracy for getIntersections
         # this two values have been copied from the fortran code
     else:
         logger.info('running KG1H \n')
         tsmo = 1.0e-4
-        data.EPSDD = float(0.001)  # accuracy for gettangents
-        data.EPSF = float(0.00001)  # accuracy for getIntersections
-#this two values have been copied from the fortran code
-
-    # ----------------------------
-    #
+        data.EPSDD = float(0.0001)  # accuracy for gettangents
+        data.EPSF = float(0.0001)  # accuracy for getIntersections
+# this two values have been copied from the fortran code
 
 # C-----------------------------------------------------------------------
 # C init

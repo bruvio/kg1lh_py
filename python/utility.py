@@ -181,3 +181,6 @@ def movingaverage(interval, window_size):
     # plt.show()
     #
     # pdb.set_trace()
+
+def create_dict(*args):
+  return dict({i:eval(i) for i in args})
