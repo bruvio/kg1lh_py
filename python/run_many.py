@@ -125,4 +125,6 @@ if __name__ == "__main__":
         # make_scripts([95521,95521,95521,95521],code,'testcode')
         # make_scripts([94751,94749,94753,94755,95346,95402,95403,95405,95407,95408],code,'vonthun')
         # make_scripts([94751,94749,94753,94755,95346,95402,95403,95405,95407,95408],code,'vonthun')
-        make_scripts([95294,95288,95289],code,'fernanda')
+        #make_scripts([95294,95288,95289],code,'fernanda')
+        # make_scripts([95760,95761,95762,95763,95764,95758,95759],code,'29oct2019')
+         make_scripts([94837],code,'bart')

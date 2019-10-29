@@ -381,9 +381,9 @@ def time_loop(arg):
 
 
 
-    xpt = data.r_ref[chan - 1]
-    ypt = data.z_ref[chan - 1]
-    angle = data.a_ref[chan - 1]
+    xpt = data.r_coord[chan - 1]
+    ypt = data.z_coord[chan - 1]
+    angle = data.a_coord[chan - 1]
 
 
     # convert to cm
@@ -516,6 +516,7 @@ def time_loop(arg):
 
         NPSI = 1  # look for one surface
         psimax = 1 # value of psi at the last closed surface
+
         nfound, r1, z1, r2, z2, r3, z3, r4, z4, ier = Flush_getIntersections(xpt,
                                                                              ypt,
                                                                              angle,
@@ -555,6 +556,9 @@ def time_loop(arg):
             xtan[IT] = fTan1
         else:
             xtan[IT] = np.float64(fTan1)
+        if int(iflsep) != 0:
+            logger.log(5,'xpt {} ypt {} angle {} dtime {} coord {} length[IT] {} lad[IT] {} xtan[IT] {}'.format(xpt,ypt,angle,dtime,cord,length[IT],lad[IT],xtan[IT]))
+            # pdb.set_trace()
 
     if data.code.lower() == 'kg1l':
         data.KG1LH_data.lid[chan] = SignalBase(data.constants)
@@ -682,6 +686,8 @@ def main(shot_no, code,read_uid, write_uid, number_of_channels,algorithm,interp_
         data.EPSDD = float(0.01)  # accuracy for gettangents
         data.EPSF = float(0.001)  # accuracy for getIntersections
         # this two values have been copied from the fortran code
+        data.EPSDD = 0.1
+        data.EPSF = 0.00001
     else:
         logger.info('running KG1H \n')
         tsmo = 1.0e-4
@@ -689,9 +695,13 @@ def main(shot_no, code,read_uid, write_uid, number_of_channels,algorithm,interp_
 #              data.EPSF = float(0.0001)  # accuracy for getIntersections
         data.EPSDD = float(0.01)  # accuracy for gettangents
         data.EPSF = float(0.001)  # accuracy for getIntersections
+        data.EPSDD = 0.1
+        data.EPSF = 0.00001
 #        data.EPSDD = float(0.000001)  # accuracy for gettangents
 #        data.EPSF = float(0.000001)  # accuracy for getIntersections
 #this two values have been copied from the fortran code
+
+
 
     # ----------------------------
     #
@@ -918,12 +928,19 @@ def main(shot_no, code,read_uid, write_uid, number_of_channels,algorithm,interp_
     logging.info('reading line of sights')
     try:
 
-        data.temp, data.r_ref, data.z_ref, data.a_ref, data.r_coord, data.z_coord, data.data_coord, data.coord_err =data.KG1_data.get_coord(data.pulse)
+        #data.temp, data.r_ref, data.z_ref, data.a_ref, data.r_coord, data.z_coord, data.data_coord, data.coord_err =data.KG1_data.get_coord(data.pulse)
+        data.r_coord,dummy= getdata(shot_no, 'KG1V', 'R')
+        data.r_coord = data.r_coord['data']
+        data.z_coord,dummy= getdata(shot_no, 'KG1V', 'Z')
+        data.z_coord = data.z_coord['data']
+        data.a_coord,dummy= getdata(shot_no, 'KG1V', 'A')
+        data.a_coord = data.a_coord['data']
 
+#        pdb.set_trace()
 
-        if data.coord_err !=0:
-            logger.error('error reading cords coordinates')
-            return 22
+        #if data.coord_err !=0:
+        #    logger.error('error reading cords coordinates')
+        #    return 22
     except:
         logger.error('error reading cords coordinates')
         return 22
@@ -1041,7 +1058,7 @@ def main(shot_no, code,read_uid, write_uid, number_of_channels,algorithm,interp_
         return 24
 
 
-    # data,chan = time_loop((data,3))
+    #data,chan = time_loop((data,3))
 
 
     # -------------------------------
@@ -1330,14 +1347,14 @@ def main(shot_no, code,read_uid, write_uid, number_of_channels,algorithm,interp_
         efit_time = data.EFIT_data.rmag_fast.time
     else:
         efit_time = data.EFIT_data.rmag.time
+    if 3 in data.KG1LH_data.lid.keys():
+        lid3=data.KG1LH_data.lid[3].data
+        lad3=data.KG1LH_data.lad[3].data
+        len3=data.KG1LH_data.len[3].data
+        xta3=data.KG1LH_data.xta[3].data
 
-    lid3=data.KG1LH_data.lid[3].data
-    lad3=data.KG1LH_data.lad[3].data
-    len3=data.KG1LH_data.len[3].data
-    xta3=data.KG1LH_data.xta[3].data
-
-    df = pd.DataFrame({'efit_time':efit_time,'lid3':lid3,'lad3':lad3,'len3':len3,'xta3':xta3})
-    df.to_csv ('export_dataframe_'+data.code.lower()+'.csv', index = None, header=True)
+        df = pd.DataFrame({'efit_time':efit_time,'lid3':lid3,'lad3':lad3,'len3':len3,'xta3':xta3})
+        df.to_csv ('export_dataframe_'+data.code.lower()+'.csv', index = None, header=True)
 
     del data
 
