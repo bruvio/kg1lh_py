@@ -389,7 +389,7 @@ def time_loop(arg):
     # convert to cm
     xpt = float(xpt * 100.0)
     ypt = float(ypt * 100.0)
-
+    flush_time = []
 
 
 
@@ -406,7 +406,8 @@ def time_loop(arg):
             dtime = np.float64(TIMEM)
 
         t, ier = flushinit(15, data.pulse, dtime, lunget=12, iseq=0,
-                           uid='JETPPF', dda='EFIT', lunmsg=0)
+                           uid='JETPPF', dda=data.ddaefit, lunmsg=0)
+        flush_time.append(t)
         #
         # t,ier = flushquickinit(data.pulse, dtime)
         if ier != 0:
@@ -557,28 +558,29 @@ def time_loop(arg):
         else:
             xtan[IT] = np.float64(fTan1)
         if int(iflsep) != 0:
+            logger.log(5,'efit time {}s'.format(t))
             logger.log(5,'xpt {} ypt {} angle {} dtime {} coord {} length[IT] {} lad[IT] {} xtan[IT] {}'.format(xpt,ypt,angle,dtime,cord,length[IT],lad[IT],xtan[IT]))
             # pdb.set_trace()
 
     if data.code.lower() == 'kg1l':
         data.KG1LH_data.lid[chan] = SignalBase(data.constants)
         data.KG1LH_data.lid[chan].data = density
-        data.KG1LH_data.lid[chan].time = [float(i) for i in time_efit]
+        data.KG1LH_data.lid[chan].time = [float(i) for i in flush_time]
         #
         data.KG1LH_data.lad[chan] = SignalBase(data.constants)
         data.KG1LH_data.lad[chan].data = [float(i) for i in lad]
 
-        data.KG1LH_data.lad[chan].time = [float(i) for i in time_efit]
+        data.KG1LH_data.lad[chan].time = [float(i) for i in flush_time]
         #
         data.KG1LH_data.len[chan] = SignalBase(data.constants)
         data.KG1LH_data.len[chan].data = [float(i) for i in length]
 
-        data.KG1LH_data.len[chan].time = [float(i) for i in time_efit]
+        data.KG1LH_data.len[chan].time = [float(i) for i in flush_time]
         #
         data.KG1LH_data.xta[chan] = SignalBase(data.constants)
         data.KG1LH_data.xta[chan].data = [float(i) for i in xtan]
 
-        data.KG1LH_data.xta[chan].time = [float(i) for i in time_efit]
+        data.KG1LH_data.xta[chan].time = [float(i) for i in flush_time]
     else:
         data.KG1LH_data.lid[chan] = SignalBase(data.constants)
         data.KG1LH_data.lid[chan].data = density
@@ -592,12 +594,12 @@ def time_loop(arg):
         data.KG1LH_data.len[chan] = SignalBase(data.constants)
         data.KG1LH_data.len[chan].data = [np.float64(i) for i in length]
 
-        data.KG1LH_data.len[chan].time = [np.float64(i) for i in time_efit]
+        data.KG1LH_data.len[chan].time = [np.float64(i) for i in flush_time]
         #
         data.KG1LH_data.xta[chan] = SignalBase(data.constants)
         data.KG1LH_data.xta[chan].data = [np.float64(i) for i in xtan]
 
-        data.KG1LH_data.xta[chan].time = [np.float64(i) for i in time_efit]
+        data.KG1LH_data.xta[chan].time = [np.float64(i) for i in flush_time]
 
 
 
@@ -688,6 +690,7 @@ def main(shot_no, code,read_uid, write_uid, number_of_channels,algorithm,interp_
         # this two values have been copied from the fortran code
         data.EPSDD = 0.1
         data.EPSF = 0.00001
+        data.ddaefit = 'EFIT'
     else:
         logger.info('running KG1H \n')
         tsmo = 1.0e-4
@@ -695,8 +698,9 @@ def main(shot_no, code,read_uid, write_uid, number_of_channels,algorithm,interp_
 #              data.EPSF = float(0.0001)  # accuracy for getIntersections
         data.EPSDD = float(0.01)  # accuracy for gettangents
         data.EPSF = float(0.001)  # accuracy for getIntersections
-        data.EPSDD = 0.1
-        data.EPSF = 0.00001
+        data.EPSDD = 0.001
+        data.EPSF = 0.0000001
+        data.ddaefit = 'EHTR'
 #        data.EPSDD = float(0.000001)  # accuracy for gettangents
 #        data.EPSF = float(0.000001)  # accuracy for getIntersections
 #this two values have been copied from the fortran code
@@ -1058,7 +1062,7 @@ def main(shot_no, code,read_uid, write_uid, number_of_channels,algorithm,interp_
         return 24
 
 
-    #data,chan = time_loop((data,3))
+    # data,chan = time_loop((data,3))
 
 
     # -------------------------------
