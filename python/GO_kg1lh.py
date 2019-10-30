@@ -341,7 +341,7 @@ def time_loop(arg):
 
     if data.code.lower() == 'kg1l':
         ntime_efit = len(data.EFIT_data.rmag.time)
-        time_efit = data.EFIT_data.rmag.time
+        time_efit = data.KG1LH_data.lid[chan].time
         data_efit = data.EFIT_data.rmag.data
         ntefit = len(time_efit)
         data.EFIT_data.sampling_time = np.mean(
@@ -357,7 +357,7 @@ def time_loop(arg):
 
     else:
         ntime_efit = len(data.EFIT_data.rmag_fast.time)
-        time_efit = data.EFIT_data.rmag_fast.time
+        time_efit = data.KG1LH_data.lid[chan].time
         data_efit = data.EFIT_data.rmag_fast.data
         ntefit = len(time_efit)
         data.EFIT_data.sampling_time = np.mean(
@@ -565,12 +565,12 @@ def time_loop(arg):
     if data.code.lower() == 'kg1l':
         data.KG1LH_data.lid[chan] = SignalBase(data.constants)
         data.KG1LH_data.lid[chan].data = density
-        data.KG1LH_data.lid[chan].time = [float(i) for i in flush_time]
+        data.KG1LH_data.lid[chan].time = [float(i) for i in time_efit]
         #
         data.KG1LH_data.lad[chan] = SignalBase(data.constants)
         data.KG1LH_data.lad[chan].data = [float(i) for i in lad]
 
-        data.KG1LH_data.lad[chan].time = [float(i) for i in flush_time]
+        data.KG1LH_data.lad[chan].time = [float(i) for i in time_efit]
         #
         data.KG1LH_data.len[chan] = SignalBase(data.constants)
         data.KG1LH_data.len[chan].data = [float(i) for i in length]
@@ -1027,7 +1027,7 @@ def main(shot_no, code,read_uid, write_uid, number_of_channels,algorithm,interp_
 #################################################
     # -------------------------------
     # 5. TIME LOOP
-    # pdb.set_trace()
+
     # print(data.EFIT_data.rmag_fast.time)
     # -------------------------------
     try:
