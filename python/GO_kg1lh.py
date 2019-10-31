@@ -90,7 +90,7 @@ def map_kg1_efit_RM_pandas(arg):
     """
     new algorithm to filter kg1v/lid data using pandas rolling mean
 
-    the sampling windown is computed as ratio between the "old fortran" rampling and the kg1v sampling
+    the sampling windown is computed as ratio between the efit rampling and the kg1v sampling
     :param arg:
     :return:
     """
@@ -166,7 +166,7 @@ def map_kg1_efit_RM_pandas(arg):
 def map_kg1_efit_RM(arg):
     """
     new algorithm to filter kg1v/lid data using rolling mean
-    the sampling window is computed as ratio between the "old fortran" rampling and the kg1v sampling
+    the sampling window is computed as ratio between the efit rampling and the kg1v sampling
     :param arg:
     :return:
     """
@@ -452,51 +452,8 @@ def time_loop(arg):
                 logger.debug('index {} - Time {}s; X-point plasma'.format(IT,TIMEM))
             else:
                 logger.log(5,'Time {}s; X-point plasma'.format(TIMEM))
-            # logger.log(5,'iflsep is {}'.format(iflsep))
 
-        #     #probably all this is useless!
-        #
-        #     # if int(iflsep) == 1:
-        #     #
-        #     #      logger.log(5,'found {} X-point '.format(iflsep))
-        #     #      psimax = data.psim1
-        #     #      logger.log(5,'psimax is {}'.format(psimax))
-        #     #      if fx[0] >= data.psim1:
-        #     #           logger.log(5,'fx is {}'.format(fx))
-        #     #           iskb = 1
-        #     #           logger.log(5,'iskb is {}'.format(iskb))
-        #     #      else:
-        #     #           iskb = 0
-        #     #           logger.log(5,'iskb is {}'.format(iskb))
-        #     #           growth = (data.psim1 / fx[0]) - 1
-        #     #           logger.log(5,'growth is {}'.format(growth))
-        #     # else:
-        #
-        #     psimax = data.psim1 * fx[0]
-        #     # psimax = 1
-        #
-        #     iskb = 0
-        #
-        #     # growth = data.psim1 - 1
-        #     growth = fx[0] - 1
-        #
-        #     logger.log(5, 'psimax is {}'.format(psimax))
-        #     logger.log(5, 'growth is {}'.format(growth))
-        #     logger.log(5, 'iflsep is {}'.format(iflsep))
-        #     logger.log(5, 'iskb is {}'.format(iskb))
-        #
-        # volume_m3, ier = Flush_getVolume(1)
-        #
-        # # if ier != 0:
-        # #     logger.warning('flush error {} in Flush_getVolume'.format(ier))
-        # #     return ier
-        #
-        # #
-        # if iskb != 1:
-        #     logger.log(5, 'iskb is {}'.format(iskb))
-        #     ier = flush_blowUp(growth, volume_m3)
-        #     logger.log(5, 'blowup error {}'.format(ier))
-        # #end of useless stuff?
+
 
         # -----------------------------------------------------------------------
         # FIND PSI AT TANGENT FLUX SURFACE (to make FLUL2 quicker)
@@ -674,10 +631,6 @@ def main(shot_no, code,read_uid, write_uid, number_of_channels,algorithm,interp_
     # C-----------------------------------------------------------------------
 
     data.psim1 = 1.00
-    # data.EPSDD = float(0.0001)                           # accuracy for gettangents
-    # data.EPSF = float(0.0001)                         # accuracy for getIntersections
-    #this two values have been copied from the fortran code
-
     # C-----------------------------------------------------------------------
     # C set smoothing time
     # C-----------------------------------------------------------------------
@@ -685,25 +638,19 @@ def main(shot_no, code,read_uid, write_uid, number_of_channels,algorithm,interp_
     if (code.lower() == 'kg1l'):
         logger.info('running KG1L \n')
         tsmo = 0.025
-        data.EPSDD = float(0.01)  # accuracy for gettangents
-        data.EPSF = float(0.001)  # accuracy for getIntersections
+        # data.EPSDD = float(0.01)
+        # data.EPSF = float(0.001)
         # this two values have been copied from the fortran code
-        data.EPSDD = 0.1
-        data.EPSF = 0.00001
+        data.EPSDD = 0.1  # accuracy for gettangents
+        data.EPSF = 0.00001 # accuracy for getIntersections
         data.ddaefit = 'EFIT'
     else:
         logger.info('running KG1H \n')
         tsmo = 1.0e-4
-#               data.EPSDD = float(0.0001)  # accuracy for gettangents
-#              data.EPSF = float(0.0001)  # accuracy for getIntersections
-        data.EPSDD = float(0.01)  # accuracy for gettangents
-        data.EPSF = float(0.001)  # accuracy for getIntersections
-        data.EPSDD = 0.001
-        data.EPSF = 0.0000001
+        data.EPSDD = 0.1
+        data.EPSF = 0.00001
         data.ddaefit = 'EHTR'
-#        data.EPSDD = float(0.000001)  # accuracy for gettangents
-#        data.EPSF = float(0.000001)  # accuracy for getIntersections
-#this two values have been copied from the fortran code
+
 
 
 
@@ -797,9 +744,6 @@ def main(shot_no, code,read_uid, write_uid, number_of_channels,algorithm,interp_
         data.KG1_data = {}
         data.EFIT_data = {}
         return_code = 0
-
-        data.temp, data.r_ref, data.z_ref, data.a_ref, data.r_coord, data.z_coord, data.data_coord, data.coord_err = [[],[],[],[],[],[],[],[]]
-
 
 
 
@@ -932,7 +876,6 @@ def main(shot_no, code,read_uid, write_uid, number_of_channels,algorithm,interp_
     logging.info('reading line of sights')
     try:
 
-        #data.temp, data.r_ref, data.z_ref, data.a_ref, data.r_coord, data.z_coord, data.data_coord, data.coord_err =data.KG1_data.get_coord(data.pulse)
         data.r_coord,dummy= getdata(shot_no, 'KG1V', 'R')
         data.r_coord = data.r_coord['data']
         data.z_coord,dummy= getdata(shot_no, 'KG1V', 'Z')
@@ -940,11 +883,7 @@ def main(shot_no, code,read_uid, write_uid, number_of_channels,algorithm,interp_
         data.a_coord,dummy= getdata(shot_no, 'KG1V', 'A')
         data.a_coord = data.a_coord['data']
 
-#        pdb.set_trace()
 
-        #if data.coord_err !=0:
-        #    logger.error('error reading cords coordinates')
-        #    return 22
     except:
         logger.error('error reading cords coordinates')
         return 22
@@ -954,18 +893,16 @@ def main(shot_no, code,read_uid, write_uid, number_of_channels,algorithm,interp_
         pickle.dump(
             [data], f)
     f.close()
+
+
         # -------------------------------
         # 4. mapping kg1v data onto efit time vector
-
-
-    # pdb.set_trace()
-    #data,chan = map_kg1_efit_RM_pandas((data,4))
-    # pdb.set_trace()
-
-
-
-
+        # pdb.set_trace()
+        #data,chan = map_kg1_efit_RM_pandas((data,4))
+        # pdb.set_trace()
         # -------------------------------
+
+
     if algorithm.lower() =='fortran':
         try:
             logger.info('start mapping kg1v data onto efit time vector')
@@ -1027,8 +964,6 @@ def main(shot_no, code,read_uid, write_uid, number_of_channels,algorithm,interp_
 #################################################
     # -------------------------------
     # 5. TIME LOOP
-
-    # print(data.EFIT_data.rmag_fast.time)
     # -------------------------------
     try:
         logger.info('Starting time loop')
@@ -1069,10 +1004,6 @@ def main(shot_no, code,read_uid, write_uid, number_of_channels,algorithm,interp_
     # 5. plot data
     # pdb.set_trace()
     # -------------------------------
-
-
-    # plot = True
-    #plot=False
 
     if plot:
         try:
@@ -1346,7 +1277,7 @@ def main(shot_no, code,read_uid, write_uid, number_of_channels,algorithm,interp_
     if plot:
         plt.show(block=True)
 
-    #writing sample data to csv for testing.
+    #writing sample data to csv for testing. (ONLY LID3!)
     if data.code.lower()=='kg1h':
         efit_time = data.EFIT_data.rmag_fast.time
     else:
