@@ -407,11 +407,13 @@ def time_loop(arg):
 
         t, ier = flushinit(15, data.pulse, dtime, lunget=12, iseq=0,
                            uid='JETPPF', dda=data.ddaefit, lunmsg=0)
-        flush_time.append(t)
         #
+
         # t,ier = flushquickinit(data.pulse, dtime)
+        flush_time.append(t)
+
         if ier != 0:
-            logger.warning('flush error {} in flushinit'.format(ier))
+            logger.debug('flush error {} in flushinit'.format(ier))
             # return ier
 
         logger.log(5, '************* Time = {}s'.format(TIMEM))
@@ -420,7 +422,7 @@ def time_loop(arg):
         iflsep, rx, zx, fx, ier = flush_getXpoint()
 
         if ier != 0:
-            logger.warning('flush error {} in flush_getXpoint'.format(ier))
+            logger.debug('flush error {} in flush_getXpoint'.format(ier))
             # return ier
         logger.log(5,
                    'Time {}s; iflsep {}; rx {}; zx {}; fx {}; ier {} '.format(TIMEM,
@@ -460,7 +462,7 @@ def time_loop(arg):
         # -----------------------------------------------------------------------
         rTan1,zTan1, fTan1, ier  = Flush_GetTangentFlux(xpt,ypt,angle, data.EPSDD)
         if ier != 0:
-            logger.warning('flush error {} in Flush_GetTangentFlux'.format(ier))
+            logger.debug('flush error {} in Flush_GetTangentFlux'.format(ier))
             # return ier
 
         logger.log(5, 'get tangent flux output is rTan {}, zTan {}, fTan {}'.format(
@@ -482,7 +484,7 @@ def time_loop(arg):
                                                                              NPSI,
                                                                              psimax)
         if ier != 0:
-            logger.warning('flush error {}  in Flush_getIntersections'.format(ier))
+            logger.debug('flush error {}  in Flush_getIntersections'.format(ier))
             # return ier
         if data.code.lower() == 'kg1l':
             cord = float(math.hypot(float(r2) - float(r1), float(z2) - float(z1)))
@@ -708,7 +710,7 @@ def main(shot_no, code,read_uid, write_uid, number_of_channels,algorithm,interp_
         try:
             data.constants = Consts("consts.ini", __version__)
         except KeyError:
-            logger.error(" Could not read in configuration file consts.ini")
+            logger.error("\n Could not read in configuration file consts.ini\n")
             sys.exit(65)
 
         read_uis = []
@@ -757,13 +759,13 @@ def main(shot_no, code,read_uid, write_uid, number_of_channels,algorithm,interp_
         logger.debug('checking pulse number')
         maxpulse = pdmsht()
         if (data.pulse > pdmsht()):
-            logger.error('try a pulse lower than {} '.format(maxpulse))
+            logger.error('\n try a pulse lower than {} \n'.format(maxpulse))
             return 71
 
 
         logger.info('INIT DONE\n')
     except:
-        logger.error('error during INIT')
+        logger.error('\n error during INIT\n')
         return 5
 
 
@@ -778,11 +780,11 @@ def main(shot_no, code,read_uid, write_uid, number_of_channels,algorithm,interp_
         success = data.KG1_data.read_data(data.pulse,
                                            read_uid=read_uid)
     except:
-        logger.error('error reading KG1 data')
+        logger.error('\n error reading KG1 data\n')
         return 20
 
     if success is False:
-        logger.error('error reading KG1 data')
+        logger.error('\n error reading KG1 data\n')
         return 20
 
     else:
@@ -819,10 +821,10 @@ def main(shot_no, code,read_uid, write_uid, number_of_channels,algorithm,interp_
                     continue
 
         if pulseok:
-                logger.error('No validated LID channels in KG1V')
+                logger.error('\n No validated LID channels in KG1V\n ')
                 return 9
     except:
-        logger.error('error reading status flags')
+        logger.error('\n error reading status flags \n')
         return 21
 
 
@@ -844,27 +846,27 @@ def main(shot_no, code,read_uid, write_uid, number_of_channels,algorithm,interp_
         data.EFIT_data = EFITData(data.constants)
         ier = data.EFIT_data.read_data(data.pulse,code)
     except:
-        logger.error('could not read EFIT data')
+        logger.error('\n could not read EFIT data \n')
         return 30
 
 
     if ier !=0:
-        logger.error('error reading EFIT data')
+        logger.error('\n error reading EFIT data \n')
         return 30
 
     if data.code.lower()=='kg1l':
         if data.EFIT_data.rmag is None:
-            logger.error('no points in Efit')
+            logger.error('\n no points in Efit \n')
             return 31
         if len(data.EFIT_data.rmag.time) ==0:
             logger.error('no points in Efit')
             return 31
     if data.code.lower()=='kg1h':
         if data.EFIT_data.rmag_fast is None:
-            logger.error('no points in Efit')
+            logger.error('\n no points in Efit \n')
             return 31
         if len(data.EFIT_data.rmag_fast.time) ==0:
-            logger.error('no points in Efit')
+            logger.error('\n no points in Efit \n')
             return 31
 
 
@@ -885,7 +887,7 @@ def main(shot_no, code,read_uid, write_uid, number_of_channels,algorithm,interp_
 
 
     except:
-        logger.error('error reading cords coordinates')
+        logger.error('\n error reading cords coordinates \n')
         return 22
 
     logger.info(' saving pulse data to {}\n'.format('saved'))
@@ -918,7 +920,7 @@ def main(shot_no, code,read_uid, write_uid, number_of_channels,algorithm,interp_
                 else:
                     continue
         except:
-            logger.error('error with filtering data')
+            logger.error('\n error with filtering data \n')
             return 23
     #
     #
@@ -938,7 +940,7 @@ def main(shot_no, code,read_uid, write_uid, number_of_channels,algorithm,interp_
                 else:
                     continue
         except:
-            logger.error('error with filtering data')
+            logger.error('\n error with filtering data \n')
             return 23
 
     elif algorithm.lower()=='rolling_mean_pandas':
@@ -958,7 +960,7 @@ def main(shot_no, code,read_uid, write_uid, number_of_channels,algorithm,interp_
                 else:
                     continue
         except:
-            logger.error('error with filtering data')
+            logger.error('\n error with filtering data \n')
             return 23
 
 #################################################
@@ -966,7 +968,7 @@ def main(shot_no, code,read_uid, write_uid, number_of_channels,algorithm,interp_
     # 5. TIME LOOP
     # -------------------------------
     try:
-        logger.info('Starting time loop')
+        logger.info('\n Starting time loop \n')
         start_time = time.time()
         with Pool(10) as pool:
             results = pool.map(time_loop,
@@ -993,7 +995,7 @@ def main(shot_no, code,read_uid, write_uid, number_of_channels,algorithm,interp_
             else:
                 continue
     except:
-        logger.error('could not perform time loop')#
+        logger.error('\n could not perform time loop \n')#
         return 24
 
 
@@ -1007,7 +1009,7 @@ def main(shot_no, code,read_uid, write_uid, number_of_channels,algorithm,interp_
 
     if plot:
         try:
-            logging.info('plotting data and comparison with Fortran code')
+            logging.info('\n plotting data and comparison with Fortran code\n ')
             linewidth = 0.5
             markersize = 1
 
@@ -1074,7 +1076,7 @@ def main(shot_no, code,read_uid, write_uid, number_of_channels,algorithm,interp_
 
                     plt.savefig(cwd + os.sep + 'figures/' + data.code +'_'+ str(data.pulse) + 'ch_' + str(chan) + '_comparisons.png', dpi=300)
         except:
-            logger.error('could not plot data')
+            logger.error('\n could not plot data \n')
             return 25
 
 
@@ -1088,14 +1090,14 @@ def main(shot_no, code,read_uid, write_uid, number_of_channels,algorithm,interp_
     #pdb.set_trace()
     # -------------------------------
 
-    logging.info('start writing PPFs')
+    logging.info('\n start writing PPFs \n')
     if (write_uid != "" and not test) or (test and write_uid.upper() != "JETPPF" and write_uid != ""):
         logger.info("\n             Writing PPF with UID {}".format(write_uid))
 
         err = open_ppf(data.pulse, write_uid)
 
         if err != 0:
-            logger.error('failed to open ppf')
+            logger.error('\n failed to open ppf \n')
             return 67
 
         itref_kg1v = -1
@@ -1128,7 +1130,7 @@ def main(shot_no, code,read_uid, write_uid, number_of_channels,algorithm,interp_
                                                      chan])
             if write_err != 0:
                 logger.error(
-                    "Failed to write {}/{}. Errorcode {}".format(dda, dtype_lid,
+                    "\n Failed to write {}/{}. Errorcode {} \n".format(dda, dtype_lid,
                                                                  write_err))
                 return 67
 
@@ -1159,7 +1161,7 @@ def main(shot_no, code,read_uid, write_uid, number_of_channels,algorithm,interp_
                                                      chan])
             if write_err != 0:
                 logger.error(
-                    "Failed to write {}/{}. Errorcode {}".format(dda, dtype_lid,
+                    "\n Failed to write {}/{}. Errorcode {} \n".format(dda, dtype_lid,
                                                                  write_err))
                 return 67
 
@@ -1188,7 +1190,7 @@ def main(shot_no, code,read_uid, write_uid, number_of_channels,algorithm,interp_
                                                      chan])
             if write_err != 0:
                 logger.error(
-                    "Failed to write {}/{}. Errorcode {}".format(dda, dtype_lid,
+                    "\n Failed to write {}/{}. Errorcode {} \n".format(dda, dtype_lid,
                                                                  write_err))
                 return 67
 
@@ -1219,7 +1221,7 @@ def main(shot_no, code,read_uid, write_uid, number_of_channels,algorithm,interp_
 
             if write_err != 0:
                 logger.error(
-                    "Failed to write {}/{}. Errorcode {}".format(dda, dtype_lid,
+                    "\n Failed to write {}/{}. Errorcode {} \n".format(dda, dtype_lid,
                                                                  write_err))
                 return 67
 
@@ -1235,7 +1237,7 @@ def main(shot_no, code,read_uid, write_uid, number_of_channels,algorithm,interp_
 
         if write_err != 0:
             logger.error(
-                "Failed to write {}/{}. Errorcode {}".format(dda, dtype_mode,
+                "\nFailed to write {}/{}. Errorcode {} \n".format(dda, dtype_mode,
                                                              write_err))
             return 67
 
@@ -1251,7 +1253,7 @@ def main(shot_no, code,read_uid, write_uid, number_of_channels,algorithm,interp_
 
         if write_err != 0:
             logger.error(
-                "Failed to write {}/{}. Errorcode {}".format(dda, dtype_mode,
+                "\n Failed to write {}/{}. Errorcode {} \n".format(dda, dtype_mode,
                                                              write_err))
             return 67
 
@@ -1260,7 +1262,8 @@ def main(shot_no, code,read_uid, write_uid, number_of_channels,algorithm,interp_
                             data.constants.code_version,code)
 
         if err != 0:
-            logger.error('failed to close ppf')
+            logger.error('\n failed to close ppf.\n')
+
             return 67
 
 
