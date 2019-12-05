@@ -68,14 +68,15 @@ def thread_map(f, iterable, pool=None):
 
 
 def getdata(shot,dda,dtype,uid=None,seq=None):
-    if seq is None:
-        ier = ppfgo(shot, seq=0)
-    else:
-        ier = ppfgo(shot, seq=seq)
     if uid is None:
         ppfuid('jetppf', rw="R")
     else:
         ppfuid(uid, rw="R")
+    if seq is None:
+        ier = ppfgo(shot, seq=0)
+    else:
+        ier = ppfgo(shot, seq=seq)
+
     ihdata, iwdata, data, x, time, ier = ppfget(
         shot, dda, dtype)
     pulse, seq, iwdat, comment, numdda, ddalist, ier = ppfinf(comlen=50,

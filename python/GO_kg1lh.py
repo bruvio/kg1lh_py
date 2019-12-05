@@ -16,6 +16,7 @@ __status__ = "Testing"
 
 from threading import Thread
 from multiprocessing.pool import Pool
+import multiprocessing as mp
 import json
 import matplotlib.pyplot as plt
 # from scipy.signal import sosfiltfilt, butter
@@ -909,8 +910,11 @@ def main(shot_no, code,read_uid, write_uid, number_of_channels,algorithm,interp_
         try:
             logger.info('start mapping kg1v data onto efit time vector')
             start_time = time.time()
-            with Pool(10) as pool:
-                results = pool.map(map_kg1_efit, [(data, chan) for chan in channels])
+            pool = Pool(max(1, mp.cpu_count() // 2))
+            # with Pool(10) as pool:
+            results = pool.map(map_kg1_efit_RM, [(data, chan) for chan in channels])
+            # with Pool(10) as pool:
+            #     results = pool.map(map_kg1_efit, [(data, chan) for chan in channels])
             logger.info("--- {}s seconds ---".format((time.time() - start_time)))
             for i,r in enumerate(results):
                 if len(r[0].KG1LH_data.lid.keys()) != 0:
@@ -928,8 +932,9 @@ def main(shot_no, code,read_uid, write_uid, number_of_channels,algorithm,interp_
         try:
             logger.info('start mapping kg1v data onto efit time vector - using rolling mean')
             start_time = time.time()
-            with Pool(10) as pool:
-                results = pool.map(map_kg1_efit_RM, [(data, chan) for chan in channels])
+            pool = Pool(max(1, mp.cpu_count() // 2))
+            # with Pool(10) as pool:
+            results = pool.map(map_kg1_efit_RM, [(data, chan) for chan in channels])
             logger.info("--- {}s seconds ---".format((time.time() - start_time)))
             # pdb.set_trace()
             for i,r in enumerate(results):
@@ -947,9 +952,12 @@ def main(shot_no, code,read_uid, write_uid, number_of_channels,algorithm,interp_
         try:
             logger.info('start mapping kg1v data onto efit time vector - using pandas rolling mean')
             start_time = time.time()
-            with Pool(10) as pool:
-                results = pool.map(map_kg1_efit_RM_pandas,
-                                   [(data, chan) for chan in channels])
+            pool = Pool(max(1, mp.cpu_count() // 2))
+            # with Pool(10) as pool:
+            results = pool.map(map_kg1_efit_RM, [(data, chan) for chan in channels])
+            # with Pool(10) as pool:
+            #     results = pool.map(map_kg1_efit_RM_pandas,
+            #                        [(data, chan) for chan in channels])
             logger.info("--- {}s seconds ---".format((time.time() - start_time)))
 
             for i, r in enumerate(results):
@@ -970,8 +978,10 @@ def main(shot_no, code,read_uid, write_uid, number_of_channels,algorithm,interp_
     try:
         logger.info('\n Starting time loop \n')
         start_time = time.time()
-        with Pool(10) as pool:
-            results = pool.map(time_loop,
+        # pool = mp.Semaphore(multiprocessing.cpu_count())
+        pool = Pool(max(1, mp.cpu_count() // 2))
+#        with Pool(10) as pool:
+        results = pool.map(time_loop,
                                [(data, chan) for chan in channels])
         logger.info("--- {}s seconds ---".format((time.time() - start_time)))
 
