@@ -141,4 +141,5 @@ if __name__ == "__main__":
         # make_scripts([96282,96283,96284,96285],code,'nave')
         # make_scripts([96176,96134,96138,96041,96270,96040,96046],code,'2dec')
         # make_scripts([96302,96303,96305,96306,96307,96309,96310,96311],code,'king_dec03')
-        make_scripts([96268,96269,96279,96280,96281,96286],code,'nave_dec03')
+        # make_scripts([96268,96269,96279,96280,96281,96286],code,'nave_dec03')
+        make_scripts([95612,95611,95609,95607],code,'sergei')
