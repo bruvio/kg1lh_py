@@ -18,7 +18,7 @@ def make_exec(files):
 
 def make_scripts(shots, code, suffix, write_uid=None):
     if write_uid == None:
-        write_uid = 'JETPPF'
+        write_uid = "JETPPF"
     else:
         write_uid = write_uid
 
@@ -26,32 +26,34 @@ def make_scripts(shots, code, suffix, write_uid=None):
     # print(cwd)
     os.chdir(os.getcwd())
 
-    shots_list = '_'.join(str(x) for x in shots)
+    shots_list = "_".join(str(x) for x in shots)
 
-    filename = "run_{}_{}.sh".format(code,suffix)
-    filename_sub = "sub_run_{}.cmd".format(code,suffix)
+    filename = "run_{}_{}.sh".format(code, suffix)
+    filename_sub = "sub_run_{}.cmd".format(code, suffix)
 
-    with open(filename, 'w') as f_out:
+    with open(filename, "w") as f_out:
         f_out.write("#!/usr/bin/env bash\n")
         # f_out.write("#!/usr/bin/ bash\n")
         #
         f_out.write(
-            "export PYTHONPATH=$PYTHONPATH:/u/bviola/work/Python/KG1L-KG1H/python\n\n")
-        f_out.write(
-            "export PATH=$PATH:/u/bviola/work/Python/KG1L-KG1H/python\n\n")
+            "export PYTHONPATH=$PYTHONPATH:/u/bviola/work/Python/KG1L-KG1H/python\n\n"
+        )
+        f_out.write("export PATH=$PATH:/u/bviola/work/Python/KG1L-KG1H/python\n\n")
 
         f_out.write("cd /u/bviola/work/Python/KG1L-KG1H/python\n\n")
         for shot in shots:
             f_out.write("echo {}\n".format(shot))
-            if code.lower() == 'kg1l':
+            if code.lower() == "kg1l":
                 call_command = "python /u/bviola/work/Python/KG1L-KG1H/python/GO_kg1lh.py -p {} -r JETPPF -u {} -c {} -a rolling_mean \n\n".format(
-                    shot, write_uid, code)
+                    shot, write_uid, code
+                )
             else:
                 call_command = "python /u/bviola/work/Python/KG1L-KG1H/python/GO_kg1lh.py -p {} -r JETPPF -u {} -c {} -a rolling_mean \n\n".format(
-                    shot, write_uid, code)
+                    shot, write_uid, code
+                )
 
             f_out.write(call_command)
-            f_out.write('sleep 15\n')
+            f_out.write("sleep 15\n")
         f_out.write("cd /u/bviola/work/Python/KG1L-KG1H\n")
     # Change file permission so can be used by batch
     make_exec([filename])
@@ -59,25 +61,31 @@ def make_scripts(shots, code, suffix, write_uid=None):
     # Write script for submitting to batch system
     filename_prefix = filename[:-3]
 
-    with open(filename_sub, 'w') as f_out:
+    with open(filename_sub, "w") as f_out:
         script_to_run = "# @ executable = " + filename + "\n"
         f_out.write(script_to_run)
         f_out.write("# @ input = /dev/null\n")
         f_out.write(
-            "# @ output = /u/bviola/work/Python/KG1L-KG1H/python/ll_" + filename_prefix + ".out\n")
+            "# @ output = /u/bviola/work/Python/KG1L-KG1H/python/ll_"
+            + filename_prefix
+            + ".out\n"
+        )
         f_out.write(
-            "# @ error = /u/bviola/work/Python/KG1L-KG1H/python/ll_" + filename_prefix + ".err\n")
+            "# @ error = /u/bviola/work/Python/KG1L-KG1H/python/ll_"
+            + filename_prefix
+            + ".err\n"
+        )
         f_out.write("# @ initialdir = /u/bviola/work/Python/KG1L-KG1H/python\n")
         f_out.write("# @ notify_user = bviola\n")
         f_out.write("# @ notification = complete\n")
         f_out.write("# @ queue\n")
     make_exec([filename_sub])
     # with open('suball_'+shots_list+'.sh', 'w') as f_out:
-    with open('suball' + code + '.sh', 'w') as f_out:
+    with open("suball" + code + ".sh", "w") as f_out:
         f_out.write("#!/usr/bin/env bash\n")
-        command = 'llsubmit {}'.format(filename_sub)
+        command = "llsubmit {}".format(filename_sub)
         f_out.write(command)
-    make_exec(['suball' + code + '.sh'])
+    make_exec(["suball" + code + ".sh"])
 
 
 if __name__ == "__main__":
@@ -125,21 +133,21 @@ if __name__ == "__main__":
         # make_scripts([95521,95521,95521,95521],code,'testcode')
         # make_scripts([94751,94749,94753,94755,95346,95402,95403,95405,95407,95408],code,'vonthun')
         # make_scripts([94751,94749,94753,94755,95346,95402,95403,95405,95407,95408],code,'vonthun')
-        #make_scripts([95294,95288,95289],code,'fernanda')
+        # make_scripts([95294,95288,95289],code,'fernanda')
         # make_scripts([95760,95761,95762,95763,95764,95758,95759],code,'29oct2019')
         #  make_scripts([94837],code,'bart')
         # make_scripts([95854,95855,95857,95858,95859,95860,95861,95862],code,'1nov2019')
         # make_scripts([95882,95883,95884,95886,95887,95889,95890,95891],code,'groth')
         # make_scripts([95891,95892,95893,94441,94442],code,'groth')
-        #make_scripts([95939,95940],code,'carine_nov05')
-        #make_scripts([95941,95942,95945,95946,95947,95948,95949],code,'carine_nov06')
+        # make_scripts([95939,95940],code,'carine_nov05')
+        # make_scripts([95941,95942,95945,95946,95947,95948,95949],code,'carine_nov06')
         # make_scripts([96177,96176,96175,96174],code,'chris')
         # make_scripts([96045,96043,96129,96136,96039],code,'27nov')
         # make_scripts([96127,96175],code,'27nov_2')
         # make_scripts([96043, 96129, 96136],code,'27nov_3')
-        #make_scripts([96042,96046,96044,96038, 96137],code,'28nov')
+        # make_scripts([96042,96046,96044,96038, 96137],code,'28nov')
         # make_scripts([96282,96283,96284,96285],code,'nave')
         # make_scripts([96176,96134,96138,96041,96270,96040,96046],code,'2dec')
         # make_scripts([96302,96303,96305,96306,96307,96309,96310,96311],code,'king_dec03')
         # make_scripts([96268,96269,96279,96280,96281,96286],code,'nave_dec03')
-        make_scripts([95612,95611,95609,95607],code,'sergei')
+        make_scripts([95612, 95611, 95609, 95607], code, "sergei")

@@ -36,7 +36,7 @@ class EFITData(SignalBase):
 
         # ------------------------
 
-    def read_data(self, shot_no,code, read_uid="JETPPF"):
+    def read_data(self, shot_no, code, read_uid="JETPPF"):
         """
         Read in efit (RMAG)
 
@@ -48,38 +48,37 @@ class EFITData(SignalBase):
         # pdb.set_trace()
         node_name = self.constants.efit
         efit_signal = SignalBase(self.constants)
-        dda = node_name[:node_name.find('/')]
-        dtype = node_name[node_name.find('/') + 1:]
+        dda = node_name[: node_name.find("/")]
+        dtype = node_name[node_name.find("/") + 1 :]
 
-        status = efit_signal.read_data_ppf(dda, dtype, shot_no,
-                                            read_bad=True,
-                                            read_uid=read_uid)
+        status = efit_signal.read_data_ppf(
+            dda, dtype, shot_no, read_bad=True, read_uid=read_uid
+        )
 
         if efit_signal.data is not None:
             # Keep points where there is ip
 
             self.rmag = efit_signal
         else:
-            if code.lower() == 'kg1l':
-                logger.error('no EFIT/RMAG data!')
+            if code.lower() == "kg1l":
+                logger.error("no EFIT/RMAG data!")
                 return 30
-
 
         node_name = self.constants.efit_fast
         efit_signal = SignalBase(self.constants)
-        dda = node_name[:node_name.find('/')]
-        dtype = node_name[node_name.find('/') + 1:]
+        dda = node_name[: node_name.find("/")]
+        dtype = node_name[node_name.find("/") + 1 :]
 
-        status = efit_signal.read_data_ppf(dda, dtype, shot_no,
-                                            read_bad=True,
-                                            read_uid=read_uid, use_64bit=True)
+        status = efit_signal.read_data_ppf(
+            dda, dtype, shot_no, read_bad=True, read_uid=read_uid, use_64bit=True
+        )
 
         if efit_signal.data is not None:
             # Keep points where there is ip
 
             self.rmag_fast = efit_signal
         else:
-            if code.lower() == 'kg1h':
-                logger.error('no EHTR/RMAG data!')
+            if code.lower() == "kg1h":
+                logger.error("no EHTR/RMAG data!")
                 return 30
         return 0
