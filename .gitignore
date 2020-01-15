@@ -118,3 +118,6 @@ sub_run_kg1l.cmd
 sub_run_kg1h.cmd
 suballkg1l.sh
 suballkg1h.sh
+python/run_kg1*.*
+python/ll_run*.*
+

@@ -25,9 +25,8 @@ __author__ = "B. Viola"
 
 class SignalKg1(SignalBase):
 
-
     # ------------------------
-    def __init__(self, constants,shot_no):
+    def __init__(self, constants, shot_no):
         """
         Init function
 
@@ -35,11 +34,13 @@ class SignalKg1(SignalBase):
 
         """
         self.signal_type = ""  # kg1r, kg1c, kg1v
-        self.dcn_or_met = "" # dcn, met
+        self.dcn_or_met = ""  # dcn, met
         self.corrections = SignalBase(constants)  # Corrections that have been made
-        self.correction_type = np.arange(0) # For debugging : to keep track of where corrections have been made
-        self.correction_dcn = np.arange(0) # For use with the lateral channels
-        self.correction_met = np.arange(0) # For use with the lateral channels
+        self.correction_type = np.arange(
+            0
+        )  # For debugging : to keep track of where corrections have been made
+        self.correction_dcn = np.arange(0)  # For use with the lateral channels
+        self.correction_met = np.arange(0)  # For use with the lateral channels
 
         self.pulse = shot_no
 
@@ -55,7 +56,7 @@ class SignalKg1(SignalBase):
         :param memo:
 
         """
-        dpcpy = self.__class__(self.constants,0)
+        dpcpy = self.__class__(self.constants, 0)
 
         if self.corrections.data is not None:
             dpcpy.corrections.data = self.corrections.data.copy()
@@ -77,9 +78,8 @@ class SignalKg1(SignalBase):
 
         return dpcpy
 
-
     # ------------------------
-    def uncorrect_fj(self, corr, index,fringe_vib=None):
+    def uncorrect_fj(self, corr, index, fringe_vib=None):
         """
         Uncorrect a fringe jump by corr, from the time corresponding to index onwards.
         Not used ATM. Will need more testing if we want to use it... Suspect isclose is wrong.
@@ -93,31 +93,38 @@ class SignalKg1(SignalBase):
         """
         # # Check we made a correction at this time.
 
-
         ind_corr, value = find_nearest(self.corrections.time, self.time[index])
         # ind_corr = np.where(np.isclose(self.corrections.time, self.time[index], atol=1e-3, rtol=1e-6) == 1)
         if np.size(ind_corr) == 0:
-            logger.error('no correction to Undo!')
+            logger.error("no correction to Undo!")
             return
-        logger.log(5,
-                   "From index {}, time {}, subtracting {} ({} fringes)".format(
-                       ind_corr, value,
-                       corr, corr / self.constants.DFR_DCN))
+        logger.log(
+            5,
+            "From index {}, time {}, subtracting {} ({} fringes)".format(
+                ind_corr, value, corr, corr / self.constants.DFR_DCN
+            ),
+        )
         # Uncorrect correction
         if fringe_vib is None:
             self.data[index:] = self.data[index:] + corr
 
-
         else:
             self.data[index:] = self.data[index:] + fringe_vib
-
 
         self.corrections.data = np.delete(self.corrections.data, ind_corr)
         self.corrections.time = np.delete(self.corrections.time, ind_corr)
 
-
     # ------------------------
-    def correct_fj(self, corr, time=None, index=None, store=True, corr_dcn=None, corr_met=None,lid=None):
+    def correct_fj(
+        self,
+        corr,
+        time=None,
+        index=None,
+        store=True,
+        corr_dcn=None,
+        corr_met=None,
+        lid=None,
+    ):
         """
         Shifts all data from time onwards, or index onwards,
         down by corr. Either time or index must be specified
@@ -134,17 +141,22 @@ class SignalKg1(SignalBase):
         """
 
         if time is None and index is None:
-            logger.warning("No time or index was specified for making the FJ correction.")
+            logger.warning(
+                "No time or index was specified for making the FJ correction."
+            )
             return
 
         if time is not None:
-            index = np.where(self.time > time),
+            index = (np.where(self.time > time),)
             if np.size(index) == 0:
-                logger.warning("Could not find time near {} for making the FJ correction.".format(time))
+                logger.warning(
+                    "Could not find time near {} for making the FJ correction.".format(
+                        time
+                    )
+                )
                 return
 
             index = np.min(index)
-
 
         self.data[index:] = self.data[index:] - corr
 
@@ -154,18 +166,16 @@ class SignalKg1(SignalBase):
         else:
             corr_store = lid
 
-        logger.log(5,
-                   "From index {}, time {}, subtracting {} ".format(
-                       index, self.time[index],
-                       corr))
+        logger.log(
+            5,
+            "From index {}, time {}, subtracting {} ".format(
+                index, self.time[index], corr
+            ),
+        )
 
         # If this is a mirror movement signal, store raw correction
-        if ("vib" in self.signal_type):
-                corr_store = corr
-
-
-
-
+        if "vib" in self.signal_type:
+            corr_store = corr
 
         if store:
             # Store in terms of the number of fringes for density, or vibration itself for vibration
@@ -174,9 +184,9 @@ class SignalKg1(SignalBase):
                 self.corrections.time = np.array([self.time[index]])
             else:
                 self.corrections.data = np.append(self.corrections.data, corr_store)
-                self.corrections.time = np.append(self.corrections.time, self.time[index])
-
-
+                self.corrections.time = np.append(
+                    self.corrections.time, self.time[index]
+                )
 
             # Also store corresponding correction for the DCN & MET lasers (for use with lateral channels only)
             if corr_dcn is not None:

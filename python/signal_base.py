@@ -8,6 +8,7 @@ import logging
 
 import numpy as np
 from scipy import signal
+
 # from getdat import getdat, getsca
 from getdat import *
 from ppf import ppfgo, ppfget, ppfssr, ppfuid
@@ -22,7 +23,9 @@ __author__ = "L. Kogan"
 
 from scipy.signal import firwin, lfilter, filtfilt, cheby1, lti
 import numpy as np
-def decimate_ZP(x, q, n=None, ftype='iir', axis=-1, zero_phase=False):
+
+
+def decimate_ZP(x, q, n=None, ftype="iir", axis=-1, zero_phase=False):
     """
     Downsample the signal by using a filter.
     By default, an order 8 Chebyshev type I filter is used.  A 30 point FIR
@@ -54,17 +57,17 @@ def decimate_ZP(x, q, n=None, ftype='iir', axis=-1, zero_phase=False):
     The ``zero_phase`` keyword was added in 0.17.0.
     The possibility to use instances of ``lti`` as ``ftype`` was added in 0.17.0.
     """
-    
+
     if not isinstance(q, int):
         raise TypeError("q must be an integer")
 
-    if ftype == 'fir':
+    if ftype == "fir":
         if n is None:
             n = 30
-        b = firwin(n + 1, 1. / q, window='hamming')
-        a = 1.
-    
-    elif ftype == 'iir':
+        b = firwin(n + 1, 1.0 / q, window="hamming")
+        a = 1.0
+
+    elif ftype == "iir":
         if n is None:
             n = 8
         b, a = cheby1(n, 0.05, 0.8 / q)
@@ -72,7 +75,7 @@ def decimate_ZP(x, q, n=None, ftype='iir', axis=-1, zero_phase=False):
         b = ftype.num
         a = ftype.den
 
-    if zero_phase:    
+    if zero_phase:
         y = filtfilt(b, a, x, axis=axis)
     else:
         y = lfilter(b, a, x, axis=axis)
@@ -80,6 +83,7 @@ def decimate_ZP(x, q, n=None, ftype='iir', axis=-1, zero_phase=False):
     sl = [slice(None)] * y.ndim
     sl[axis] = slice(None, None, q)
     return y[sl]
+
 
 def gcd(a, b):
     """Compute the greatest common divisor of a and b"""
@@ -93,7 +97,7 @@ def lcm(a, b):
     return a * b / gcd(a, b)
 
 
-class SignalBase():
+class SignalBase:
     # ------------------------
     def __init__(self, constants):
         """
@@ -103,12 +107,20 @@ class SignalBase():
         self.constants = constants
         self.data = None
         self.time = None
-        self.ihdata = None # For use with PPF data
-        self.iwdata = None # For use with PPF data
-
+        self.ihdata = None  # For use with PPF data
+        self.iwdata = None  # For use with PPF data
 
     # ------------------------
-    def read_data_ppf(self, dda, dtype, shot_no, read_bad=False, read_uid="JETPPF", seq=0, use_64bit=False):
+    def read_data_ppf(
+        self,
+        dda,
+        dtype,
+        shot_no,
+        read_bad=False,
+        read_uid="JETPPF",
+        seq=0,
+        use_64bit=False,
+    ):
         """
         Read in and store PPF data
         :param dda: DDA
@@ -118,7 +130,9 @@ class SignalBase():
         :param read_uid: UID to use to read PPF data
         :param seq: sequence number to read in
         """
-        logger.debug( "Reading in PPF signal {}/{} with uid {}".format(dda, dtype, read_uid))
+        logger.debug(
+            "Reading in PPF signal {}/{} with uid {}".format(dda, dtype, read_uid)
+        )
 
         if dda == "" or dtype == "":
             return 0
@@ -128,7 +142,7 @@ class SignalBase():
         ppfuid(read_uid, rw="R")
 
         if read_bad:
-            ppfssr([0,1,2,3,4])
+            ppfssr([0, 1, 2, 3, 4])
 
         if ier != 0:
             return 0
@@ -160,7 +174,7 @@ class SignalBase():
         :param use_64bit: If set to true the data is stored as 64 bit float
         """
         self.pulse = shot_no
-        logger.debug( "Reading in JPF signal {}".format(signal_name))
+        logger.debug("Reading in JPF signal {}".format(signal_name))
 
         if signal_name == "":
             return
@@ -184,7 +198,7 @@ class SignalBase():
         :param signal_name: signal name
         :param shot_no: shot number
         """
-        logger.debug( "Reading in JPF 1D signal {}".format(signal_name))
+        logger.debug("Reading in JPF 1D signal {}".format(signal_name))
         data, nwds, title, units, ier = getsca(signal_name, shot_no, nwds=0)
 
         if ier != 0:
@@ -194,7 +208,9 @@ class SignalBase():
             self.data = data
 
     # ------------------------
-    def filter_signal(self, family, ncoeff=None, percent=None, start_time=0, end_time=0):
+    def filter_signal(
+        self, family, ncoeff=None, percent=None, start_time=0, end_time=0
+    ):
         """
         Filter the signal using wavelet filtering
         :param family: wavelet family to use for filtering
@@ -207,7 +223,9 @@ class SignalBase():
 
         ind_start, ind_end = self.get_time_inds(start_time, end_time)
 
-        return wv_denoise(self.data[ind_start:ind_end+1], family, ncoeff=ncoeff, percent=percent)
+        return wv_denoise(
+            self.data[ind_start : ind_end + 1], family, ncoeff=ncoeff, percent=percent
+        )
 
     # ------------------------
     def get_time_inds(self, start_time, end_time):
@@ -218,7 +236,7 @@ class SignalBase():
         :return: index of start_time, index of end_time
         """
         ind_start = 0
-        ind_end = np.size(self.data)-1
+        ind_end = np.size(self.data) - 1
 
         if end_time > 0.0:
             ind_after = np.where(self.time > start_time)[0]
@@ -244,7 +262,7 @@ class SignalBase():
         # pdb.set_trace()
         if resample_method == "interp":
             return np.interp(new_time, self.time, self.data), new_time
-        if resample_method =='zeropadding':
+        if resample_method == "zeropadding":
             # zero padding procedure
             M = len(self.time)
             N = len(new_time)
@@ -268,7 +286,7 @@ class SignalBase():
             # newtime=np.concatenate(time_kg1r, ttt)
 
             newtime = np.concatenate((self.time, ttt))
-            resTime = newtime[::ratioMN + 1]
+            resTime = newtime[:: ratioMN + 1]
             # newtime.size
             # Out[17]: 150195
             # newtime.size/5
@@ -279,9 +297,9 @@ class SignalBase():
             # Out[21]: 150195
             # In[20]: newsig.size/5
             # Out[22]: 30039.0
-#            resSig = signal.decimate(newsig, ratioMN + 1)
+            #            resSig = signal.decimate(newsig, ratioMN + 1)
             resSig = decimate_ZP(newsig, ratioMN + 1, zero_phase=True)
-            return resSig,resTime
+            return resSig, resTime
 
         if resample_method == "interp_ZPS":
             ###
@@ -308,7 +326,7 @@ class SignalBase():
             # newtime=np.concatenate(time_efit, ttt)
 
             newtime = np.concatenate((self.time, ttt))
-            resTime = newtime[::ratioMN + 1]
+            resTime = newtime[:: ratioMN + 1]
             # newtime.size
             # Out[17]: 150195
             # newtime.size/5
@@ -323,7 +341,6 @@ class SignalBase():
             resSig = decimate_ZP(newsig, ratioMN + 1, zero_phase=True)
             return resSig, resTime
 
-
         else:
             logger.warning("Unknown resampling method, data has not been resampled!")
             return self.data
@@ -335,7 +352,7 @@ class SignalBase():
         :param npoints: Number of points over which to calculate the difference
         :return: numpy array of difference
         """
-        diff = self.data[npoints:] - self.data[0:-1*npoints]
+        diff = self.data[npoints:] - self.data[0 : -1 * npoints]
         return diff
 
     # ------------------------
@@ -345,7 +362,7 @@ class SignalBase():
         :param npoints: Number of points over which to calculate the difference
         :return: numpy array of second differential
         """
-        diff = self.data[npoints:] - self.data[0:-1*npoints]
+        diff = self.data[npoints:] - self.data[0 : -1 * npoints]
         diff_second = diff[1:] - diff[0:-1]
         return diff_second
 
@@ -357,4 +374,3 @@ class SignalBase():
         """
         self.data = np.delete(self.data, ind_points)
         self.time = np.delete(self.time, ind_points)
-
