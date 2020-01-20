@@ -260,7 +260,37 @@ def get_min_max_seq(shot_no, dda="KG1V", read_uid="JETPPF"):
             return unval_seq, val_seq
 
 
-def check_SF(read_uid, pulse):
+# def check_SF(read_uid, pulse):
+#     """
+#
+#     :param read_uid:
+#     :param pulse:
+#     :return: list of Status Flags
+#     """
+#     logging.info("\n")
+#     logging.info("checking status FLAGS ")
+#
+#     ppfuid(read_uid, "r")
+#
+#     ppfssr([0, 1, 2, 3, 4])
+#
+#     channels = arange(0, 8) + 1
+#     SF_list = []
+#
+#     pulse = int(pulse)
+#
+#     for channel in channels:
+#         ch_text = "lid" + str(channel)
+#
+#         st_ch = GetSF(pulse, "kg1v", ch_text)
+#         st_ch = asscalar(st_ch)
+#         SF_list.append(st_ch)
+#     logging.info("%s has the following SF %s", str(pulse), SF_list)
+#
+#     return SF_list
+
+
+def check_SF(read_uid, pulse, seq,dda=None):
     """
 
     :param read_uid:
@@ -269,7 +299,11 @@ def check_SF(read_uid, pulse):
     """
     logging.info("\n")
     logging.info("checking status FLAGS ")
-
+    if dda is None:
+        dda = 'kg1v'
+    else:
+        dda = dda
+    ier = ppfgo(pulse, seq=seq)
     ppfuid(read_uid, "r")
 
     ppfssr([0, 1, 2, 3, 4])
@@ -282,13 +316,12 @@ def check_SF(read_uid, pulse):
     for channel in channels:
         ch_text = "lid" + str(channel)
 
-        st_ch = GetSF(pulse, "kg1v", ch_text)
+        st_ch = GetSF(pulse, dda, ch_text)
         st_ch = asscalar(st_ch)
         SF_list.append(st_ch)
     logging.info("%s has the following SF %s", str(pulse), SF_list)
 
     return SF_list
-
 
 def extract_history(filename, outputfile):
     """

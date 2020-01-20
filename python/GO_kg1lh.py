@@ -573,6 +573,7 @@ def main(
     interp_method,
     plot,
     test=False,
+    force=False
 ):
     """
     Program to calculate the line averaged density for all channels of
@@ -755,6 +756,27 @@ def main(
     except:
         logger.error("\n error during INIT\n")
         return 5
+
+
+    # -------------------------------
+    # 0. check if there is already a validated public ppf
+    # if there is quit
+    pdb.set_trace()
+    if ((not force) and (write_uid.lower() == 'jetppf')) :
+        logger.info('checking SF of public KG1V ppf')
+
+        SF_list_public = check_SF("jetppf", shot_no, 0,dda=code.lower())
+        if bool(set(SF_list_public) & set([1, 2, 3])):
+            logger.warning(
+                "\n \n there is already a saved public PPF with validated channels! \n \n "
+            )
+            logger.info(
+                "\n No PPF was written. \n"
+            )
+
+            logger.info("\n             Finished. \n")
+            return 100
+
 
     # -------------------------------
     # 2. Read in KG1 data
@@ -1356,6 +1378,10 @@ if __name__ == "__main__":
         help="Debug level. 0: Error, 1: Warning, 2: Info, 3: Debug, 4: Debug Plus",
         default=2,
     )
+    parser.add_argument("-fo", "--force",
+                        help="forces code execution even when there is already a validated public pulse",
+                        default=False)
+
     parser.add_argument(
         "-ch",
         "--number_of_channels",
@@ -1422,4 +1448,5 @@ if __name__ == "__main__":
         args.interp_method,
         args.plot,
         args.test,
+        args.force
     )

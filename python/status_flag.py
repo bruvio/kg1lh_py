@@ -101,6 +101,8 @@ def GetSF(pulse, dda, dtype):
     return istat
 
 
+
+
 def Getnonvalidatedpulses(pulselist, dtypelist, SF_validated):
     """
     
