@@ -761,7 +761,7 @@ def main(
     # -------------------------------
     # 0. check if there is already a validated public ppf
     # if there is quit
-    pdb.set_trace()
+    # pdb.set_trace()
     if ((not force) and (write_uid.lower() == 'jetppf')) :
         logger.info('checking SF of public KG1V ppf')
 
