@@ -376,7 +376,7 @@ def time_loop(arg):
     xpt = float(xpt * 100.0)
     ypt = float(ypt * 100.0)
     flush_time = []
-
+    # pdb.set_trace()
     for IT in range(0, ntefit):
 
         TIMEM = time_efit[IT]
@@ -1001,16 +1001,18 @@ def main(
         logger.error("\n could not perform time loop \n")  #
         return 24
 
-    # data,chan = time_loop((data,3))
+    # data,chan = time_loop((data,5))
+    for chan in data.KG1LH_data.lad.keys():
+        if not np.any(data.KG1LH_data.lad[chan].data == 0.0):
+            logger.error('FLUSH error in ch. {} \n'.format(chan))
 
     # -------------------------------
     # 5. plot data
-    # pdb.set_trace()
     # -------------------------------
 
     if plot:
         try:
-            logging.info("\n plotting data and comparison with Fortran code\n ")
+            logging.info("\n plotting data and comparison with public data\n ")
             linewidth = 0.5
             markersize = 1
 
