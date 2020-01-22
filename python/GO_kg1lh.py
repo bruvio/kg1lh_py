@@ -30,7 +30,7 @@ import threading
 import argparse
 import pickle
 import logging
-
+import dill
 import math
 
 from types import SimpleNamespace
@@ -397,13 +397,17 @@ def time_loop(arg):
             dda=data.ddaefit,
             lunmsg=0,
         )
+
         #
+        # if ier != 0:
+        #     logger.debug("flush error {} in flushinit".format(ier))
+        #     pass
+        # else:
 
         # t,ier = flushquickinit(data.pulse, dtime)
         flush_time.append(t)
 
-        if ier != 0:
-            logger.debug("flush error {} in flushinit".format(ier))
+
             # return ier
 
         logger.log(5, "************* Time = {}s".format(TIMEM))
@@ -511,8 +515,8 @@ def time_loop(arg):
                 5,
                 "xpt {} ypt {} angle {} dtime {} coord {} length[IT] {} lad[IT] {} xtan[IT] {}".format(
                     xpt, ypt, angle, dtime, cord, length[IT], lad[IT], xtan[IT]
-                ),
-            )
+            ),
+        )
             # pdb.set_trace()
 
     if data.code.lower() == "kg1l":
@@ -573,7 +577,8 @@ def main(
     interp_method,
     plot,
     test=False,
-    force=False
+    force=False,
+    no_multithreading=False
 ):
     """
     Program to calculate the line averaged density for all channels of
@@ -889,6 +894,10 @@ def main(
         pickle.dump([data], f)
     f.close()
 
+    with open("./saved/data_" + str(shot_no) + ".dill",
+              "wb") as f:
+        dill.dump(data, f)
+    f.close()
     # -------------------------------
     # 4. mapping kg1v data onto efit time vector
     # pdb.set_trace()
@@ -969,41 +978,61 @@ def main(
     # -------------------------------
     # 5. TIME LOOP
     # -------------------------------
-    try:
-        logger.info("\n Starting time loop \n")
-        start_time = time.time()
-        # pool = mp.Semaphore(multiprocessing.cpu_count())
-        pool = Pool(max(1, mp.cpu_count() // 2))
-        #        with Pool(10) as pool:
-        results = pool.map(time_loop, [(data, chan) for chan in channels])
-        logger.info("--- {}s seconds ---".format((time.time() - start_time)))
+    if no_multithreading:
 
-        for i, res in enumerate(results):
-            if len(res[0].KG1LH_data.lad.keys()) != 0:
-                # data.KG1LH_data.lid[i + 1] = SignalBase(data.constants)
-                # data.KG1LH_data.lid[i + 1].time = res[0].KG1LH_data.lid[res[1]].time
-                # data.KG1LH_data.lid[i + 1].data = res[0].KG1LH_data.lid[res[1]].data
+        print('ch. 2')
+        data,chan = time_loop((data,2))
+        print('ch. 3')
+        data,chan = time_loop((data,3))
+        print('ch. 4')
+        data,chan = time_loop((data,4))
+        print('ch. 5')
+        data,chan = time_loop((data,5))
+        print('ch. 6')
+        data,chan = time_loop((data,6))
+        print('ch. 7')
+        data,chan = time_loop((data,7))
+        print('ch. 8')
+        data,chan = time_loop((data,8))
+        print('ch. 1')
+        data,chan = time_loop((data,1))
+    else:
+        try:
+            logger.info("\n Starting time loop \n")
+            start_time = time.time()
+            # pool = mp.Semaphore(multiprocessing.cpu_count())
+            pool = Pool(max(1, mp.cpu_count() // 2))
+            #        with Pool(10) as pool:
+            results = pool.map(time_loop, [(data, chan) for chan in channels])
+            logger.info("--- {}s seconds ---".format((time.time() - start_time)))
 
-                data.KG1LH_data.lad[i + 1] = SignalBase(data.constants)
-                data.KG1LH_data.lad[i + 1].time = res[0].KG1LH_data.lad[res[1]].time
-                data.KG1LH_data.lad[i + 1].data = res[0].KG1LH_data.lad[res[1]].data
+            for i, res in enumerate(results):
+                if len(res[0].KG1LH_data.lad.keys()) != 0:
+                    # data.KG1LH_data.lid[i + 1] = SignalBase(data.constants)
+                    # data.KG1LH_data.lid[i + 1].time = res[0].KG1LH_data.lid[res[1]].time
+                    # data.KG1LH_data.lid[i + 1].data = res[0].KG1LH_data.lid[res[1]].data
 
-                data.KG1LH_data.len[i + 1] = SignalBase(data.constants)
-                data.KG1LH_data.len[i + 1].time = res[0].KG1LH_data.len[res[1]].time
-                data.KG1LH_data.len[i + 1].data = res[0].KG1LH_data.len[res[1]].data
+                    data.KG1LH_data.lad[i + 1] = SignalBase(data.constants)
+                    data.KG1LH_data.lad[i + 1].time = res[0].KG1LH_data.lad[res[1]].time
+                    data.KG1LH_data.lad[i + 1].data = res[0].KG1LH_data.lad[res[1]].data
 
-                data.KG1LH_data.xta[i + 1] = SignalBase(data.constants)
-                data.KG1LH_data.xta[i + 1].time = res[0].KG1LH_data.xta[res[1]].time
-                data.KG1LH_data.xta[i + 1].data = res[0].KG1LH_data.xta[res[1]].data
-            else:
-                continue
-    except:
-        logger.error("\n could not perform time loop \n")  #
-        return 24
+                    data.KG1LH_data.len[i + 1] = SignalBase(data.constants)
+                    data.KG1LH_data.len[i + 1].time = res[0].KG1LH_data.len[res[1]].time
+                    data.KG1LH_data.len[i + 1].data = res[0].KG1LH_data.len[res[1]].data
 
-    # data,chan = time_loop((data,5))
+                    data.KG1LH_data.xta[i + 1] = SignalBase(data.constants)
+                    data.KG1LH_data.xta[i + 1].time = res[0].KG1LH_data.xta[res[1]].time
+                    data.KG1LH_data.xta[i + 1].data = res[0].KG1LH_data.xta[res[1]].data
+                else:
+                    continue
+        except:
+            logger.error("\n could not perform time loop \n")  #
+            return 24
+
+
+    # pdb.set_trace()
     for chan in data.KG1LH_data.lad.keys():
-        if not np.any(data.KG1LH_data.lad[chan].data == 0.0):
+        if np.all(data.KG1LH_data.lad[chan].data == 0.0):
             logger.error('FLUSH error in ch. {} \n'.format(chan))
 
     # -------------------------------
@@ -1128,8 +1157,8 @@ def main(
             logger.error("\n could not plot data \n")
             return 25
 
-    # if plot:
-    #     plt.show(block=True)
+    if plot:
+        plt.show(block=True)
 
     # -------------------------------
     # 7. writing PPFs
@@ -1419,6 +1448,8 @@ if __name__ == "__main__":
         default=False,
     )
 
+    parser.add_argument("-nmt", "--no_multithreading",help= " no multithreading: True or False, if True the code will not be run using multithreading (slower) - option used for testing or debugging",    default=False)
+
     args = parser.parse_args(sys.argv[1:])
 
     # Setup the logger
@@ -1450,5 +1481,6 @@ if __name__ == "__main__":
         args.interp_method,
         args.plot,
         args.test,
-        args.force
+        args.force,
+        args.no_multithreading
     )
