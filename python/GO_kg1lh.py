@@ -417,6 +417,7 @@ def time_loop(arg):
 
         if ier != 0:
             logger.debug("flush error {} in flush_getXpoint".format(ier))
+            logger.debug("{}".format(Flush_getError(ier)))
             # return ier
         logger.log(
             5,
@@ -980,21 +981,21 @@ def main(
     # -------------------------------
     if no_multithreading:
 
-        print('ch. 2')
+        logger.info("\n Starting time loop ch. 2\n")
         data,chan = time_loop((data,2))
-        print('ch. 3')
+        logger.info("\n Starting time loop ch. 3\n")
         data,chan = time_loop((data,3))
-        print('ch. 4')
+        logger.info("\n Starting time loop ch. 4\n")
         data,chan = time_loop((data,4))
-        print('ch. 5')
+        logger.info("\n Starting time loop ch. 5\n")
         data,chan = time_loop((data,5))
-        print('ch. 6')
+        logger.info("\n Starting time loop ch. 6\n")
         data,chan = time_loop((data,6))
-        print('ch. 7')
+        logger.info("\n Starting time loop ch. 7\n")
         data,chan = time_loop((data,7))
-        print('ch. 8')
+        logger.info("\n Starting time loop ch. 8\n")
         data,chan = time_loop((data,8))
-        print('ch. 1')
+        logger.info("\n Starting time loop ch. 1\n")
         data,chan = time_loop((data,1))
     else:
         try:
