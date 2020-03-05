@@ -24,16 +24,45 @@ To tun the code::
     cd /u/username/work/
     python GO_kg1lh.py -h
 
-    usage: GO_kg1lh.py [-h] [-d DEBUG] [-r read_uid]  [-u uid_write]  [-c code]
 
-    Run GO_kg1lh
+usage: GO_kg1lh.py [-h] -p PULSE [-c CODE] [-r UID_READ] [-u UID_WRITE]
+                   [-d DEBUG] [-fo FORCE] [-ch NUMBER_OF_CHANNELS]
+                   [-a ALGORITHM] [-i INTERP_METHOD] [-pl PLOT] [-t TEST]
+                   [-nmt NO_MULTITHREADING]
 
-    optional arguments:
-    -h, --help            show this help message and exit
-    -d DEBUG, --debug DEBUG
-    Debug level. 0: Info, 1: Warning, 2: Debug, 3: Error, 4: Debug plus;
-    default level is INFO
-
+optional arguments:
+  -h, --help            show this help message and exit
+  -p PULSE, --pulse PULSE
+                        Pulse number to run.
+  -c CODE, --code CODE  code to run.
+  -r UID_READ, --uid_read UID_READ
+                        UID to read PPFs from.
+  -u UID_WRITE, --uid_write UID_WRITE
+                        UID to write PPFs to.
+  -d DEBUG, --debug DEBUG
+                        Debug level. 0: Error, 1: Warning, 2: Info, 3: Debug,
+                        4: Debug Plus
+  -fo FORCE, --force FORCE
+                        forces code execution even when there is already a
+                        validated public pulse
+  -ch NUMBER_OF_CHANNELS, --number_of_channels NUMBER_OF_CHANNELS
+                        Number of channels to process: 1 to 8
+  -a ALGORITHM, --algorithm ALGORITHM
+                        algorithm to be used to filter kg1 lid. User cab
+                        choose between: - rolling_mean - rolling_mean_pandas -
+                        fortran
+  -i INTERP_METHOD, --interp_method INTERP_METHOD
+                        algorithm to be used to resample KG1 data on EFIT
+                        timebase, choose between: - interp - interp_ZPS
+  -pl PLOT, --plot PLOT
+                        plot data: True or False
+  -t TEST, --test TEST  Run in test mode. In this mode code will run and if
+                        -uw=JETPPF then no PPF will be written, to avoid over-
+                        writing validated data.
+  -nmt NO_MULTITHREADING, --no_multithreading NO_MULTITHREADING
+                        no multithreading: True or False, if True the code
+                        will not be run using multithreading (slower) - option
+                        used for testing or debugging
 
 
 
@@ -116,3 +145,8 @@ Return codes:
 +---+-----------------------------------------------+
 |100| TEST MODE - NO PPF IS WRITTEN.                |
 +---+-----------------------------------------------+
+
+
+
+
+
