@@ -7,7 +7,7 @@ Class that runs CORMAT_py GUI
 # ----------------------------
 __author__ = "Bruno Viola"
 __Name__ = "KG1L_py"
-__version__ = "4.4"
+__version__ = "4.5"
 __release__ = "2"
 __maintainer__ = "Bruno Viola"
 __email__ = "bruno.viola@ukaea.uk"
@@ -107,11 +107,15 @@ import numpy as np
 import matplotlib.pyplot as plt
 from utility import *
 import pandas as pd
-
-from my_flush import *
-# sys.path.append("../../")
-# from eg_python_tools.my_flush import *
-
+try:
+    from my_flush import *
+except:
+    logger.error('failed to load local Flush wrapper')
+    try:
+        sys.path.append("../../")
+        from eg_python_tools.my_flush import *
+    except:
+        logger.error('failed to load Flush wrapper')
 # qm = QtGui.QMessageBox
 # qm_permanent = QtGui.QMessageBox
 plt.rcParams["savefig.directory"] = os.chdir(os.getcwd())
