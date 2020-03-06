@@ -12,8 +12,6 @@ import copy
 
 import numpy as np
 from signal_base import SignalBase
-from make_plots import make_plot
-from kg4_data import Kg4Data
 from library import *
 
 logger = logging.getLogger(__name__)

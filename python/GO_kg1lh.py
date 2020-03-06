@@ -7,13 +7,49 @@ Class that runs CORMAT_py GUI
 # ----------------------------
 __author__ = "Bruno Viola"
 __Name__ = "KG1L_py"
-__version__ = "4.3"
+__version__ = "4.5"
 __release__ = "2"
 __maintainer__ = "Bruno Viola"
 __email__ = "bruno.viola@ukaea.uk"
 __status__ = "Testing"
 # __status__ = "Production"
 
+
+
+
+
+import logging
+logger = logging.getLogger(__name__)
+import sys
+import os
+from importlib import import_module
+
+libnames = ['ppf']
+relative_imports = []
+
+for libname in libnames:
+    try:
+        lib = import_module(libname)
+    except:
+        exc_type, exc, tb = sys.exc_info()
+        print(os.path.realpath(__file__))
+        print(exc)
+    else:
+        globals()[libname] = lib
+for libname in relative_imports:
+    try:
+        anchor = libname.split('.')
+        libr = anchor[0]
+        package = anchor[1]
+
+        lib = import_module(libr)
+        # lib = import_module(libr,package=package)
+    except:
+        exc_type, exc, tb = sys.exc_info()
+        print(os.path.realpath(__file__))
+        print(exc)
+    else:
+        globals()[libr] = lib
 from threading import Thread
 from multiprocessing.pool import Pool
 import multiprocessing as mp
@@ -29,22 +65,18 @@ from multiprocessing.pool import ThreadPool
 import threading
 import argparse
 import pickle
-import logging
 import dill
 import math
 
 from types import SimpleNamespace
 from logging.handlers import RotatingFileHandler
 from logging import handlers
-import os
 import pathlib
 
 # from pickle import dump,load
 import pickle
 import platform
 import datetime
-import sys
-import os
 import time
 from pathlib import Path
 import matplotlib.pyplot as plt
@@ -61,7 +93,6 @@ from kg1l_data import KG1LData
 from matplotlib import gridspec
 from matplotlib.backends.backend_qt4agg import NavigationToolbar2QT as NavigationToolbar
 from matplotlib.ticker import AutoMinorLocator
-from ppf import *
 from ppf_write import *
 from signal_base import SignalBase
 
@@ -71,22 +102,24 @@ import inspect
 import fileinput
 import cProfile, pstats, io
 import inspect
-from ppf import *
 from scipy import signal
 import numpy as np
 import matplotlib.pyplot as plt
 from utility import *
 import pandas as pd
-
-
-sys.path.append("../../")
-from eg_python_tools.my_flush import *
-
+try:
+    from my_flush import *
+except:
+    logger.error('failed to load local Flush wrapper')
+    try:
+        sys.path.append("../../")
+        from eg_python_tools.my_flush import *
+    except:
+        logger.error('failed to load Flush wrapper')
 # qm = QtGui.QMessageBox
 # qm_permanent = QtGui.QMessageBox
 plt.rcParams["savefig.directory"] = os.chdir(os.getcwd())
 myself = lambda: inspect.stack()[1][3]
-logger = logging.getLogger(__name__)
 # noinspection PyUnusedLocal
 
 # --------

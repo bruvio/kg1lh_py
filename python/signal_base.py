@@ -5,13 +5,46 @@ differences between adjacent time points.
 """
 
 import logging
+logger = logging.getLogger(__name__)
+import sys
+import os
+from importlib import import_module
+
+
+
+
+libnames = ['ppf','getdat']
+relative_imports = []
+
+for libname in libnames:
+    try:
+        lib = import_module(libname)
+    except:
+        exc_type, exc, tb = sys.exc_info()
+        print(os.path.realpath(__file__))
+        print(exc)
+    else:
+        globals()[libname] = lib
+for libname in relative_imports:
+    try:
+        anchor = libname.split('.')
+        libr = anchor[0]
+        package = anchor[1]
+
+        lib = import_module(libr)
+        # lib = import_module(libr,package=package)
+    except:
+        exc_type, exc, tb = sys.exc_info()
+        print(os.path.realpath(__file__))
+        print(exc)
+    else:
+        globals()[libr] = lib
 
 import numpy as np
 from scipy import signal
 
 # from getdat import getdat, getsca
-from getdat import *
-from ppf import ppfgo, ppfget, ppfssr, ppfuid
+
 import pdb
 from wv_denoise import wv_denoise
 
@@ -137,9 +170,9 @@ class SignalBase:
         if dda == "" or dtype == "":
             return 0
 
-        ier = ppfgo(shot_no, seq=seq)
+        ier = ppf.ppfgo(shot_no, seq=seq)
 
-        ppfuid(read_uid, rw="R")
+        ppf.ppfuid(read_uid, rw="R")
 
         if read_bad:
             ppfssr([0, 1, 2, 3, 4])
@@ -147,7 +180,7 @@ class SignalBase:
         if ier != 0:
             return 0
 
-        ihdata, iwdata, data, x, time, ier = ppfget(shot_no, dda, dtype)
+        ihdata, iwdata, data, x, time, ier = ppf.ppfget(shot_no, dda, dtype)
 
         if ier != 0:
             return 0
@@ -179,7 +212,7 @@ class SignalBase:
         if signal_name == "":
             return
 
-        data, time, nwds, title, units, ier = getdat(signal_name, shot_no, nwds=-1)
+        data, time, nwds, title, units, ier = getdat.getdat(signal_name, shot_no, nwds=-1)
 
         if ier != 0:
             return
@@ -199,7 +232,7 @@ class SignalBase:
         :param shot_no: shot number
         """
         logger.debug("Reading in JPF 1D signal {}".format(signal_name))
-        data, nwds, title, units, ier = getsca(signal_name, shot_no, nwds=0)
+        data, nwds, title, units, ier = getdat.getsca(signal_name, shot_no, nwds=0)
 
         if ier != 0:
             return

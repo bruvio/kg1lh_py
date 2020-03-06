@@ -1,9 +1,42 @@
+import logging
+
+logger = logging.getLogger(__name__)
+import sys
+import os
+from importlib import import_module
+
+libnames = ['ppf']
+relative_imports = []
+
+for libname in libnames:
+    try:
+        lib = import_module(libname)
+    except:
+        exc_type, exc, tb = sys.exc_info()
+        print(os.path.realpath(__file__))
+        print(exc)
+    else:
+        globals()[libname] = lib
+for libname in relative_imports:
+    try:
+        anchor = libname.split('.')
+        libr = anchor[0]
+        package = anchor[1]
+
+        lib = import_module(libr)
+        # lib = import_module(libr,package=package)
+    except:
+        exc_type, exc, tb = sys.exc_info()
+        print(os.path.realpath(__file__))
+        print(exc)
+    else:
+        globals()[libr] = lib
 import math
 import numpy as np
 import matplotlib.pyplot as plt
 from multiprocessing.pool import ThreadPool
 from threading import Thread
-from ppf import *
+
 
 pool = ThreadPool(processes=8)
 
@@ -72,16 +105,16 @@ def thread_map(f, iterable, pool=None):
 
 def getdata(shot, dda, dtype, uid=None, seq=None):
     if uid is None:
-        ppfuid("jetppf", rw="R")
+        ppf.ppfuid("jetppf", rw="R")
     else:
-        ppfuid(uid, rw="R")
+        ppf.ppfuid(uid, rw="R")
     if seq is None:
-        ier = ppfgo(shot, seq=0)
+        ier = ppf.ppfgo(shot, seq=0)
     else:
-        ier = ppfgo(shot, seq=seq)
+        ier = ppf.ppfgo(shot, seq=seq)
 
-    ihdata, iwdata, data, x, time, ier = ppfget(shot, dda, dtype)
-    pulse, seq, iwdat, comment, numdda, ddalist, ier = ppfinf(comlen=50, numdda=50)
+    ihdata, iwdata, data, x, time, ier = ppf.ppfget(shot, dda, dtype)
+    pulse, seq, iwdat, comment, numdda, ddalist, ier = ppf.ppfinf(comlen=50, numdda=50)
 
     name = dict()
     name["ihdata"] = ihdata

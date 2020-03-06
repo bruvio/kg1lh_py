@@ -5,6 +5,8 @@ My interface to flush routines
 
 
 """
+import logging
+logger = logging.getLogger(__name__)
 import numpy as np
 from numpy.ctypeslib import ndpointer
 from ctypes import (
@@ -18,14 +20,16 @@ from ctypes import (
     byref,
     c_void_p,
 )
-
+import pdb
 # /usr/local/depot/BackwardsCompatible32/lib/libflush.so
 import os
 
 cwd = os.getcwd()
+# pdb.set_trace()
 # lib_flush = CDLL('/home/flush/flush/libflush.so') #32b compiled library used by kg1l fortran
 # lib_flush = CDLL(cwd+'/libflush.so') #64b compiled library
-lib_flush = CDLL("libflush.so")  # 64b compiled library
+
+lib_flush = CDLL("libITMflush.so")  # 64b compiled library
 
 # ##############################
 lib_flush.flushquickinit_.argtypes = [
@@ -776,3 +780,5 @@ def flush_getAllXpoint():
 
     lib_flush.flush_getallxpoints_(byref(nx), rx, zx, fx, byref(ier))
     return nx.value, rx, zx, fx, ier.value
+# except:
+#     logger.error('failed to load Flush wrapper')
