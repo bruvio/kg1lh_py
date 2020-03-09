@@ -175,7 +175,7 @@ class SignalBase:
         ppf.ppfuid(read_uid, rw="R")
 
         if read_bad:
-            ppfssr([0, 1, 2, 3, 4])
+            ppf.ppfssr([0, 1, 2, 3, 4])
 
         if ier != 0:
             return 0
