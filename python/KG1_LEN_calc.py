@@ -1,16 +1,31 @@
+import logging
+logger = logging.getLogger(__name__)
+
 import matplotlib.pyplot as plt
-from scipy.interpolate import interp1d
-from scipy.optimize import bisect
+from types import SimpleNamespace
 import numpy as np
 import csv
 import math
-from scipy.interpolate import interp1d
-from scipy.optimize import bisect
-from scipy.interpolate import BSpline
+from utility import *
 import matplotlib.pylab as plt
 from MAGTool import *  # Magnetics Tool
+from consts import Consts
 
 
+
+from efit_data import EFITData
+__version__ = "4.5"
+GM = (math.sqrt(5)-1)/2
+W =8
+H = GM*W
+SIZE = (W,H)
+
+
+def is_empty(structure):
+    if structure:
+        return False
+    else:
+        return True
 
 def plot_point(point, angle, length):
     '''
@@ -34,7 +49,7 @@ def plot_point(point, angle, length):
 
     # fig.show()
 
-with open('./e2d_data/vessel_JET_csv.txt', 'rt') as f:
+with open('./vessel_JET_csv.txt', 'rt') as f:
     reader = csv.reader(f, delimiter=';')
     next(reader)
     # col = list(zip(*reader))[1]
@@ -181,7 +196,7 @@ def readEFITFlux(expDataDictJPNobj, timeEquil):
     timeEFIT = RBND_t  # one of the _t variables
     iCurrentTime = numpy.where(
         numpy.abs(timeEquil - timeEFIT) < 2 * min(numpy.diff(timeEFIT)))  # twice of the min of EFIT delta time
-    print(timeEFIT[iCurrentTime])
+    # print(timeEFIT[iCurrentTime])
 
     iTEFIT = iCurrentTime[0][0]
 
@@ -202,14 +217,7 @@ def readEFITFlux(expDataDictJPNobj, timeEquil):
     return rC0, zC0, psi0, rGrid, zGrid, iTEFIT, timeEFIT
 
 
-LEN1 = []
-LEN2 = []
-LEN3 = []
-LEN4 = []
-LEN5 = []
-LEN6 = []
-LEN7 = []
-LEN8 = []
+
 data = SimpleNamespace()
 data.pulse = JPN
 
@@ -228,56 +236,65 @@ try:
     ier = data.EFIT_data.read_data(data.pulse, 'kg1l')
 except:
     logger.error("\n could not read EFIT data \n")
-    return 30
-
-if ier != 0:
-    logger.error("\n error reading EFIT data \n")
-    return 30
 
 
+LEN1 = []
+LEN2 = []
+LEN3 = []
+LEN4 = []
+LEN5 = []
+LEN6 = []
+LEN7 = []
+LEN8 = []
 time_efit = data.EFIT_data.rmag.time
 ntefit = len(time_efit)
 for IT in range(0, ntefit):
 
     TIMEM = time_efit[IT]
-    rC0, zC0, psi0, rGrid, zGrid, iTEFIT, timeEFIT = readEFITFlux(expDataDictJPNobj, TIMEM)
-    BoundCoordTuple = list(zip(r_ves, z_ves))
+    print(TIMEM)
+
+    rC0,zC0 , psi0, rGrid, zGrid, iTEFIT, timeEFIT = readEFITFlux(expDataDictJPNobj_EFIT, TIMEM)
+    BoundCoordTuple = list(zip(rC0, zC0))
     polygonBound = Polygon(BoundCoordTuple)
-    x1 = polygonVessel.intersection(LOS1)
-    x2 = polygonVessel.intersection(LOS2)
-    x3 = polygonVessel.intersection(LOS3)
-    x4 = polygonVessel.intersection(LOS4)
-    x5 = polygonVessel.intersection(LOS5)
-    x6 = polygonVessel.intersection(LOS6)
-    x7 = polygonVessel.intersection(LOS7)
-    x8 = polygonVessel.intersection(LOS8)
+    x1 = polygonBound.intersection(LOS1)
+    x2 = polygonBound.intersection(LOS2)
+    x3 = polygonBound.intersection(LOS3)
+    x4 = polygonBound.intersection(LOS4)
+    x5 = polygonBound.intersection(LOS5)
+    x6 = polygonBound.intersection(LOS6)
+    x7 = polygonBound.intersection(LOS7)
+    x8 = polygonBound.intersection(LOS8)
     for chan in channels:
+        print(chan)
         name = 'x' + str(chan)
         name_len = 'LEN'+ str(chan)
         dummy = vars()[name]
         len = vars()[name_len]
+        if is_empty(dummy.bounds):
+            len.append(0)
+        else:
 
-        r1 = dummy.xy[0][0]
-        z1 = dummy.xy[1][0]
-        r2 = dummy.xy[0][1]
-        z2 = dummy.xy[1][1]
-        len.append(np.float64(
-            math.hypot(
-                np.float64(r2) - np.float64(r1), np.float64(z2) - np.float64(z1)
-            )
-        ))
+            r1 = dummy.xy[0][0]
+            z1 = dummy.xy[1][0]
+            r2 = dummy.xy[0][1]
+            z2 = dummy.xy[1][1]
+            len.append(np.float64(
+                math.hypot(
+                    np.float64(r2) - np.float64(r1), np.float64(z2) - np.float64(z1)
+                )
+            ))
 
 
 
 plt.figure(3, figsize=SIZE, dpi=90) #1, figsize=(10, 4), dpi=180)
 for chan in channels:
     kg1l_len3, dummy = getdata(JPN, 'KG1L', "LEN" + str(chan))
-    plt.subplot(chan, 1, 1)
+    plt.subplot(8, 1, chan)
     plt.plot(time_efit,vars()['LEN'+str(chan)],label='LEN'+str(chan))
     plt.plot(
-        kg1l_lid3["time"],
-        kg1l_lid3["data"],
-        label="lid_jetppf_ch" + str(chan),
+        kg1l_len3["time"],
+        kg1l_len3["data"],
+        label="LEN_jetppf_ch" + str(chan),
     )
 
 plt.show()
