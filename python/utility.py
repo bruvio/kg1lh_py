@@ -226,3 +226,33 @@ def movingaverage(interval, window_size):
 
 def create_dict(*args):
     return dict({i: eval(i) for i in args})
+def is_empty(structure):
+    """
+
+    :param structure:
+    :return: check is structure is empty
+    """
+    if structure:
+        return False
+    else:
+        return True
+
+def plot_point(point, angle, length):
+    '''
+    point - Tuple (x, y)
+    angle - Angle you want your end point at in degrees.
+    length - Length of the line you want to plot.
+
+    Will return start and end point of the segment
+    '''
+
+    # unpack the first point
+    x, y = point
+
+    # find the end points
+    endy1 = y-length * math.sin(math.radians(angle))
+    endy2 = y+length * math.sin(math.radians(angle))
+    endx1 = x-length * math.cos(math.radians(angle))
+    endx2 = x+length * math.cos(math.radians(angle))
+    return endx1,endx2,endy1,endy2
+    # plt.plot([endx1, endx2], [endy1, endy2])
