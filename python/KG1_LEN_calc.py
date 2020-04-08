@@ -1,6 +1,6 @@
 import logging
 logger = logging.getLogger(__name__)
-
+from shapely.geometry import LineString,Polygon,MultiPoint
 import matplotlib.pyplot as plt
 from types import SimpleNamespace
 import numpy as np
@@ -10,11 +10,26 @@ from utility import *
 import matplotlib.pylab as plt
 from MAGTool import *  # Magnetics Tool
 from consts import Consts
-
+from ppf_write import *
 
 
 from efit_data import EFITData
 __version__ = "4.5"
+
+debug_map = {
+    0: logging.ERROR,
+    1: logging.WARNING,
+    2: logging.INFO,
+    3: logging.DEBUG,
+    4: 5,
+}
+
+logging.basicConfig(level=debug_map[2])
+
+logging.addLevelName(5, "DEBUG_PLUS")
+
+logger = logging.getLogger(__name__)
+
 GM = (math.sqrt(5)-1)/2
 W =8
 H = GM*W
@@ -79,12 +94,51 @@ f.close()
 plt.figure(1, figsize=SIZE, dpi=90) #1, figsize=(10, 4), dpi=180)
 plt.plot(r_ves, z_ves)
 
-from shapely.geometry import LineString,Polygon,MultiPoint
+
+JPN = 95272
+DDA='KG1L'
+EFIT = 'EFIT'
+type_of_ppf = 'private'
+# DDA='KG1H'
+# EFIT = 'EHTR'
+
+if EFIT =='EFIT':
+    nameSignalsTable_EFIT = 'signalsTable_EFIT'  #
+else:
+    nameSignalsTable_EFIT = 'signalsTable_EHTR'  #
+JPNobj = MAGTool(JPN)
+data = SimpleNamespace()
+data.pulse = JPN
+logging.info("reading line of sights")
+try:
+
+    data.r_coord, dummy = getdata(JPN, "KG1V", "R")
+    data.r_coord = data.r_coord["data"]
+    data.z_coord, dummy = getdata(JPN, "KG1V", "Z")
+    data.z_coord = data.z_coord["data"]
+    data.a_coord, dummy = getdata(JPN, "KG1V", "A")
+    data.a_coord = data.a_coord["data"]
+
+except:
+    logger.error("\n error reading cords coordinates \n")
+
+
+print('a ',data.a_coord)
+print('r ',data.r_coord)
+print('z ',data.z_coord)
+
+
 #definig line of sigths as segments
-LOS1 = LineString([(1.885,-5), (1.885,3)])
-LOS2 = LineString([(2.6969,-5), (2.6969,3)])
-LOS3 = LineString([(3.034,-5), (3.034,3)])
-LOS4 = LineString([(3.73,-5), (3.73,3)])
+# LOS1 = LineString([(1.885,-5), (1.885,3)])
+# LOS2 = LineString([(2.6969,-5), (2.6969,3)])
+# LOS3 = LineString([(3.034,-5), (3.034,3)])
+# LOS4 = LineString([(3.73,-5), (3.73,3)])
+
+LOS1 = LineString([(data.r_coord[0],-5), (data.r_coord[0],3)])
+LOS2 = LineString([(data.r_coord[1],-5), (data.r_coord[1],3)])
+LOS3 = LineString([(data.r_coord[2],-5), (data.r_coord[2],3)])
+LOS4 = LineString([(data.r_coord[3],-5), (data.r_coord[3],3)])
+
 
 plt.plot([1.885,1.885], [-3,3],label='LOS1')
 plt.plot([2.6969,2.6969], [-3,3],label='LOS2')
@@ -92,19 +146,19 @@ plt.plot([3.034,3.034], [-3,3],label='LOS3')
 plt.plot([3.73,3.73], [-3,3],label='LOS4')
 
 
-endx1,endx2,endy1,endy2 = plot_point([3.0, -0.6073], math.degrees(0.3901),2)
+endx1,endx2,endy1,endy2 = plot_point([data.r_coord[4], data.z_coord[4]], math.degrees(data.a_coord[4]),2)
 LOS5 = LineString([(endx1, endy1), (endx2, endy2)])
 plt.plot([endx1, endx2], [endy1, endy2],label='LOS5')
 
-endx1,endx2,endy1,endy2 = plot_point([3.0, -0.3727], math.degrees(0.1681),2)
+endx1,endx2,endy1,endy2 = plot_point([data.r_coord[5], data.z_coord[5]], math.degrees(data.a_coord[5]),2)
 LOS6 = LineString([(endx1, endy1), (endx2, endy2)])
 plt.plot([endx1, endx2], [endy1, endy2],label='LOS6')
 
-endx1,endx2,endy1,endy2 = plot_point([3.0, -0.1468], math.degrees(-0.0389),2)
+endx1,endx2,endy1,endy2 = plot_point([data.r_coord[6], data.z_coord[6]], math.degrees(data.a_coord[6]),2)
 LOS7 = LineString([(endx1, endy1), (endx2, endy2)])
 plt.plot([endx1, endx2], [endy1, endy2],label='LOS7')
 
-endx1,endx2,endy1,endy2 = plot_point([3.0, 0.1862], math.degrees(-0.2437),2)
+endx1,endx2,endy1,endy2 = plot_point([data.r_coord[7], data.z_coord[7]], math.degrees(data.a_coord[7]),2)
 LOS8 =LineString([(endx1, endy1), (endx2, endy2)])
 plt.plot([endx1, endx2], [endy1, endy2],label='LOS8')
 
@@ -149,10 +203,9 @@ plt.plot(r_ves, z_ves)
 #                     )
 #                 )
 # print(cord)
-JPN = 95272
-JPNobj = MAGTool(JPN)
 
-nameSignalsTable_EFIT = 'signalsTable_EFIT'  #
+
+
 nameSignals_EFIT = STJET.signalsTableJET(nameSignalsTable_EFIT)
 expDataDictJPNobj_EFIT = JPNobj.download(JPN, nameSignalsTable_EFIT, nameSignals_EFIT, 0)
 
@@ -218,8 +271,7 @@ def readEFITFlux(expDataDictJPNobj, timeEquil):
 
 
 
-data = SimpleNamespace()
-data.pulse = JPN
+
 
 try:
     data.constants = Consts("consts.ini", __version__)
@@ -246,59 +298,132 @@ LEN5 = []
 LEN6 = []
 LEN7 = []
 LEN8 = []
-time_efit = data.EFIT_data.rmag.time
+if DDA == 'KG1L':
+    time_efit = data.EFIT_data.rmag.time
+if DDA == 'KG1H':
+    time_efit = data.EFIT_data.rmag_fast.time
 ntefit = len(time_efit)
+
+
+LOSName = ['LOS1','LOS2','LOS3','LOS4','LOS5','LOS6','LOS7','LOS8']
+
 for IT in range(0, ntefit):
 
     TIMEM = time_efit[IT]
-    print(TIMEM)
+    # print(TIMEM)
+    try:
+        rC0,zC0 , psi0, rGrid, zGrid, iTEFIT, timeEFIT = readEFITFlux(expDataDictJPNobj_EFIT, TIMEM)
+        BoundCoordTuple = list(zip(rC0, zC0))
+        polygonBound = Polygon(BoundCoordTuple)
+        x1 = polygonBound.intersection(LOS1)
+        x2 = polygonBound.intersection(LOS2)
+        x3 = polygonBound.intersection(LOS3)
+        x4 = polygonBound.intersection(LOS4)
+        x5 = polygonBound.intersection(LOS5)
+        x6 = polygonBound.intersection(LOS6)
+        x7 = polygonBound.intersection(LOS7)
+        x8 = polygonBound.intersection(LOS8)
+        for chan in channels:
+            # print(chan)
+            name = 'x' + str(chan)
+            name_len = 'LEN'+ str(chan)
+            dummy = vars()[name]
+            length = vars()[name_len]
+            if is_empty(dummy.bounds):
+                length.append(0)
+            else:
 
-    rC0,zC0 , psi0, rGrid, zGrid, iTEFIT, timeEFIT = readEFITFlux(expDataDictJPNobj_EFIT, TIMEM)
-    BoundCoordTuple = list(zip(rC0, zC0))
-    polygonBound = Polygon(BoundCoordTuple)
-    x1 = polygonBound.intersection(LOS1)
-    x2 = polygonBound.intersection(LOS2)
-    x3 = polygonBound.intersection(LOS3)
-    x4 = polygonBound.intersection(LOS4)
-    x5 = polygonBound.intersection(LOS5)
-    x6 = polygonBound.intersection(LOS6)
-    x7 = polygonBound.intersection(LOS7)
-    x8 = polygonBound.intersection(LOS8)
-    for chan in channels:
-        print(chan)
-        name = 'x' + str(chan)
-        name_len = 'LEN'+ str(chan)
-        dummy = vars()[name]
-        len = vars()[name_len]
-        if is_empty(dummy.bounds):
-            len.append(0)
-        else:
-
-            r1 = dummy.xy[0][0]
-            z1 = dummy.xy[1][0]
-            r2 = dummy.xy[0][1]
-            z2 = dummy.xy[1][1]
-            len.append(np.float64(
-                math.hypot(
-                    np.float64(r2) - np.float64(r1), np.float64(z2) - np.float64(z1)
-                )
-            ))
+                r1 = dummy.xy[0][0]
+                z1 = dummy.xy[1][0]
+                r2 = dummy.xy[0][1]
+                z2 = dummy.xy[1][1]
+                length.append(np.float64(
+                    math.hypot(
+                        np.float64(r2) - np.float64(r1), np.float64(z2) - np.float64(z1)
+                    )
+                ))
+    except:
+        print('skipping {}'.format(TIMEM))
 
 
-
-plt.figure(3, figsize=SIZE, dpi=90) #1, figsize=(10, 4), dpi=180)
+plt.figure(3, figsize=SIZE, dpi=400) #1, figsize=(10, 4), dpi=180)
 for chan in channels:
-    kg1l_len3, dummy = getdata(JPN, 'KG1L', "LEN" + str(chan))
-    plt.subplot(8, 1, chan)
-    plt.plot(time_efit,vars()['LEN'+str(chan)],label='LEN'+str(chan))
-    plt.plot(
-        kg1l_len3["time"],
-        kg1l_len3["data"],
-        label="LEN_jetppf_ch" + str(chan),
-    )
+    kg1l_len3, dummy = getdata(JPN, DDA, "LEN" + str(chan))
+    if chan ==1:
+        ax_1 = plt.subplot(8, 1, chan)
+        plt.subplot(8, 1, chan)
+        plt.plot(time_efit,vars()['LEN'+str(chan)],label='LEN'+str(chan))
+        plt.plot(
+            kg1l_len3["time"],
+            kg1l_len3["data"],
+            label="LEN_jetppf_ch" + str(chan),
+        )
+        plt.legend(loc='best', fontsize=8)
+    else:
+        plt.subplot(8, 1, chan, sharex=ax_1)
+        plt.subplot(8, 1, chan)
+        plt.plot(time_efit, vars()['LEN' + str(chan)], label='LEN' + str(chan))
+        plt.plot(
+            kg1l_len3["time"],
+            kg1l_len3["data"],
+            label="LEN_jetppf_ch" + str(chan),
+        )
+        plt.legend(loc='best',fontsize = 8)
+plt.savefig('./figures/overlay_LEN-{}-{}-{}.png'.format(JPN,EFIT,type_of_ppf))
+
+plt.figure(4, figsize=SIZE, dpi=400) #1, figsize=(10, 4), dpi=180)
+f = open('JPN_{}_len_{}-{}'.format(JPN,EFIT,type_of_ppf),'w')
+for chan in channels:
+    kg1l_len3, dummy = getdata(JPN, DDA, "LEN" + str(chan))
+    try:
+        if chan ==1:
+            ax_1 = plt.subplot(8, 1, chan)
+            plt.plot(time_efit,abs(kg1l_len3["data"]-vars()['LEN'+str(chan)]),label='diff-LEN'+str(chan))
+            plt.legend(loc='best', fontsize=8)
+        else:
+            plt.subplot(8, 1, chan, sharex=ax_1)
+            plt.plot(time_efit, abs(kg1l_len3["data"] - vars()['LEN' + str(chan)]),
+                     label='diff-LEN' + str(chan))
+            plt.legend(loc='best',fontsize = 8)
+
+        print('chan {} mean difference between flush and geometry calc is {}'.format(str(chan),np.mean(abs(kg1l_len3["data"] - vars()['LEN' + str(chan)]))))
+        print('chan {} median difference between flush and geometry calc is {} \n'.format(str(chan),np.median(abs(kg1l_len3["data"] - vars()['LEN' + str(chan)]))))
+
+        f.write('chan {} mean difference between flush and geometry calc is {} \n'.format(str(chan),np.mean(abs(kg1l_len3["data"] - vars()['LEN' + str(chan)]))))
+        f.write( 'chan {} median difference between flush and geometry calc is {} \n'.format(str(chan),np.median(abs(kg1l_len3["data"] - vars()['LEN' + str(chan)]))))
+    except:
+
+        print('skipping channel {}\n'.format(chan))
+        f.write('skipping channel {}\n'.format(chan))
+plt.savefig('./figures/difference_LEN-{}-{}-{}.png'.format(JPN,EFIT,type_of_ppf))
 
 plt.show()
+f.close()
 
+err = open_ppf(JPN, 'bviola')
 
+if err != 0:
+    logger.error("\n failed to open ppf \n")
 
+itref_kg1v = -1
+
+for chan in channels:
+    dtype_lid = "LEN{}".format(chan)
+    comment = "CORD LENGTH KG1 CHANNEL {}".format(chan)
+
+    write_err, itref_written = write_ppf(
+        JPN,
+        DDA,
+        dtype_lid,
+        vars()['LEN'+str(chan)],
+        time=time_efit,
+        comment=comment,
+        unitd="M",
+        unitt="SEC",
+        itref=itref_kg1v,
+        nt=len(time_efit),
+        status=time_efit,
+        global_status=0,
+    )
+err = close_ppf(JPN, 'bviola', data.constants.code_version, DDA)
 
