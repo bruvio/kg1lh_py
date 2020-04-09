@@ -45,7 +45,7 @@ def main(
 
 
     # -------------------------------
-    # 1. Init
+    # 0. Init
     # -------------------------------
     logger.info('\n initializing...')
     DDA=code
@@ -75,6 +75,23 @@ def main(
         sys.exit(65)
     data.EFIT_data = {}
 
+    # -------------------------------
+    # 1. check if there is already a validated public ppf
+    # -------------------------------
+    # if ((not force) and (write_uid.lower() == 'jetppf')):
+    #     logger.info('checking SF of public KG1V ppf')
+    #
+    #     SF_list_public = check_SF("jetppf", shot_no, 0, dda=code.lower())
+    #     if bool(set(SF_list_public) & set([1, 2, 3])):
+    #         logger.warning(
+    #             "\n \n there is already a saved public PPF with validated channels! \n \n "
+    #         )
+    #         logger.info(
+    #             "\n No PPF was written. \n"
+    #         )
+    #
+    #         logger.info("\n             Finished. \n")
+    #         return 100
 
     # -------------------------------
     # 2. Read in EFIT data
@@ -85,6 +102,16 @@ def main(
         ier = data.EFIT_data.read_data(data.pulse, 'kg1l')
     except:
         logger.error("\n could not read EFIT data \n")
+    logger.info('getting EFIT seq'
+    )
+    try:
+        data.unval_seq, data.val_seq = get_min_max_seq(
+            data.pulse, dda=code, read_uid=s'jetppf'
+        )
+    except TypeError:
+        logger.error(
+            "impossible to read sequence for user {}".format(self.read_uid)
+        )
 
     if DDA == 'KG1L':
         time_efit = data.EFIT_data.rmag.time
@@ -125,7 +152,7 @@ def main(
     print('z ',data.z_coord)
 
     # -------------------------------
-    # 3. defining line of sigths as segments
+    # 4. defining line of sigths as segments
     # -------------------------------
     logger.info('\n defining line of sigths as segments')
     LOS1 = LineString([(data.r_coord[0],-5), (data.r_coord[0],3)])
@@ -160,7 +187,7 @@ def main(
 
 
     # -------------------------------
-    # 3. time loop
+    # 5. time loop
     # -------------------------------
     logger.info('\n time loop')
     for IT in range(0, ntefit):
@@ -205,6 +232,128 @@ def main(
 
 
 
+
+
+    # -------------------------------
+    # 6. writing PPFs
+    # -------------------------------
+    logging.info("\n start writing PPFs \n")
+    if (write_uid != "" and not test) or (
+        test and write_uid.upper() != "JETPPF" and write_uid != ""
+    ):
+        logger.info("\n             Writing PPF with UID {}".format(write_uid))
+
+        err = open_ppf(data.pulse, write_uid)
+
+        if err != 0:
+            logger.error("\n failed to open ppf \n")
+            return err
+
+        itref_kg1v = -1
+
+        for chan in channels:
+            dtype_lid = "LEN{}".format(chan)
+            comment = "CORD LENGTH KG1 CHANNEL {}".format(chan)
+
+            write_err, itref_written = write_ppf(
+                JPN,
+                DDA,
+                dtype_lid,
+                vars()['LEN'+str(chan)],
+                time=time_efit,
+                comment=comment,
+                unitd="M",
+                unitt="SEC",
+                itref=itref_kg1v,
+                nt=len(time_efit),
+                status=time_efit,
+                global_status=0,
+            )
+            if write_err != 0:
+                logger.error(
+                    "Failed to write {}/{}. Errorcode {}".format(
+                        DDA, dtype_lid, write_err
+                    )
+                )
+                return write_err
+
+
+        mode = "Produced by {}".format(self.owner)
+        dtype_mode = "EFIT"
+        comment = mode
+        write_err, itref_written = write_ppf(
+            self.data.pulse,
+            dda,
+            dtype_mode,
+            np.array([1]),
+            time=np.array([0]),
+            comment=comment,
+            unitd=" ",
+            unitt=" ",
+            itref=-1,
+            nt=1,
+            status=None,
+        )
+        if write_err != 0:
+            logger.error("failed to write mode ppf")
+            return write_err
+
+        mode = "EFIT source"
+        dtype_mode = EFIT
+        comment = mode
+        write_err, itref_written = write_ppf(
+            self.data.pulse,
+            dda,
+            dtype_mode,
+            np.array([1]),
+            time=np.array([0]),
+            comment=comment,
+            unitd=" ",
+            unitt=" ",
+            itref=-1,
+            nt=1,
+            status=None,
+        )
+        if write_err != 0:
+            logger.error("failed to write source ppf")
+            return write_err
+
+
+        mode = "EFIT version"
+        dtype_mode = data.version
+        comment = mode
+        write_err, itref_written = write_ppf(
+            self.data.pulse,
+            dda,
+            dtype_mode,
+            np.array([1]),
+            time=np.array([0]),
+            comment=comment,
+            unitd=" ",
+            unitt=" ",
+            itref=-1,
+            nt=1,
+            status=None,
+        )
+        if write_err != 0:
+            logger.error("failed to write version ppf")
+            return write_err
+
+        err = close_ppf(JPN, 'bviola', data.constants.code_version, DDA)
+        #writing EFIT seq and version for data provenance
+        if write_err != 0:
+            logger.error("failed to close ppf")
+            return err
+
+        logger.info('\n DONE')
+    else:
+    logger.info(
+        "No PPF was written. UID given was {}, test: {}".format(write_uid, test)
+    )
+
+    # -------------------------------
+    # 7. plotting data and comparison with previous mathod
+    # -------------------------------
     if plot:
         try:
             plt.figure(3, figsize=SIZE, dpi=400)  # 1, figsize=(10, 4), dpi=180)
@@ -237,75 +386,40 @@ def main(
             for chan in channels:
                 kg1l_len3, dummy = getdata(JPN, DDA, "LEN" + str(chan))
                 try:
-                    if chan ==1:
+                    if chan == 1:
                         ax_1 = plt.subplot(8, 1, chan)
-                        plt.plot(time_efit,abs(kg1l_len3["data"]-vars()['LEN'+str(chan)]),label='diff-LEN'+str(chan))
+                        plt.plot(time_efit, abs(kg1l_len3["data"] - vars()['LEN' + str(chan)]),
+                                 label='diff-LEN' + str(chan))
                         plt.legend(loc='best', fontsize=8)
                     else:
                         plt.subplot(8, 1, chan, sharex=ax_1)
                         plt.plot(time_efit, abs(kg1l_len3["data"] - vars()['LEN' + str(chan)]),
                                  label='diff-LEN' + str(chan))
-                        plt.legend(loc='best',fontsize = 8)
+                        plt.legend(loc='best', fontsize=8)
 
                     # print('chan {} mean difference between flush and geometry calc is {}'.format(str(chan),np.mean(abs(kg1l_len3["data"] - vars()['LEN' + str(chan)]))))
                     # print('chan {} median difference between flush and geometry calc is {} \n'.format(str(chan),np.median(abs(kg1l_len3["data"] - vars()['LEN' + str(chan)]))))
 
-                    f.write('chan {} mean difference between flush and geometry calc is {} \n'.format(str(chan),np.mean(abs(kg1l_len3["data"] - vars()['LEN' + str(chan)]))))
-                    f.write( 'chan {} median difference between flush and geometry calc is {} \n'.format(str(chan),np.median(abs(kg1l_len3["data"] - vars()['LEN' + str(chan)]))))
+                    f.write('chan {} mean difference between flush and geometry calc is {} \n'.format(str(chan), np.mean(
+                        abs(kg1l_len3["data"] - vars()['LEN' + str(chan)]))))
+                    f.write('chan {} median difference between flush and geometry calc is {} \n'.format(str(chan),
+                                                                                                        np.median(abs(
+                                                                                                            kg1l_len3[
+                                                                                                                "data"] -
+                                                                                                            vars()[
+                                                                                                                'LEN' + str(
+                                                                                                                    chan)]))))
                 except:
 
                     logger.warning('skipping channel {}\n'.format(chan))
                     f.write('skipping channel {}\n'.format(chan))
             f.close()
-            plt.savefig('./figures/difference_LEN-{}-{}-{}.png'.format(JPN,EFIT,type_of_ppf))
+            plt.savefig('./figures/difference_LEN-{}-{}-{}.png'.format(JPN, EFIT, type_of_ppf))
         except:
             logger.error("\n could not plot data \n")
     if plot:
         plt.show(block=True)
 
-
-    # -------------------------------
-    # 3. writing PPFs
-    # -------------------------------
-    logging.info("\n start writing PPFs \n")
-    if (write_uid != "" and not test) or (
-        test and write_uid.upper() != "JETPPF" and write_uid != ""
-    ):
-        logger.info("\n             Writing PPF with UID {}".format(write_uid))
-
-        err = open_ppf(data.pulse, write_uid)
-
-        if err != 0:
-            logger.error("\n failed to open ppf \n")
-
-
-        itref_kg1v = -1
-
-        for chan in channels:
-            dtype_lid = "LEN{}".format(chan)
-            comment = "CORD LENGTH KG1 CHANNEL {}".format(chan)
-
-            write_err, itref_written = write_ppf(
-                JPN,
-                DDA,
-                dtype_lid,
-                vars()['LEN'+str(chan)],
-                time=time_efit,
-                comment=comment,
-                unitd="M",
-                unitt="SEC",
-                itref=itref_kg1v,
-                nt=len(time_efit),
-                status=time_efit,
-                global_status=0,
-            )
-        err = close_ppf(JPN, 'bviola', data.constants.code_version, DDA)
-
-        logger.info('\n DONE')
-    else:
-    logger.info(
-        "No PPF was written. UID given was {}, test: {}".format(write_uid, test)
-    )
 
 
     logger.info("\n             Finished.\n")
