@@ -55,7 +55,9 @@ from multiprocessing.pool import Pool
 import multiprocessing as mp
 import json
 import matplotlib.pyplot as plt
-
+from shapely.geometry import LineString,Polygon
+from MAGTool import *
+import signalsTableJET_MAG as STJET
 # from scipy.signal import sosfiltfilt, butter
 import pdb
 import pandas as pd
@@ -84,8 +86,8 @@ from consts import Consts
 
 # from find_disruption import find_disruption
 from kg1_ppf_data import Kg1PPFData
+import getpass
 
-from library import *  # containing useful function
 from efit_data import EFITData
 from kg1l_data import KG1LData
 
@@ -98,14 +100,13 @@ from signal_base import SignalBase
 
 # from custom_formatters import MyFormatter,QPlainTextEditLogger,HTMLFormatter
 # from support_classes import LineEdit,Key,KeyBoard,MyLocator
-import inspect
 import fileinput
 import cProfile, pstats, io
 import inspect
 from scipy import signal
 import numpy as np
 import matplotlib.pyplot as plt
-from utility import *
+from utility import * # containing useful function
 import pandas as pd
 try:
     from my_flush import *
@@ -423,11 +424,12 @@ def time_loop(arg):
         xpt = float(xpt * 100.0)
         ypt = float(ypt * 100.0)
         flush_time = []
+
+
         # pdb.set_trace()
         for IT in range(0, ntefit):
 
             TIMEM = time_efit[IT]
-
             logger.log(5, "computing lad/len/xtan \n")
             if data.code.lower() == "kg1l":
                 dtime = float(TIMEM)
@@ -446,8 +448,8 @@ def time_loop(arg):
             )
 
             #
-            # if ier != 0:
-            #     logger.debug("flush error {} in flushinit".format(ier))
+            if ier != 0:
+                logger.debug("flush error {} in flushinit".format(ier))
             #     pass
             # else:
 
@@ -521,41 +523,41 @@ def time_loop(arg):
             NPSI = 1  # look for one surface
             psimax = 1  # value of psi at the last closed surface
 
-            nfound, r1, z1, r2, z2, r3, z3, r4, z4, ier = Flush_getIntersections(
-                xpt, ypt, angle, data.EPSF, NPSI, psimax
-            )
-            if ier != 0:
-                logger.debug("flush error {}  in Flush_getIntersections".format(ier))
-                # return ier
-            if data.code.lower() == "kg1l":
-                cord = float(math.hypot(float(r2) - float(r1), float(z2) - float(z1)))
-            else:
-                cord = np.float64(
-                    math.hypot(
-                        np.float64(r2) - np.float64(r1), np.float64(z2) - np.float64(z1)
-                    )
-                )
-            logger.log(5, "found {} intersection/s".format(nfound))
+            # nfound, r1, z1, r2, z2, r3, z3, r4, z4, ier = Flush_getIntersections(
+            #     xpt, ypt, angle, data.EPSF, NPSI, psimax
+            # )
+            # if ier != 0:
+            #     logger.debug("flush error {}  in Flush_getIntersections".format(ier))
+            #     # return ier
+            # if data.code.lower() == "kg1l":
+            #     cord = float(math.hypot(float(r2) - float(r1), float(z2) - float(z1)))
+            # else:
+            #     cord = np.float64(
+            #         math.hypot(
+            #             np.float64(r2) - np.float64(r1), np.float64(z2) - np.float64(z1)
+            #         )
+            #     )
+            # logger.log(5, "found {} intersection/s".format(nfound))
 
             # -----------------------------------------------------------------------
             # final results
             # -----------------------------------------------------------------------
-            if cord < 0:
-                cord = abs(cord)
-            if data.code.lower() == "kg1l":
-                length[IT] = float(cord / 100.0)  # conversion from cm to m
-            else:
-                length[IT] = np.float64(cord / 100.0)  # conversion from cm to m
-            logger.log(5, "cord length for channel {} is {}".format(chan, length[IT]))
-            # length[IT] = cord # conversion from cm to m
-            if length[IT] > 0.0:
-                if data.code.lower() == "kg1l":
-                    lad[IT] = float(density[IT] / length[IT])
-                else:
-                    lad[IT] = np.float64(density[IT] / length[IT])
-
-            else:
-                lad[IT] = 0.0
+            # if cord < 0:
+            #     cord = abs(cord)
+            # if data.code.lower() == "kg1l":
+            #     length[IT] = float(cord / 100.0)  # conversion from cm to m
+            # else:
+            #     length[IT] = np.float64(cord / 100.0)  # conversion from cm to m
+            # logger.log(5, "cord length for channel {} is {}".format(chan, length[IT]))
+            # # length[IT] = cord # conversion from cm to m
+            # if length[IT] > 0.0:
+            #     if data.code.lower() == "kg1l":
+            #         lad[IT] = float(density[IT] / length[IT])
+            #     else:
+            #         lad[IT] = np.float64(density[IT] / length[IT])
+            #
+            # else:
+            #     lad[IT] = 0.0
             if data.code.lower() == "kg1l":
                 xtan[IT] = fTan1
             else:
@@ -564,8 +566,8 @@ def time_loop(arg):
                 logger.log(5, "efit time {}s".format(t))
                 logger.log(
                     5,
-                    "xpt {} ypt {} angle {} dtime {} coord {} length[IT] {} lad[IT] {} xtan[IT] {}".format(
-                        xpt, ypt, angle, dtime, cord, length[IT], lad[IT], xtan[IT]
+                    "xpt {} ypt {} angle {} dtime {}   xtan[IT] {}".format(
+                        xpt, ypt, angle, dtime,  xtan[IT]
                 ),
             )
                 # pdb.set_trace()
@@ -576,12 +578,14 @@ def time_loop(arg):
             data.KG1LH_data.lid[chan].time = [float(i) for i in time_efit]
             #
             data.KG1LH_data.lad[chan] = SignalBase(data.constants)
-            data.KG1LH_data.lad[chan].data = [float(i) for i in lad]
+            # data.KG1LH_data.lad[chan].data = [float(i) for i in lad]
+            data.KG1LH_data.lad[chan].data = [float(0) for i in time_efit]
 
             data.KG1LH_data.lad[chan].time = [float(i) for i in time_efit]
             #
             data.KG1LH_data.len[chan] = SignalBase(data.constants)
-            data.KG1LH_data.len[chan].data = [float(i) for i in length]
+            # data.KG1LH_data.len[chan].data = [float(i) for i in length]
+            data.KG1LH_data.len[chan].data = [float(0) for i in time_efit]
 
             data.KG1LH_data.len[chan].time = [float(i) for i in flush_time]
             #
@@ -595,12 +599,14 @@ def time_loop(arg):
             data.KG1LH_data.lid[chan].time = [np.float64(i) for i in time_efit]
             #
             data.KG1LH_data.lad[chan] = SignalBase(data.constants)
-            data.KG1LH_data.lad[chan].data = [np.float64(i) for i in lad]
+            # data.KG1LH_data.lad[chan].data = [np.float64(i) for i in lad]
+            data.KG1LH_data.lad[chan].data = [np.float64(0) for i in time_efit]
 
             data.KG1LH_data.lad[chan].time = [np.float64(i) for i in time_efit]
             #
             data.KG1LH_data.len[chan] = SignalBase(data.constants)
-            data.KG1LH_data.len[chan].data = [np.float64(i) for i in length]
+            # data.KG1LH_data.len[chan].data = [np.float64(i) for i in length]
+            data.KG1LH_data.len[chan].data = [np.float64(0) for i in time_efit]
 
             data.KG1LH_data.len[chan].time = [np.float64(i) for i in flush_time]
             #
@@ -734,7 +740,7 @@ def main(
             owner = os.getlogin()
         else:
             logger.log(5, "using getuser to authenticate")
-            import getpass
+
 
             owner = getpass.getuser()
         logger.log(5, "this is your username {}".format(owner))
@@ -757,6 +763,7 @@ def main(
         cwd = os.getcwd()
         pathlib.Path(cwd + os.sep + "figures").mkdir(parents=True, exist_ok=True)
         pathlib.Path(cwd + os.sep + "saved").mkdir(parents=True, exist_ok=True)
+        pathlib.Path(cwd + os.sep + "logFile").mkdir(parents=True, exist_ok=True)
         # -------------------------------
         # Read  config data.
         # -------------------------------
@@ -796,6 +803,15 @@ def main(
         data.code = code
         data.KG1_data = {}
         data.EFIT_data = {}
+        data.JPNobj = MAGTool(data.pulse)
+
+        if code.lower() == 'kg1l':
+            data.EFIT = 'EFIT'
+            nameSignalsTable_EFIT = 'signalsTable_EFIT'  #
+        else:
+            data.EFIT = 'EHTR'
+            nameSignalsTable_EFIT = 'signalsTable_EHTR'  #
+
         return_code = 0
 
         data.KG1LH_data = KG1LData(data.constants)
@@ -900,6 +916,10 @@ def main(
     # 2. Read in EFIT data
     # -------------------------------
     try:
+        # pdb.set_trace()
+        data.nameSignals_EFIT = STJET.signalsTableJET(nameSignalsTable_EFIT)
+        data.expDataDictJPNobj_EFIT = data.JPNobj.download(data.pulse, nameSignalsTable_EFIT,
+                                                 data.nameSignals_EFIT, 0)
         data.EFIT_data = EFITData(data.constants)
         ier = data.EFIT_data.read_data(data.pulse, code)
     except:
@@ -937,6 +957,63 @@ def main(
         data.z_coord = data.z_coord["data"]
         data.a_coord, dummy = getdata(shot_no, "KG1V", "A")
         data.a_coord = data.a_coord["data"]
+
+        LEN1 = []
+        LEN2 = []
+        LEN3 = []
+        LEN4 = []
+        LEN5 = []
+        LEN6 = []
+        LEN7 = []
+        LEN8 = []
+
+        print('a ', data.a_coord)
+        print('r ', data.r_coord)
+        print('z ', data.z_coord)
+
+        # -------------------------------
+        # 4. defining line of sigths as segments
+        # -------------------------------
+        logger.info('\n defining line of sigths as segments')
+        data.LOS1 = LineString([(data.r_coord[0], -5), (data.r_coord[0], 3)])
+        data.LOS2 = LineString([(data.r_coord[1], -5), (data.r_coord[1], 3)])
+        data.LOS3 = LineString([(data.r_coord[2], -5), (data.r_coord[2], 3)])
+        data.LOS4 = LineString([(data.r_coord[3], -5), (data.r_coord[3], 3)])
+
+        # plt.figure(1, figsize=SIZE, dpi=90) #1, figsize=(10, 4), dpi=180)
+        # plt.plot(r_ves, z_ves)
+        #
+        # plt.plot([data.r_coord[0],data.r_coord[0]], [-3,3],label='LOS1')
+        # plt.plot([data.r_coord[1],data.r_coord[1]], [-3,3],label='LOS2')
+        # plt.plot([data.r_coord[2],data.r_coord[2]], [-3,3],label='LOS3')
+        # plt.plot([data.r_coord[3],data.r_coord[3]], [-3,3],label='LOS4')
+
+        endx1, endx2, endy1, endy2 = plot_point(
+            [data.r_coord[4], data.z_coord[4]], math.degrees(data.a_coord[4]),
+            2)
+        data.LOS5 = LineString([(endx1, endy1), (endx2, endy2)])
+        # plt.plot([endx1, endx2], [endy1, endy2],label='LOS5')
+
+        endx1, endx2, endy1, endy2 = plot_point(
+            [data.r_coord[5], data.z_coord[5]], math.degrees(data.a_coord[5]),
+            2)
+        data.LOS6 = LineString([(endx1, endy1), (endx2, endy2)])
+        # plt.plot([endx1, endx2], [endy1, endy2],label='LOS6')
+
+        endx1, endx2, endy1, endy2 = plot_point(
+            [data.r_coord[6], data.z_coord[6]], math.degrees(data.a_coord[6]),
+            2)
+        data.LOS7 = LineString([(endx1, endy1), (endx2, endy2)])
+        # plt.plot([endx1, endx2], [endy1, endy2],label='LOS7')
+
+        endx1, endx2, endy1, endy2 = plot_point(
+            [data.r_coord[7], data.z_coord[7]], math.degrees(data.a_coord[7]),
+            2)
+        data.LOS8 = LineString([(endx1, endy1), (endx2, endy2)])
+
+
+
+
 
     except:
         logger.error("\n error reading cords coordinates \n")
@@ -1040,6 +1117,58 @@ def main(
     # pdb.set_trace()
     if no_multithreading:
         # pdb.set_trace()
+        try:
+            logger.info("\n Starting time loop \n")
+            start_time = time.time()
+            time_efit = data.EFIT_data.rmag.time
+            ntefit = len(time_efit)
+            for IT in range(0, ntefit):
+
+                TIMEM = time_efit[IT]
+                try:
+                    rC0, zC0, psi0, rGrid, zGrid, iTEFIT, timeEFIT = data.JPNobj.readEFITFlux(
+                        data.expDataDictJPNobj_EFIT, TIMEM)
+                    BoundCoordTuple = list(zip(rC0, zC0))
+                    polygonBound = Polygon(BoundCoordTuple)
+                    x1 = polygonBound.intersection(data.LOS1)
+                    x2 = polygonBound.intersection(data.LOS2)
+                    x3 = polygonBound.intersection(data.LOS3)
+                    x4 = polygonBound.intersection(data.LOS4)
+                    x5 = polygonBound.intersection(data.LOS5)
+                    x6 = polygonBound.intersection(data.LOS6)
+                    x7 = polygonBound.intersection(data.LOS7)
+                    x8 = polygonBound.intersection(data.LOS8)
+                    for chan in channels:
+                        # print(chan)
+                        name = 'x' + str(chan)
+                        name_len = 'LEN' + str(chan)
+                        dummy = vars()[name]
+                        length = vars()[name_len]
+                        if is_empty(dummy.bounds):
+                            length.append(0)
+                        else:
+
+                            r1 = dummy.xy[0][0]
+                            z1 = dummy.xy[1][0]
+                            r2 = dummy.xy[0][1]
+                            z2 = dummy.xy[1][1]
+
+                            length.append(np.float64(
+                                math.hypot(
+                                    np.float64(r2) - np.float64(r1),
+                                    np.float64(z2) - np.float64(z1)
+                                )
+                            ))
+                except:
+                    print('skipping {}'.format(TIMEM))
+                logger.log(5, "computing lad/len/xtan \n")
+
+            # pdb.set_trace()
+        except:
+            logger.error("\n could not calculate LENs using EFIT\n")  #
+            return 24
+        # pdb.set_trace()
+
         if 2 in data.KG1_data.density.keys():
             logger.info("\n Starting time loop ch. 2\n")
             data,chan = time_loop((data,2))
@@ -1068,6 +1197,51 @@ def main(
         try:
             logger.info("\n Starting time loop \n")
             start_time = time.time()
+            time_efit = data.EFIT_data.rmag.time
+            ntefit = len(time_efit)
+            for IT in range(0, ntefit):
+
+                TIMEM = time_efit[IT]
+                try:
+                    rC0, zC0, psi0, rGrid, zGrid, iTEFIT, timeEFIT = data.JPNobj.readEFITFlux(
+                        data.expDataDictJPNobj_EFIT, TIMEM)
+                    BoundCoordTuple = list(zip(rC0, zC0))
+                    polygonBound = Polygon(BoundCoordTuple)
+                    x1 = polygonBound.intersection(data.LOS1)
+                    x2 = polygonBound.intersection(data.LOS2)
+                    x3 = polygonBound.intersection(data.LOS3)
+                    x4 = polygonBound.intersection(data.LOS4)
+                    x5 = polygonBound.intersection(data.LOS5)
+                    x6 = polygonBound.intersection(data.LOS6)
+                    x7 = polygonBound.intersection(data.LOS7)
+                    x8 = polygonBound.intersection(data.LOS8)
+                    for chan in channels:
+                        # print(chan)
+                        name = 'x' + str(chan)
+                        name_len = 'LEN' + str(chan)
+                        dummy = vars()[name]
+                        length = vars()[name_len]
+                        if is_empty(dummy.bounds):
+                            length.append(0)
+                        else:
+
+                            r1 = dummy.xy[0][0]
+                            z1 = dummy.xy[1][0]
+                            r2 = dummy.xy[0][1]
+                            z2 = dummy.xy[1][1]
+
+                            length.append(np.float64(
+                                math.hypot(
+                                    np.float64(r2) - np.float64(r1),
+                                    np.float64(z2) - np.float64(z1)
+                                )
+                            ))
+                except:
+                    print('skipping {}'.format(TIMEM))
+                logger.log(5, "computing lad/len/xtan \n")
+
+            # pdb.set_trace()
+
             # pool = mp.Semaphore(multiprocessing.cpu_count())
             pool = Pool(max(1, mp.cpu_count() // 2))
             #        with Pool(10) as pool:
@@ -1084,11 +1258,11 @@ def main(
 
                         data.KG1LH_data.lad[key] = SignalBase(data.constants)
                         data.KG1LH_data.lad[key].time = res[0].KG1LH_data.lad[res[1]].time
-                        data.KG1LH_data.lad[key].data = res[0].KG1LH_data.lad[res[1]].data
+                        data.KG1LH_data.lad[key].data = 0
 
                         data.KG1LH_data.len[key] = SignalBase(data.constants)
                         data.KG1LH_data.len[key].time = res[0].KG1LH_data.len[res[1]].time
-                        data.KG1LH_data.len[key].data = res[0].KG1LH_data.len[res[1]].data
+                        data.KG1LH_data.len[key].data = 0
 
                         data.KG1LH_data.xta[key] = SignalBase(data.constants)
                         data.KG1LH_data.xta[key].time = res[0].KG1LH_data.xta[res[1]].time
@@ -1098,6 +1272,29 @@ def main(
         except:
             logger.error("\n could not perform time loop \n")  #
             return 24
+    # pdb.set_trace()
+    LEN_df =pd.DataFrame({'LEN1':LEN1,
+                          'LEN2':LEN2,
+                          'LEN3':LEN3,
+                          'LEN4':LEN4,
+                          'LEN5':LEN5,
+                          'LEN6':LEN6,
+                          'LEN7':LEN7,
+                          'LEN8':LEN8})
+    pdb.set_trace()
+    for chan in data.KG1LH_data.lid.keys():
+        print(chan)
+        name = 'LEN'+str(chan)
+
+        data.KG1LH_data.len[chan].data = LEN_df[name]
+        for i in range(0,len(data.KG1LH_data.lid[chan].time)):
+            if LEN_df[name].iloc[i] > 0.0:
+                data.KG1LH_data.lad[chan].data[i] = float(1/ LEN_df[name].iloc[i] / data.KG1LH_data.lid[chan].data[i])
+            else:
+                data.KG1LH_data.lad[chan].data[i] = 0.0
+
+
+
 
 
     # pdb.set_trace()

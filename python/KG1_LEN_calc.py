@@ -5,7 +5,10 @@ import matplotlib.pyplot as plt
 from types import SimpleNamespace
 import numpy as np
 import csv
+import pdb
 import math
+import getpass
+import os
 import argparse
 from utility import *
 import matplotlib.pylab as plt
@@ -17,7 +20,7 @@ from efit_data import EFITData
 
 # ----------------------------
 __author__ = "Bruno Viola"
-__Name__ = "KG1L_py"
+__Name__ = "KG1LH LENs writer"
 __version__ = "1"
 __release__ = "2"
 __maintainer__ = "Bruno Viola"
@@ -36,11 +39,10 @@ SIZE = (W,H)
 
 def main(
     JPN,
-    code
+    code,
     write_uid,
     plot,
-    test=False,
-    force=False
+    test=False
 ):
 
 
@@ -49,9 +51,24 @@ def main(
     # -------------------------------
     logger.info('\n initializing...')
     DDA=code
+    channels = np.arange(0, 8) + 1
 
-    type_of_ppf = 'public'
+    # type_of_ppf = 'public'
+    read_uid = 'jetppf'
+    type_of_ppf = read_uid
 
+    if "USR" in os.environ:
+        logger.log(5, "USR in env")
+        # owner = os.getenv('USR')
+        owner = os.getlogin()
+    else:
+        logger.log(5, "using getuser to authenticate")
+        import getpass
+
+        owner = getpass.getuser()
+
+    cwd = os.getcwd()
+    pathlib.Path(cwd + os.sep + "logFile").mkdir(parents=True, exist_ok=True)
 
     if DDA =='KG1L':
         EFIT = 'EFIT'
@@ -105,13 +122,20 @@ def main(
     logger.info('getting EFIT seq'
     )
     try:
+        logging.info('reading {} sequence '.format(EFIT))
         data.unval_seq, data.val_seq = get_min_max_seq(
-            data.pulse, dda=code, read_uid=s'jetppf'
+            data.pulse, dda=EFIT, read_uid='jetppf'
         )
     except TypeError:
         logger.error(
-            "impossible to read sequence for user {}".format(self.read_uid)
+            "impossible to read sequence for user {}".format(read_uid)
         )
+    try:
+        logging.info('reading {} version '.format(EFIT))
+        data.version , dummy = getdata(JPN, "EFIT", "AREA")
+        data.version = 0.1
+    except:
+        logger.error('failed to read {} version'.format(EFIT))
 
     if DDA == 'KG1L':
         time_efit = data.EFIT_data.rmag.time
@@ -134,7 +158,7 @@ def main(
 
     except:
         logger.error("\n error reading cords coordinates \n")
-
+    # pdb.set_trace()
     LEN1 = []
     LEN2 = []
     LEN3 = []
@@ -278,12 +302,11 @@ def main(
                 return write_err
 
 
-        mode = "Produced by {}".format(self.owner)
-        dtype_mode = "EFIT"
-        comment = mode
+        comment = "Produced by {}".format(owner)
+        dtype_mode = "MODE"
         write_err, itref_written = write_ppf(
-            self.data.pulse,
-            dda,
+            data.pulse,
+            DDA,
             dtype_mode,
             np.array([1]),
             time=np.array([0]),
@@ -298,14 +321,25 @@ def main(
             logger.error("failed to write mode ppf")
             return write_err
 
-        mode = "EFIT source"
-        dtype_mode = EFIT
-        comment = mode
+        comment = "EFIT source"
+        if EFIT =='EFIT':
+
+            dtype_mode = "EFIT"
+        if EFIT == 'EHTR':
+            dtype_mode = "EHTR"
+        write_err, itref_written = write_ppf(data.pulse,DDA,dtype_mode,np.array([1]),time=np.array([0]),comment=comment,unitd=" ",unitt=" ",itref=-1,nt=1,status=None)
+        if write_err != 0:
+            logger.error("failed to write source ppf")
+            return write_err
+
+        # writing EFIT seq and version for data provenance
+        dtype_mode = "VER"
+        comment = EFIT + "version"
         write_err, itref_written = write_ppf(
-            self.data.pulse,
-            dda,
+            data.pulse,
+            DDA,
             dtype_mode,
-            np.array([1]),
+            np.array([data.version]),
             time=np.array([0]),
             comment=comment,
             unitd=" ",
@@ -315,18 +349,16 @@ def main(
             status=None,
         )
         if write_err != 0:
-            logger.error("failed to write source ppf")
+            logger.error("failed to write version ppf")
             return write_err
 
-
-        mode = "EFIT version"
-        dtype_mode = data.version
-        comment = mode
+        dtype_mode = "SEQ"
+        comment = EFIT + "sequence"
         write_err, itref_written = write_ppf(
-            self.data.pulse,
-            dda,
+            data.pulse,
+            DDA,
             dtype_mode,
-            np.array([1]),
+            np.array([data.val_seq]),
             time=np.array([0]),
             comment=comment,
             unitd=" ",
@@ -340,22 +372,23 @@ def main(
             return write_err
 
         err = close_ppf(JPN, 'bviola', data.constants.code_version, DDA)
-        #writing EFIT seq and version for data provenance
+
         if write_err != 0:
             logger.error("failed to close ppf")
             return err
 
         logger.info('\n DONE')
     else:
-    logger.info(
-        "No PPF was written. UID given was {}, test: {}".format(write_uid, test)
-    )
+        logger.info(
+            "No PPF was written. UID given was {}, test: {}".format(write_uid, test)
+        )
 
     # -------------------------------
     # 7. plotting data and comparison with previous mathod
     # -------------------------------
     if plot:
         try:
+            # pdb.set_trace()
             plt.figure(3, figsize=SIZE, dpi=400)  # 1, figsize=(10, 4), dpi=180)
             for chan in channels:
                 kg1l_len3, dummy = getdata(JPN, DDA, "LEN" + str(chan))
@@ -444,9 +477,9 @@ if __name__ == "__main__":
         help="Debug level. 0: Error, 1: Warning, 2: Info, 3: Debug, 4: Debug Plus",
         default=2,
     )
-    parser.add_argument("-fo", "--force",
-                        help="forces code execution even when there is already a validated public pulse",
-                        default=False)
+    # parser.add_argument("-fo", "--force",
+    #                     help="forces code execution even when there is already a validated public pulse",
+    #                     default=False)
 
 
 
@@ -488,6 +521,5 @@ if __name__ == "__main__":
         args.code,
         args.uid_write,
         args.plot,
-        args.test,
-        args.force
+        args.test
     )
