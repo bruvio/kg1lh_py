@@ -11,6 +11,7 @@ import getpass
 import os
 import time
 import argparse
+import pathlib
 from utility import *
 import matplotlib.pylab as plt
 from MAGTool import *  # Magnetics Tool

@@ -1281,19 +1281,19 @@ def main(
                           'LEN6':LEN6,
                           'LEN7':LEN7,
                           'LEN8':LEN8})
-    pdb.set_trace()
+    # pdb.set_trace()
     for chan in data.KG1LH_data.lid.keys():
-        print(chan)
+        # print(chan)
         name = 'LEN'+str(chan)
-
-        data.KG1LH_data.len[chan].data = LEN_df[name]
+        dummy = []
+        data.KG1LH_data.len[chan].data = np.asarray(LEN_df[name])
         for i in range(0,len(data.KG1LH_data.lid[chan].time)):
-            # if LEN_df[name].iloc[i] > 0.0:
-            #     data.KG1LH_data.lad[chan].data[i] = float(1/ LEN_df[name].iloc[i] / data.KG1LH_data.lid[chan].data[i])
-            # else:
-            #     data.KG1LH_data.lad[chan].data[i] = 0.0
-            data.KG1LH_data.lad[chan].data = [float(data.KG1LH_data.lid[chan].data[i])/LEN_df[name].iloc[i]) for i in range(0,len(data.KG1LH_data.lid[chan].time) if LEN_df[name].iloc[i]) > 0.0 else 0.0  ]
-
+            if LEN_df[name].iloc[i] > 0.0:
+                dummy.append(float(data.KG1LH_data.lid[chan].data[i])/LEN_df[name].iloc[i])
+            else:
+                dummy.append(0.0)
+            # data.KG1LH_data.lad[chan].data = [float(data.KG1LH_data.lid[chan].data[i])/LEN_df[name].iloc[i])  if LEN_df[name].iloc[i]) > 0.0 else 0.0 for i in range(0,len(data.KG1LH_data.lid[chan].time)  ]
+        data.KG1LH_data.lad[chan].data = dummy
 
 
 
