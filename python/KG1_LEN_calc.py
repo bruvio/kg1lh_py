@@ -9,6 +9,7 @@ import pdb
 import math
 import getpass
 import os
+import time
 import argparse
 from utility import *
 import matplotlib.pylab as plt
@@ -44,8 +45,7 @@ def main(
     plot,
     test=False
 ):
-
-
+    code_start_time = time.time()
     # -------------------------------
     # 0. Init
     # -------------------------------
@@ -453,8 +453,7 @@ def main(
     if plot:
         plt.show(block=True)
 
-
-
+    logger.info("--- {}s seconds ---".format((time.time() - code_start_time)))
     logger.info("\n             Finished.\n")
 
 if __name__ == "__main__":

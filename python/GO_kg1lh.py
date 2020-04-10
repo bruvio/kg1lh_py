@@ -579,13 +579,13 @@ def time_loop(arg):
             #
             data.KG1LH_data.lad[chan] = SignalBase(data.constants)
             # data.KG1LH_data.lad[chan].data = [float(i) for i in lad]
-            data.KG1LH_data.lad[chan].data = [float(0) for i in time_efit]
+            # data.KG1LH_data.lad[chan].data = [float(0) for i in time_efit]
 
             data.KG1LH_data.lad[chan].time = [float(i) for i in time_efit]
             #
             data.KG1LH_data.len[chan] = SignalBase(data.constants)
             # data.KG1LH_data.len[chan].data = [float(i) for i in length]
-            data.KG1LH_data.len[chan].data = [float(0) for i in time_efit]
+            # data.KG1LH_data.len[chan].data = [float(0) for i in time_efit]
 
             data.KG1LH_data.len[chan].time = [float(i) for i in flush_time]
             #
@@ -600,13 +600,13 @@ def time_loop(arg):
             #
             data.KG1LH_data.lad[chan] = SignalBase(data.constants)
             # data.KG1LH_data.lad[chan].data = [np.float64(i) for i in lad]
-            data.KG1LH_data.lad[chan].data = [np.float64(0) for i in time_efit]
+            # data.KG1LH_data.lad[chan].data = [np.float64(0) for i in time_efit]
 
             data.KG1LH_data.lad[chan].time = [np.float64(i) for i in time_efit]
             #
             data.KG1LH_data.len[chan] = SignalBase(data.constants)
             # data.KG1LH_data.len[chan].data = [np.float64(i) for i in length]
-            data.KG1LH_data.len[chan].data = [np.float64(0) for i in time_efit]
+            # data.KG1LH_data.len[chan].data = [np.float64(0) for i in time_efit]
 
             data.KG1LH_data.len[chan].time = [np.float64(i) for i in flush_time]
             #
@@ -1258,11 +1258,11 @@ def main(
 
                         data.KG1LH_data.lad[key] = SignalBase(data.constants)
                         data.KG1LH_data.lad[key].time = res[0].KG1LH_data.lad[res[1]].time
-                        data.KG1LH_data.lad[key].data = 0
+                        # data.KG1LH_data.lad[key].data = 0
 
                         data.KG1LH_data.len[key] = SignalBase(data.constants)
                         data.KG1LH_data.len[key].time = res[0].KG1LH_data.len[res[1]].time
-                        data.KG1LH_data.len[key].data = 0
+                        # data.KG1LH_data.len[key].data = 0
 
                         data.KG1LH_data.xta[key] = SignalBase(data.constants)
                         data.KG1LH_data.xta[key].time = res[0].KG1LH_data.xta[res[1]].time
@@ -1288,11 +1288,11 @@ def main(
 
         data.KG1LH_data.len[chan].data = LEN_df[name]
         for i in range(0,len(data.KG1LH_data.lid[chan].time)):
-            if LEN_df[name].iloc[i] > 0.0:
-                data.KG1LH_data.lad[chan].data[i] = float(1/ LEN_df[name].iloc[i] / data.KG1LH_data.lid[chan].data[i])
-            else:
-                data.KG1LH_data.lad[chan].data[i] = 0.0
-
+            # if LEN_df[name].iloc[i] > 0.0:
+            #     data.KG1LH_data.lad[chan].data[i] = float(1/ LEN_df[name].iloc[i] / data.KG1LH_data.lid[chan].data[i])
+            # else:
+            #     data.KG1LH_data.lad[chan].data[i] = 0.0
+            data.KG1LH_data.lad[chan].data = [float(data.KG1LH_data.lid[chan].data[i])/LEN_df[name].iloc[i]) for i in range(0,len(data.KG1LH_data.lid[chan].time) if LEN_df[name].iloc[i]) > 0.0 else 0.0  ]
 
 
 
