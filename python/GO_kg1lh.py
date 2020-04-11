@@ -805,6 +805,23 @@ def main(
         data.EFIT_data = {}
         data.JPNobj = MAGTool(data.pulse)
 
+        try:
+            logging.info('reading {} sequence '.format(EFIT))
+            data.unval_seq, data.val_seq = get_min_max_seq(
+                data.pulse, dda=EFIT, read_uid=read_uid
+            )
+        except TypeError:
+            logger.error(
+                "impossible to read sequence for user {}".format(read_uid)
+            )
+        try:
+            logging.info('reading {} version '.format(EFIT))
+            data.version, dummy = getdata(JPN, "EFIT", "AREA")
+            data.version = 0.1
+        except:
+            logger.error('failed to read {} version'.format(EFIT))
+
+
         if code.lower() == 'kg1l':
             data.EFIT = 'EFIT'
             nameSignalsTable_EFIT = 'signalsTable_EFIT'  #
@@ -1603,6 +1620,78 @@ def main(
                 )
             )
             return 67
+
+        comment = "Produced by {}".format(owner)
+        dtype_mode = "MODE"
+        write_err, itref_written = write_ppf(
+            data.pulse,
+            DDA,
+            dtype_mode,
+            np.array([1]),
+            time=np.array([0]),
+            comment=comment,
+            unitd=" ",
+            unitt=" ",
+            itref=-1,
+            nt=1,
+            status=None,
+        )
+        if write_err != 0:
+            logger.error("failed to write mode ppf")
+            return write_err
+
+        comment = "EFIT source"
+        if EFIT =='EFIT':
+
+            dtype_mode = "EFIT"
+        if EFIT == 'EHTR':
+            dtype_mode = "EHTR"
+        write_err, itref_written = write_ppf(data.pulse,DDA,dtype_mode,np.array([1]),time=np.array([0]),comment=comment,unitd=" ",unitt=" ",itref=-1,nt=1,status=None)
+        if write_err != 0:
+            logger.error("failed to write source ppf")
+            return 67
+
+        # writing EFIT seq and version for data provenance
+        dtype_mode = "VER"
+        comment = EFIT + "version"
+        write_err, itref_written = write_ppf(
+            data.pulse,
+            DDA,
+            dtype_mode,
+            np.array([data.version]),
+            time=np.array([0]),
+            comment=comment,
+            unitd=" ",
+            unitt=" ",
+            itref=-1,
+            nt=1,
+            status=None,
+        )
+        if write_err != 0:
+            logger.error("failed to write version ppf")
+            return 67
+
+        dtype_mode = "SEQ"
+        comment = EFIT + "sequence"
+        write_err, itref_written = write_ppf(
+            data.pulse,
+            DDA,
+            dtype_mode,
+            np.array([data.val_seq]),
+            time=np.array([0]),
+            comment=comment,
+            unitd=" ",
+            unitt=" ",
+            itref=-1,
+            nt=1,
+            status=None,
+        )
+        if write_err != 0:
+            logger.error("failed to write version ppf")
+            return 67
+
+
+
 
         err = close_ppf(data.pulse, write_uid, data.constants.code_version, code)
 
