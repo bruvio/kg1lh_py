@@ -37,6 +37,29 @@ H = GM*W
 SIZE = (W,H)
 
 # vessel = [(x, y) for x in r_ves for y in z_ves]
+with open('./vessel_JET_csv.txt', 'rt') as f:
+    reader = csv.reader(f, delimiter=';')
+    next(reader)
+    # col = list(zip(*reader))[1]
+    csv_dic = []
+
+    for row in reader:
+        csv_dic.append(row);
+    # print(csv_dic)
+    col1 = []
+    col2 = []
+
+    for row in csv_dic:
+        col1.append(row[0])
+        col2.append(row[1])
+    dummy=np.array(col1)
+    # print(dummy)
+    dummy2=np.array(col2)
+    dummy2=[float(i) for i in dummy2]
+    z_ves=-np.asarray(dummy2)
+    dummy=[float(i) for i in dummy]
+    r_ves=np.asarray(dummy)
+f.close()
 
 
 def main(
@@ -185,30 +208,30 @@ def main(
     LOS3 = LineString([(data.r_coord[2],-5), (data.r_coord[2],3)])
     LOS4 = LineString([(data.r_coord[3],-5), (data.r_coord[3],3)])
 
-    # plt.figure(1, figsize=SIZE, dpi=90) #1, figsize=(10, 4), dpi=180)
-    # plt.plot(r_ves, z_ves)
-    #
-    # plt.plot([data.r_coord[0],data.r_coord[0]], [-3,3],label='LOS1')
-    # plt.plot([data.r_coord[1],data.r_coord[1]], [-3,3],label='LOS2')
-    # plt.plot([data.r_coord[2],data.r_coord[2]], [-3,3],label='LOS3')
-    # plt.plot([data.r_coord[3],data.r_coord[3]], [-3,3],label='LOS4')
+    plt.figure(1, figsize=SIZE, dpi=90) #1, figsize=(10, 4), dpi=180)
+    plt.plot(r_ves, z_ves)
+
+    plt.plot([data.r_coord[0],data.r_coord[0]], [-3,3],label='LOS1')
+    plt.plot([data.r_coord[1],data.r_coord[1]], [-3,3],label='LOS2')
+    plt.plot([data.r_coord[2],data.r_coord[2]], [-3,3],label='LOS3')
+    plt.plot([data.r_coord[3],data.r_coord[3]], [-3,3],label='LOS4')
 
 
     endx1,endx2,endy1,endy2 = plot_point([data.r_coord[4], data.z_coord[4]], math.degrees(data.a_coord[4]),2)
     LOS5 = LineString([(endx1, endy1), (endx2, endy2)])
-    # plt.plot([endx1, endx2], [endy1, endy2],label='LOS5')
+    plt.plot([endx1, endx2], [endy1, endy2],label='LOS5')
 
     endx1,endx2,endy1,endy2 = plot_point([data.r_coord[5], data.z_coord[5]], math.degrees(data.a_coord[5]),2)
     LOS6 = LineString([(endx1, endy1), (endx2, endy2)])
-    # plt.plot([endx1, endx2], [endy1, endy2],label='LOS6')
+    plt.plot([endx1, endx2], [endy1, endy2],label='LOS6')
 
     endx1,endx2,endy1,endy2 = plot_point([data.r_coord[6], data.z_coord[6]], math.degrees(data.a_coord[6]),2)
     LOS7 = LineString([(endx1, endy1), (endx2, endy2)])
-    # plt.plot([endx1, endx2], [endy1, endy2],label='LOS7')
+    plt.plot([endx1, endx2], [endy1, endy2],label='LOS7')
 
     endx1,endx2,endy1,endy2 = plot_point([data.r_coord[7], data.z_coord[7]], math.degrees(data.a_coord[7]),2)
     LOS8 =LineString([(endx1, endy1), (endx2, endy2)])
-    # plt.plot([endx1, endx2], [endy1, endy2],label='LOS8')
+    plt.plot([endx1, endx2], [endy1, endy2],label='LOS8')
 
 
     # -------------------------------
@@ -221,6 +244,7 @@ def main(
         # print(TIMEM)
         try:
             rC0,zC0 , psi0, rGrid, zGrid, iTEFIT, timeEFIT = JPNobj.readEFITFlux(expDataDictJPNobj_EFIT, TIMEM)
+            # pdb.set_trace()
             BoundCoordTuple = list(zip(rC0, zC0))
             polygonBound = Polygon(BoundCoordTuple)
             x1 = polygonBound.intersection(LOS1)
@@ -250,12 +274,19 @@ def main(
                             np.float64(r2) - np.float64(r1), np.float64(z2) - np.float64(z1)
                         )
                     ))
+
+                    if np.abs(TIMEM - 51.635)<0.001:
+                        plt.plot(rC0,zC0,linewidth =0.1,marker='x',label='time=51.635s')
+                        plt.plot([r1, r2], [z1, z2],'r')
+                    if np.abs(TIMEM - 53.4246)<0.01:
+                        plt.plot(rC0,zC0,linewidth =0.1,marker='x',label='time=53.4246s')
+                        plt.plot([r1, r2], [z1, z2], 'r')
         except:
             print('skipping {}'.format(TIMEM))
 
 
-
-
+    plt.legend()
+    # plt.show()
 
 
 
