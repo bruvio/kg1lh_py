@@ -97,9 +97,11 @@ def main(
     if DDA =='KG1L':
         EFIT = 'EFIT'
         nameSignalsTable_EFIT = 'signalsTable_EFIT'  #
-    else:
+    elif:
         EFIT = 'EHTR'
         nameSignalsTable_EFIT = 'signalsTable_EHTR'  #
+
+
 
 
     JPNobj = MAGTool(JPN)
@@ -108,6 +110,14 @@ def main(
     # reading EFIT signal table
     nameSignals_EFIT = STJET.signalsTableJET(nameSignalsTable_EFIT)
     expDataDictJPNobj_EFIT = JPNobj.download(JPN, nameSignalsTable_EFIT, nameSignals_EFIT, 0)
+
+    nameSignalsTable_XLOC = 'signalsTable_XLOC'  #
+    nameSignals_XLOC = STJET.signalsTableJET(nameSignalsTable_XLOC)
+    expDataDictJPNobj_XLOC = JPNobj.download(JPN, nameSignalsTable_XLOC, nameSignals_XLOC, 0)
+
+    timeXLOC = expDataDictJPNobj_XLOC['ROG']['t']
+    ntxloc = len(timeXLOC)
+
 
     try:
         data.constants = Consts("consts.ini", __version__)
@@ -166,6 +176,9 @@ def main(
     if DDA == 'KG1H':
         time_efit = data.EFIT_data.rmag_fast.time
     ntefit = len(time_efit)
+
+
+
 
     # -------------------------------
     # 3. reading line of sights
@@ -283,10 +296,106 @@ def main(
                         plt.plot([r1, r2], [z1, z2], 'r')
         except:
             print('skipping {}'.format(TIMEM))
+    # find if diverted or limiter configuration
+    ctype_v = expDataDictJPNobj_XLOC['CTYPE']['v']
+    ctype_t = expDataDictJPNobj_XLOC['CTYPE']['t']
+    for IT in range(0, ntxloc):
+        TIMEM = time_xloc[IT]
 
+
+
+
+        iTimeX = numpy.where(
+            numpy.abs(float(TIMEM) - ctype_t) < 2 * min(numpy.diff(ctype_t)))  # twice of the min of EFIT delta time
+
+        iTimeXLOC = iTimeX[0][0]
+
+        if ctype_v[iTimeXLOC]==-1: # diverted
+            flagDiverted  = 1
+        else:
+            flagDiverted = 0
+
+
+        # XLOC
+        gapXLOC,rG,zG,iTXLOC  = JPNobj.gapXLOC(nameListGap,expDataDictJPNobj_XLOC,\
+                                               gapDict,TIMEM))
+        spXLOC,rSP,zSP,iTXLOC = JPNobj.strikePointsXLOC(nameListStrikePoints,\
+                                expDataDictJPNobj_XLOC,gapDict,TIMEM)
+
+        rX_XLOC = expDataDictJPNobj_XLOC['RX']['v']
+        zX_XLOC = expDataDictJPNobj_XLOC['ZX']['v']
+
+        rXp = rX_XLOC[iTXLOC]+offR_XLOC
+        zXp = zX_XLOC[iTXLOC]+offZ_XLOC
+
+        rBND_XLOC = []
+        if flagDiverted:
+            rBND_XLOC.append(rXp)
+        for jj,vv in enumerate(rG):
+            rBND_XLOC.append(rG[jj])
+        if flagDiverted:
+             rBND_XLOC.append(rXp)
+        else:
+            rBND_XLOC.append(rBND_XLOC[0])
+
+        zBND_XLOC = []
+        if flagDiverted:
+            zBND_XLOC.append(zXp)
+        for jj,vv in enumerate(zG):
+            zBND_XLOC.append(zG[jj])
+        if flagDiverted:
+             zBND_XLOC.append(zXp)
+        else:
+            zBND_XLOC.append(zBND_XLOC[0])
+
+
+
+         # interpolate with splines
+        tck,u = interpolate.splprep([rBND_XLOC,zBND_XLOC], s = 0)
+        rBND_XLOC_smooth, zBND_XLOC_smooth \
+            = interpolate.splev(np.linspace(0,1,1000),tck,der=0)
+
+        BoundCoordTuple = list(zip(rBND_XLOC_smooth, zBND_XLOC_smooth))
+        polygonBound = Polygon(BoundCoordTuple)
+        x1 = polygonBound.intersection(LOS1)
+        x2 = polygonBound.intersection(LOS2)
+        x3 = polygonBound.intersection(LOS3)
+        x4 = polygonBound.intersection(LOS4)
+        x5 = polygonBound.intersection(LOS5)
+        x6 = polygonBound.intersection(LOS6)
+        x7 = polygonBound.intersection(LOS7)
+        x8 = polygonBound.intersection(LOS8)
+        for chan in channels:
+            # print(chan)
+            name = 'x' + str(chan)
+            name_len = 'LEN' + str(chan)
+            dummy = vars()[name]
+            length = vars()[name_len]
+            if is_empty(dummy.bounds):
+                length.append(0)
+            else:
+
+                r1 = dummy.xy[0][0]
+                z1 = dummy.xy[1][0]
+                r2 = dummy.xy[0][1]
+                z2 = dummy.xy[1][1]
+                length.append(np.float64(
+                    math.hypot(
+                        np.float64(r2) - np.float64(r1), np.float64(z2) - np.float64(z1)
+                    )
+                ))
+
+                if np.abs(TIMEM - 51.635) < 0.001:
+                    plt.plot(rG, zG, linewidth=0.1, marker='o', label='time=51.635s')
+                    plt.plot([r1, r2], [z1, z2], 'k')
+                if np.abs(TIMEM - 53.4246) < 0.01:
+                    plt.plot(rG, zG, linewidth=0.1, marker='o', label='time=53.4246s')
+                    plt.plot([r1, r2], [z1, z2], 'k')
+    except:
+    print('skipping {}'.format(TIMEM))
 
     plt.legend()
-    # plt.show()
+    plt.show()
 
 
 
