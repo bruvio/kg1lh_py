@@ -1325,23 +1325,6 @@ class MAGTool:
         # rGrid,zGrid: coordinates of the EFIT grid where Grad Shafranov Equation is solved
 
         EFIT = expDataDictJPNobj
-        PSIR_v = EFIT['PSIR']['v']#data
-        PSIR_x = EFIT['PSIR']['x']#nr of elements
-        PSIR_t = EFIT['PSIR']['t']#time
-
-        PSIZ_v = EFIT['PSIZ']['v']
-        PSIZ_x = EFIT['PSIZ']['x']
-        PSIZ_t = EFIT['PSIZ']['t']
-
-        rPSI = PSIR_v
-        zPSI = PSIZ_v
-        rGrid,zGrid = numpy.meshgrid(rPSI,zPSI)
-
-
-        PSI_v = EFIT['PSI']['v']
-        PSI_x = EFIT['PSI']['x']
-        PSI_t = EFIT['PSI']['t']
-        psiEFIT =numpy.reshape(PSI_v,(len(PSI_t),len(PSI_x)))
 
         RBND_v = EFIT['RBND']['v']
         RBND_x = EFIT['RBND']['x']
@@ -1363,20 +1346,10 @@ class MAGTool:
 
         rC0 = rC[iTEFIT,:]
         zC0 = zC[iTEFIT,:]
-        psi0 = psiEFIT[iTEFIT,:]
 
 
-        # ihdat,iwdat,data,x,t,ier = ppf.ppfget(JPN,'EFIT','PSIR',fix0=0,reshape=0,no_x=0,no_t=0)
-        # rPSI = data
-        # ihdat,iwdat,data,x,t,ier = ppf.ppfget(JPN,'EFIT','PSIZ',fix0=0,reshape=0,no_x=0,no_t=0)
-        # zPSI = data
-        # ihdat,iwdat,data,x,t,ier = ppf.ppfget(JPN,'EFIT','RBND',fix0=0,reshape=0,no_x=0,no_t=0)
-        # rBND = data
-        # rC=np.reshape(rBND,(105,989))
-        # ihdat,iwdat,data,x,t,ier = ppf.ppfget(JPN,'EFIT','ZBND',fix0=0,reshape=0,no_x=0,no_t=0)
-        # zBND = data
-        # zC=np.reshape(zBND,(105,989))
-        return rC0,zC0,psi0,rGrid,zGrid,iTEFIT,timeEFIT
+
+        return rC0,zC0
 
     @staticmethod
     def readGapFile(fileNameGap):
