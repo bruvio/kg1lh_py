@@ -1265,7 +1265,7 @@ def main(
                     # print('skipping {}'.format(TIMEM))
                     logger.log(5, "computing lad/len/xtan \n")
 
-            pdb.set_trace()
+            # pdb.set_trace()
 
             # pool = mp.Semaphore(multiprocessing.cpu_count())
             pool = Pool(max(1, mp.cpu_count() // 2))
@@ -1308,6 +1308,7 @@ def main(
                           'LEN8':LEN8})
     # pdb.set_trace()
     for chan in data.KG1LH_data.lid.keys():
+        # pdb.set_trace()
         # print(chan)
         name = 'LEN'+str(chan)
         dummy = []
@@ -1319,7 +1320,7 @@ def main(
                 dummy.append(0.0)
             # data.KG1LH_data.lad[chan].data = [float(data.KG1LH_data.lid[chan].data[i])/LEN_df[name].iloc[i])  if LEN_df[name].iloc[i]) > 0.0 else 0.0 for i in range(0,len(data.KG1LH_data.lid[chan].time)  ]
         data.KG1LH_data.lad[chan].data = dummy
-
+        # pdb.set_trace()
 
 
     # pdb.set_trace()
@@ -1829,5 +1830,5 @@ if __name__ == "__main__":
         args.plot,
         args.test,
         args.force,
-        args.no_multithreading
+        args.no_multithreading,
     )
