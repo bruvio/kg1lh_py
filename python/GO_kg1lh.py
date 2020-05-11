@@ -1262,6 +1262,13 @@ def main(
                                 )
                             ))
                 except:
+                    for chan in channels:
+                        # print(chan)
+                        name = 'x' + str(chan)
+                        name_len = 'LEN' + str(chan)
+                        dummy = vars()[name]
+                        length = vars()[name_len]
+                        length.append(0)
                     # print('skipping {}'.format(TIMEM))
                     logger.log(5, "computing lad/len/xtan \n")
 
