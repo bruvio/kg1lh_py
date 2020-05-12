@@ -18,6 +18,13 @@ from MAGTool import *  # Magnetics Tool
 from consts import Consts
 from ppf_write import *
 from efit_data import EFITData
+from scipy import interpolate
+
+
+
+
+
+
 
 
 # ----------------------------
@@ -108,6 +115,23 @@ def main(
     # reading EFIT signal table
     nameSignals_EFIT = STJET.signalsTableJET(nameSignalsTable_EFIT)
     expDataDictJPNobj_EFIT = JPNobj.download(JPN, nameSignalsTable_EFIT, nameSignals_EFIT, 0)
+
+    nameSignalsTable_XLOC = 'signalsTable_XLOC'  #
+    nameSignals_XLOC = STJET.signalsTableJET(nameSignalsTable_XLOC)
+    expDataDictJPNobj_XLOC = JPNobj.download(JPN, nameSignalsTable_XLOC, nameSignals_XLOC, 0)
+
+    time_xloc = expDataDictJPNobj_XLOC['ROG']['t']
+    ntxloc = len(time_xloc)
+
+    # READ JET GEOMETRY FW anf GAPS
+    gapDict = JPNobj.readGapFile('gapILW.csv')
+    nameListGap = ['GAP32','GAP6','GAP31','GAP30','RIG','GAP29','GAP28','GAP7','GAP27','GAP26',\
+                       'TOG1','GAP25','TOG2','TOG3','TOG4','GAP24','TOG5',\
+                       'GAP2','GAP23','GAP3','GAP22','GAP21','GAP20','ROG','GAP19','GAP4','GAP18','LOG','GAP17']
+
+    nameListStrikePoints = ['RSOGB','ZSOGB','RSIGB','ZSIGB']#,'WLBSRP']
+        #nameListStrikePoints = ['ZSOGB','ZSIGB']#,'WLBSRP']
+
 
     try:
         data.constants = Consts("consts.ini", __version__)
@@ -237,13 +261,14 @@ def main(
     # -------------------------------
     # 5. time loop
     # -------------------------------
-    logger.info('\n time loop')
+    logger.info('\n EFIT time loop')
     for IT in range(0, ntefit):
 
         TIMEM = time_efit[IT]
         # print(TIMEM)
         try:
-            rC0,zC0 , psi0, rGrid, zGrid, iTEFIT, timeEFIT = JPNobj.readEFITFlux(expDataDictJPNobj_EFIT, TIMEM)
+            # pdb.set_trace()
+            rC0,zC0  = JPNobj.readEFITFlux(expDataDictJPNobj_EFIT, TIMEM)
             # pdb.set_trace()
             BoundCoordTuple = list(zip(rC0, zC0))
             polygonBound = Polygon(BoundCoordTuple)
@@ -282,13 +307,161 @@ def main(
                         plt.plot(rC0,zC0,linewidth =0.1,marker='x',label='time=53.4246s')
                         plt.plot([r1, r2], [z1, z2], 'r')
         except:
+            for chan in channels:
+                name_len = 'LEN'+ str(chan)
+
+                length = vars()[name_len]
+                length.append(0)
+
             print('skipping {}'.format(TIMEM))
 
+    # find if diverted or limiter configuration
+    ctype_v = expDataDictJPNobj_XLOC['CTYPE']['v']
+    ctype_t = expDataDictJPNobj_XLOC['CTYPE']['t']
 
-    plt.legend()
+    LENxloc1 = []
+    LENxloc2 = []
+    LENxloc3 = []
+    LENxloc4 = []
+    LENxloc5 = []
+    LENxloc6 = []
+    LENxloc7 = []
+    LENxloc8 = []
+    time_xloc_real = []
+    logger.info('\n XLOC time loop')
+    for IT in range(0, ntxloc):
+        try:
+
+            TIMEM = time_xloc[IT]
+
+
+
+            #
+            # iTimeX = np.where(
+            #     np.abs(float(TIMEM) - ctype_t) < 2 * min(np.diff(ctype_t)))  # twice of the min of EFIT delta time
+            # # print(TIMEM,iTimeX)
+            #
+            # iTimeXLOC = iTimeX[0][0]
+            # pdb.set_trace()
+            if ctype_v[IT] == -3:
+                pass
+                # continue
+            # pdb.set_trace()
+            elif ctype_v[IT]==-1: # diverted
+                flagDiverted  = 1
+            else:
+                flagDiverted = 0
+
+
+            # XLOC
+            gapXLOC,rG,zG,iTXLOC  = JPNobj.gapXLOC(nameListGap,expDataDictJPNobj_XLOC,\
+                                                   gapDict,TIMEM)
+            spXLOC,rSP,zSP,iTXLOC = JPNobj.strikePointsXLOC(nameListStrikePoints,\
+                                    expDataDictJPNobj_XLOC,gapDict,TIMEM)
+
+            rX_XLOC = expDataDictJPNobj_XLOC['RX']['v']
+            zX_XLOC = expDataDictJPNobj_XLOC['ZX']['v']
+
+            rXp = rX_XLOC[iTXLOC]+2.67
+            zXp = zX_XLOC[iTXLOC]-1.712
+            # pdb.set_trace()
+            rBND_XLOC = []
+            if flagDiverted:
+                rBND_XLOC.append(rXp)
+            for jj,vv in enumerate(rG):
+                rBND_XLOC.append(rG[jj])
+            if flagDiverted:
+                 rBND_XLOC.append(rXp)
+            else:
+                rBND_XLOC.append(rBND_XLOC[0])
+
+            zBND_XLOC = []
+            if flagDiverted:
+                zBND_XLOC.append(zXp)
+            for jj,vv in enumerate(zG):
+                zBND_XLOC.append(zG[jj])
+            if flagDiverted:
+                 zBND_XLOC.append(zXp)
+            else:
+                zBND_XLOC.append(zBND_XLOC[0])
+
+            # pdb.set_trace()
+
+             # interpolate with splines
+            tck,u = interpolate.splprep([rBND_XLOC,zBND_XLOC], s = 0)
+            rBND_XLOC_smooth, zBND_XLOC_smooth \
+                = interpolate.splev(np.linspace(0,1,1000),tck,der=0)
+            # plt.figure()
+            # plt.plot(rBND_XLOC_smooth,zBND_XLOC_smooth)
+            # pdb.set_trace()
+            logging.disabled = True
+            BoundCoordTuple = list(zip(rBND_XLOC_smooth, zBND_XLOC_smooth))
+            polygonBound = Polygon(BoundCoordTuple)
+            x1 = polygonBound.intersection(LOS1)
+            x2 = polygonBound.intersection(LOS2)
+            x3 = polygonBound.intersection(LOS3)
+            x4 = polygonBound.intersection(LOS4)
+            x5 = polygonBound.intersection(LOS5)
+            x6 = polygonBound.intersection(LOS6)
+            x7 = polygonBound.intersection(LOS7)
+            x8 = polygonBound.intersection(LOS8)
+            for chan in channels:
+                # print(chan)
+                name = 'x' + str(chan)
+                name_len = 'LENxloc' + str(chan)
+                dummy = vars()[name]
+                length = vars()[name_len]
+                if is_empty(dummy.bounds):
+                    length.append(0)
+                else:
+
+                    r1 = dummy.xy[0][0]
+                    z1 = dummy.xy[1][0]
+                    r2 = dummy.xy[0][1]
+                    z2 = dummy.xy[1][1]
+                    cord = np.float64(
+                        math.hypot(
+                            np.float64(r2) - np.float64(r1), np.float64(z2) - np.float64(z1)
+                        )
+                    )
+                    if cord >0.0:
+                        length.append(cord)
+                        time_xloc_real.append(TIMEM)
+                    else:
+                        length.append(0)
+                        time_xloc_real.append(TIMEM)
+                    # if np.abs(TIMEM - 51.635) < 0.001:
+                    #     plt.plot(rG, zG, linewidth=0.1, marker='o', label='time=51.635s')
+                    #     plt.plot([r1, r2], [z1, z2], 'k')
+                    # if np.abs(TIMEM - 53.4246) < 0.01:
+                    #     plt.plot(rG, zG, linewidth=0.1, marker='o', label='time=53.4246s')
+                    #     plt.plot([r1, r2], [z1, z2], 'k')
+        except:
+            for chan in channels:
+                # print(chan)
+                name = 'x' + str(chan)
+                name_len = 'LENxloc' + str(chan)
+                dummy = vars()[name]
+                length = vars()[name_len]
+                length.append(0)
+                time_xloc_real.append(TIMEM)
+
+            # print('skipping {}'.format(TIMEM))
+
+    logging.disabled = False
     # plt.show()
-
-
+    # plt.figure()
+    # # plt.plot(time_xloc_real,LENxloc3,'r',label='LEN3 xloc')
+    # plt.plot(time_xloc,LENxloc3,'.r',label='LEN3 xloc')
+    # plt.plot(time_efit,LEN3,'.b',label='LEN3 efit')
+    # plt.legend()
+    #
+    # # print(len(time_xloc))
+    # # print(len(time_xloc_real))
+    # # print(len(LENxloc3))
+    #
+    # plt.show()
+    # pdb.set_trace()
 
     # -------------------------------
     # 6. writing PPFs
@@ -426,22 +599,24 @@ def main(
                 kg1l_len3, dummy = getdata(JPN, DDA, "LEN" + str(chan))
                 if chan == 1:
                     ax_1 = plt.subplot(8, 1, chan)
-                    plt.subplot(8, 1, chan)
-                    plt.plot(time_efit, vars()['LEN' + str(chan)], label='LEN' + str(chan))
+                    # plt.subplot(8, 1, chan)
+                    plt.plot(time_efit, vars()['LEN' + str(chan)], label='LEN' + str(chan),linewidth=1)
+                    plt.scatter(time_xloc, vars()['LENxloc' + str(chan)], label='LENxloc' + str(chan),s=1)
                     plt.plot(
                         kg1l_len3["time"],
                         kg1l_len3["data"],
-                        label="LEN_jetppf_ch" + str(chan),
+                        label="LEN_jetppf_ch" + str(chan),linewidth=1,
                     )
                     plt.legend(loc='best', fontsize=8)
                 else:
                     plt.subplot(8, 1, chan, sharex=ax_1)
-                    plt.subplot(8, 1, chan)
-                    plt.plot(time_efit, vars()['LEN' + str(chan)], label='LEN' + str(chan))
+                    # plt.subplot(8, 1, chan)
+                    plt.plot(time_efit, vars()['LEN' + str(chan)], label='LEN' + str(chan),linewidth=1)
+                    plt.scatter(time_xloc, vars()['LENxloc' + str(chan)], label='LENxloc' + str(chan),s=1)
                     plt.plot(
                         kg1l_len3["time"],
                         kg1l_len3["data"],
-                        label="LEN_jetppf_ch" + str(chan),
+                        label="LEN_jetppf_ch" + str(chan),linewidth=1,
                     )
                     plt.legend(loc='best', fontsize=8)
             plt.savefig('./figures/overlay_LEN-{}-{}-{}.png'.format(JPN, EFIT, type_of_ppf))
@@ -478,15 +653,17 @@ def main(
 
                     logger.warning('skipping channel {}\n'.format(chan))
                     f.write('skipping channel {}\n'.format(chan))
-            f.close()
+            # f.close()
             plt.savefig('./figures/difference_LEN-{}-{}-{}.png'.format(JPN, EFIT, type_of_ppf))
         except:
             logger.error("\n could not plot data \n")
-    if plot:
-        plt.show(block=True)
+
 
     logger.info("--- {}s seconds ---".format((time.time() - code_start_time)))
     logger.info("\n             Finished.\n")
+
+    if plot:
+        plt.show(block=True)
 
 if __name__ == "__main__":
 

@@ -168,7 +168,7 @@ class MAGTool:
                else:
                    dictDataExpTMP['v'] = dataExp        # signal value
                    dictDataExpTMP['t'] = tExp# signal time
-                   print(signals,' Downloaded !!')
+                   # print(signals,' Downloaded !!')
                    out_str += 'Downloaded :)))'
                    out_str +='\n' # new Line
                    out_file.write(out_str)
@@ -1205,7 +1205,7 @@ class MAGTool:
             iTimeXLOC = numpy.where(numpy.abs(timeEquil-timeXLOC)<50*min(numpy.diff(timeXLOC)))# twice of the min of XLOC delta time
 
         iTXLOC = iTimeXLOC[0][0]
-        print('Time XLOC:' + str(timeXLOC[iTXLOC]))
+        # print('Time XLOC:' + str(timeXLOC[iTXLOC]))
         SP0 = {}
         rSP0 = []
         zSP0 = []
@@ -1219,7 +1219,7 @@ class MAGTool:
                 pylab.title(str(jj))
                 pylab.show()
             SP0[jj]=vSP[iTXLOC] #as dictionary
-            print(jj + ': ' + str(vSP[iTXLOC]))
+            # print(jj + ': ' + str(vSP[iTXLOC]))
 
             R1 = geomInfoGapXLOC[jj]['R1']
             R2 = geomInfoGapXLOC[jj]['R2']
@@ -1266,7 +1266,7 @@ class MAGTool:
 
 
         iTXLOC = iTimeXLOC[0][0]
-        print('Time XLOC:' + str(timeXLOC[iTXLOC]))
+        # print('Time XLOC:' + str(timeXLOC[iTXLOC]))
         gap0 = {}
         rG0 = []
         zG0 = []
@@ -1274,7 +1274,7 @@ class MAGTool:
         for jj in nameListGap:
             vGAP = expDataXLOC[jj]['v']
             gap0[jj]=vGAP[iTXLOC] # as dictionary
-            print(jj + ': ' + str(vGAP[iTXLOC]))
+            # print(jj + ': ' + str(vGAP[iTXLOC]))
 
             R1 = geomInfoGapXLOC[jj]['R1']
             R2 = geomInfoGapXLOC[jj]['R2']
@@ -1300,7 +1300,7 @@ class MAGTool:
         iTimeWALLS = numpy.where(numpy.abs(timeEquil-timeWALLS)<10e-3)# WALLS delta time
 
         iTWALLS = iTimeWALLS[0][0]
-        print(timeWALLS[iTWALLS])
+        # print(timeWALLS[iTWALLS])
         rWALLS = []
         zWALLS = []
         for jj,vv in enumerate(nameListGapWALLS):
@@ -1355,7 +1355,7 @@ class MAGTool:
     def readGapFile(fileNameGap):
         fileDir = os.path.dirname('__file__')
         fileDir = os.path.dirname(os.path.realpath('__file__'))
-        fileName = os.path.join(fileDir,'Database/' + fileNameGap)
+        fileName = os.path.join(fileDir,  fileNameGap)
         # read gaps and strike points
         gapSpDict = {}
         with open(fileName,'r') as f:
