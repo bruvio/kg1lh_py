@@ -21,7 +21,7 @@ from efit_data import EFITData
 from scipy import interpolate
 
 
-
+logging.getLogger('shapely').disabled = True
 
 
 
@@ -67,7 +67,8 @@ with open('./vessel_JET_csv.txt', 'rt') as f:
     dummy=[float(i) for i in dummy]
     r_ves=np.asarray(dummy)
 f.close()
-
+def run_euc(list_a,list_b):
+    return np.array([[ np.linalg.norm(i-j) for j in list_b] for i in list_a])
 
 def main(
     JPN,
@@ -479,14 +480,14 @@ def main(
     LENxloc_a8 = LENxloc8[LENxloc8 != 0]
 
     #removing from time vector instants where xloc LENx are 0
-    time_xloc1 = time_xloc[np.argwhere(LENxloc1 !=0)]
-    time_xloc2 = time_xloc[np.argwhere(LENxloc2 !=0)]
-    time_xloc3 = time_xloc[np.argwhere(LENxloc3 !=0)]
-    time_xloc4 = time_xloc[np.argwhere(LENxloc4 !=0)]
-    time_xloc5 = time_xloc[np.argwhere(LENxloc5 !=0)]
-    time_xloc6 = time_xloc[np.argwhere(LENxloc6 !=0)]
-    time_xloc7 = time_xloc[np.argwhere(LENxloc7 !=0)]
-    time_xloc8 = time_xloc[np.argwhere(LENxloc8 !=0)]
+    time_xloc1 = np.concatenate(time_xloc[np.argwhere(LENxloc1 !=0)])
+    time_xloc2 = np.concatenate(time_xloc[np.argwhere(LENxloc2 !=0)])
+    time_xloc3 = np.concatenate(time_xloc[np.argwhere(LENxloc3 !=0)])
+    time_xloc4 = np.concatenate(time_xloc[np.argwhere(LENxloc4 !=0)])
+    time_xloc5 = np.concatenate(time_xloc[np.argwhere(LENxloc5 !=0)])
+    time_xloc6 = np.concatenate(time_xloc[np.argwhere(LENxloc6 !=0)])
+    time_xloc7 = np.concatenate(time_xloc[np.argwhere(LENxloc7 !=0)])
+    time_xloc8 = np.concatenate(time_xloc[np.argwhere(LENxloc8 !=0)])
 
 
     # pdb.set_trace()
@@ -679,6 +680,7 @@ def main(
                         kg1l_len3["data"],
                         label="LEN_jetppf_ch" + str(chan),linewidth=1,
                     )
+                    plt.xlim(min(vars()['time_xloc' + str(chan)]),max(vars()['time_xloc' + str(chan)]))
                     plt.legend(loc='best', fontsize=8)
                 else:
                     plt.subplot(8, 1, chan, sharex=ax_1)
@@ -691,8 +693,9 @@ def main(
                         kg1l_len3["data"],
                         label="LEN_jetppf_ch" + str(chan),linewidth=1,
                     )
+                    plt.xlim(min(vars()['time_xloc' + str(chan)]),max(vars()['time_xloc' + str(chan)]))
                     plt.legend(loc='best', fontsize=8)
-            plt.savefig('./figures/overlay_LEN-{}-{}-{}.png'.format(JPN, EFIT, type_of_ppf))
+            plt.savefig('./figures/overlay_LEN-{}-{}-{}.png'.format(JPN, EFIT, type_of_ppf),dpi=300)
 
             plt.figure(4, figsize=SIZE, dpi=400)  # 1, figsize=(10, 4), dpi=180)
             f = open('JPN_{}_len_{}-{}'.format(JPN, EFIT, type_of_ppf), 'w')
@@ -727,40 +730,38 @@ def main(
                     logger.warning('skipping channel {}\n'.format(chan))
                     f.write('skipping channel {}\n'.format(chan))
             # f.close()
-            plt.savefig('./figures/difference_LEN-{}-{}-{}.png'.format(JPN, EFIT, type_of_ppf))
+            plt.savefig('./figures/difference_LEN-{}-{}-{}.png'.format(JPN, EFIT, type_of_ppf),dpi=300)
             ###
             # pdb.set_trace()
             #
-            # plt.figure(5, figsize=SIZE, dpi=400)  # 1, figsize=(10, 4), dpi=180)
+            plt.figure(5, figsize=SIZE, dpi=400)  # 1, figsize=(10, 4), dpi=180)
             # f = open('JPN_{}_len_{}-{}'.format(JPN, EFIT, type_of_ppf), 'w')
-            # for chan in channels:
-            #     kg1l_len3, dummy = getdata(JPN, DDA, "LEN" + str(chan))
-            #     try:
-            #         if chan == 1:
-            #             ax_1 = plt.subplot(8, 1, chan)
-            #             plt.plot(vars()['time_xloc' + str(chan)], abs(vars()['LENxloc_a' + str(chan)] - vars()['len_intersect' + str(chan)]),
-            #                      label='diff-LEN' + str(chan))
-            #             plt.legend(loc='best', fontsize=8)
-            #         else:
-            #             plt.subplot(8, 1, chan, sharex=ax_1)
-            #             plt.plot(vars()['time_xloc' + str(chan)], abs(vars()['LENxloc_a' + str(chan)] - vars()['len_intersect' + str(chan)]),
-            #                      label='diff-LEN' + str(chan))
-            #             plt.legend(loc='best', fontsize=8)
-            #
-            #         # print('chan {} mean difference between flush and geometry calc is {}'.format(str(chan),np.mean(abs(kg1l_len3["data"] - vars()['LEN' + str(chan)]))))
-            #         # print('chan {} median difference between flush and geometry calc is {} \n'.format(str(chan),np.median(abs(kg1l_len3["data"] - vars()['LEN' + str(chan)]))))
-            #
-            #         f.write('chan {} mean difference between EFIT and XLOC calc is {} \n'.format(str(chan), np.mean(
-            #             abs(vars()['LENxloc_a' + str(chan)] - vars()[
-            #                 'len_intersect' + str(chan)]))))
-            #         f.write('chan {} median difference between EFIT and XLOC calc is {} \n'.format(str(chan),
-            #                                                                                             np.median(abs(vars()['LENxloc_a' + str(chan)] - vars()['len_intersect' + str(chan)]))))
-            #     except:
-            #
-            #         logger.warning('skipping channel {}\n'.format(chan))
-            #         f.write('skipping channel {}\n'.format(chan))
-            # # f.close()
-            # plt.savefig('./figures/difference_LEN-{}-{}-{}.png'.format(JPN, EFIT, type_of_ppf))
+            for chan in channels:
+                # kg1l_len3, dummy = getdata(JPN, DDA, "LEN" + str(chan))
+                try:
+                    if chan == 1:
+                        ax_1 = plt.subplot(8, 1, chan)
+
+                        plt.plot(list(vars()['time_xloc' + str(chan)]), abs(vars()['LENxloc_a' + str(chan)] - np.interp(vars()['time_xloc' + str(chan)], time_efit, vars()['LEN' + str(chan)])),                                 label='diff-LEN' + str(chan))
+                        plt.legend(loc='best', fontsize=8)
+                    else:
+                        plt.subplot(8, 1, chan, sharex=ax_1)
+                        # plt.plot(vars()['time_xloc' + str(chan)],
+                        #          abs(vars()['LENxloc_a' + str(chan)]-np.interp(vars()['time_xloc' + str(chan)], time_efit, vars()['LEN' + str(chan)])),
+                        #          label='diff-LEN' + str(chan))
+                        plt.plot(list(vars()['time_xloc' + str(chan)]), abs(vars()['LENxloc_a' + str(chan)] - np.interp(vars()['time_xloc' + str(chan)], time_efit, vars()['LEN' + str(chan)])),                                 label='diff-LEN' + str(chan))
+
+                        plt.legend(loc='best', fontsize=8)
+
+                    # print('chan {} mean difference between flush and geometry calc is {}'.format(str(chan),np.mean(abs(kg1l_len3["data"] - vars()['LEN' + str(chan)]))))
+                    # print('chan {} median difference between flush and geometry calc is {} \n'.format(str(chan),np.median(abs(kg1l_len3["data"] - vars()['LEN' + str(chan)]))))
+
+                except:
+
+                    logger.warning('skipping channel {}\n'.format(chan))
+                    # f.write('skipping channel {}\n'.format(chan))
+            # f.close()
+            plt.savefig('./figures/difference_LEN-{}-{}-{}.png'.format(JPN, 'XLOC', type_of_ppf))
         except:
             logger.error("\n could not plot data \n")
 
