@@ -447,10 +447,59 @@ def main(
                 time_xloc_real.append(TIMEM)
 
             # print('skipping {}'.format(TIMEM))
+    LEN1 = np.asarray(LEN1)
+    LEN2 = np.asarray(LEN2)
+    LEN3 = np.asarray(LEN3)
+    LEN4 = np.asarray(LEN4)
+    LEN5 = np.asarray(LEN5)
+    LEN6 = np.asarray(LEN6)
+    LEN7 = np.asarray(LEN7)
+    LEN8 = np.asarray(LEN8)
+
+
+    LENxloc1 = np.asarray(LENxloc1)
+    LENxloc2 = np.asarray(LENxloc2)
+    LENxloc3 = np.asarray(LENxloc3)
+    LENxloc4 = np.asarray(LENxloc4)
+    LENxloc5 = np.asarray(LENxloc5)
+    LENxloc6 = np.asarray(LENxloc6)
+    LENxloc7 = np.asarray(LENxloc7)
+    LENxloc8 = np.asarray(LENxloc8)
+
+
+
+    # removing 0 from xloc LENx
+    LENxloc_a1 = LENxloc1[LENxloc1 != 0]
+    LENxloc_a2 = LENxloc2[LENxloc2 != 0]
+    LENxloc_a3 = LENxloc3[LENxloc3 != 0]
+    LENxloc_a4 = LENxloc4[LENxloc4 != 0]
+    LENxloc_a5 = LENxloc5[LENxloc5 != 0]
+    LENxloc_a6 = LENxloc6[LENxloc6 != 0]
+    LENxloc_a7 = LENxloc7[LENxloc7 != 0]
+    LENxloc_a8 = LENxloc8[LENxloc8 != 0]
+
+    #removing from time vector instants where xloc LENx are 0
+    time_xloc1 = time_xloc[np.argwhere(LENxloc1 !=0)]
+    time_xloc2 = time_xloc[np.argwhere(LENxloc2 !=0)]
+    time_xloc3 = time_xloc[np.argwhere(LENxloc3 !=0)]
+    time_xloc4 = time_xloc[np.argwhere(LENxloc4 !=0)]
+    time_xloc5 = time_xloc[np.argwhere(LENxloc5 !=0)]
+    time_xloc6 = time_xloc[np.argwhere(LENxloc6 !=0)]
+    time_xloc7 = time_xloc[np.argwhere(LENxloc7 !=0)]
+    time_xloc8 = time_xloc[np.argwhere(LENxloc8 !=0)]
+
+
+    # pdb.set_trace()
 
     logging.disabled = False
     # plt.show()
     # plt.figure()
+    # chan = 3
+    # plt.plot(time_efit, vars()['LEN' + str(chan)], label='LEN' + str(chan),             linewidth=1,c='blue')
+    # plt.scatter(time_xloc3, vars()['LENxloc_a' + str(chan)],                label='LENxloc' + str(chan), s=1,c='red')
+
+
+    # plt.show()
     # # plt.plot(time_xloc_real,LENxloc3,'r',label='LEN3 xloc')
     # plt.plot(time_xloc,LENxloc3,'.r',label='LEN3 xloc')
     # plt.plot(time_efit,LEN3,'.b',label='LEN3 efit')
@@ -459,9 +508,32 @@ def main(
     # # print(len(time_xloc))
     # # print(len(time_xloc_real))
     # # print(len(LENxloc3))
-    #
+
     # plt.show()
+
+
+    #finding values of LENx computed with efit at the same time of the LENx computed using with xloc
+
+    len_intersect1 = LEN1[np.argwhere(np.intersect1d(time_efit,time_xloc1))]
+    len_intersect2 = LEN2[np.argwhere(np.intersect1d(time_efit,time_xloc2))]
+    len_intersect3 = LEN3[np.argwhere(np.intersect1d(time_efit,time_xloc3))]
+    len_intersect4 = LEN4[np.argwhere(np.intersect1d(time_efit,time_xloc4))]
+    len_intersect5 = LEN5[np.argwhere(np.intersect1d(time_efit,time_xloc5))]
+    len_intersect6 = LEN6[np.argwhere(np.intersect1d(time_efit,time_xloc6))]
+    len_intersect7 = LEN7[np.argwhere(np.intersect1d(time_efit,time_xloc7))]
+    len_intersect8 = LEN8[np.argwhere(np.intersect1d(time_efit,time_xloc8))]
+
+
+
+        # vars()[time_len] = np.asarray(time_xloc)
+        # vars()[time_len_a] = vars()[time_len][vars()[name_len_a] != 0]
+    #
+
     # pdb.set_trace()
+
+    # LENxloc3 = LENxloc3[np.asarray(LENxloc3) !=0]
+    # time_xloc = time_xloc[np.asarray(LENxloc3) !=0]
+
 
     # -------------------------------
     # 6. writing PPFs
@@ -601,7 +673,7 @@ def main(
                     ax_1 = plt.subplot(8, 1, chan)
                     # plt.subplot(8, 1, chan)
                     plt.plot(time_efit, vars()['LEN' + str(chan)], label='LEN' + str(chan),linewidth=1)
-                    plt.scatter(time_xloc, vars()['LENxloc' + str(chan)], label='LENxloc' + str(chan),s=1)
+                    plt.plot(vars()['time_xloc' + str(chan)], vars()['LENxloc_a' + str(chan)], label='LENxloc' + str(chan),linewidth=1)
                     plt.plot(
                         kg1l_len3["time"],
                         kg1l_len3["data"],
@@ -612,7 +684,8 @@ def main(
                     plt.subplot(8, 1, chan, sharex=ax_1)
                     # plt.subplot(8, 1, chan)
                     plt.plot(time_efit, vars()['LEN' + str(chan)], label='LEN' + str(chan),linewidth=1)
-                    plt.scatter(time_xloc, vars()['LENxloc' + str(chan)], label='LENxloc' + str(chan),s=1)
+                    plt.plot(vars()['time_xloc' + str(chan)],
+                                vars()['LENxloc_a' + str(chan)], label='LENxloc' + str(chan),linewidth=1)
                     plt.plot(
                         kg1l_len3["time"],
                         kg1l_len3["data"],
@@ -655,6 +728,39 @@ def main(
                     f.write('skipping channel {}\n'.format(chan))
             # f.close()
             plt.savefig('./figures/difference_LEN-{}-{}-{}.png'.format(JPN, EFIT, type_of_ppf))
+            ###
+            # pdb.set_trace()
+            #
+            # plt.figure(5, figsize=SIZE, dpi=400)  # 1, figsize=(10, 4), dpi=180)
+            # f = open('JPN_{}_len_{}-{}'.format(JPN, EFIT, type_of_ppf), 'w')
+            # for chan in channels:
+            #     kg1l_len3, dummy = getdata(JPN, DDA, "LEN" + str(chan))
+            #     try:
+            #         if chan == 1:
+            #             ax_1 = plt.subplot(8, 1, chan)
+            #             plt.plot(vars()['time_xloc' + str(chan)], abs(vars()['LENxloc_a' + str(chan)] - vars()['len_intersect' + str(chan)]),
+            #                      label='diff-LEN' + str(chan))
+            #             plt.legend(loc='best', fontsize=8)
+            #         else:
+            #             plt.subplot(8, 1, chan, sharex=ax_1)
+            #             plt.plot(vars()['time_xloc' + str(chan)], abs(vars()['LENxloc_a' + str(chan)] - vars()['len_intersect' + str(chan)]),
+            #                      label='diff-LEN' + str(chan))
+            #             plt.legend(loc='best', fontsize=8)
+            #
+            #         # print('chan {} mean difference between flush and geometry calc is {}'.format(str(chan),np.mean(abs(kg1l_len3["data"] - vars()['LEN' + str(chan)]))))
+            #         # print('chan {} median difference between flush and geometry calc is {} \n'.format(str(chan),np.median(abs(kg1l_len3["data"] - vars()['LEN' + str(chan)]))))
+            #
+            #         f.write('chan {} mean difference between EFIT and XLOC calc is {} \n'.format(str(chan), np.mean(
+            #             abs(vars()['LENxloc_a' + str(chan)] - vars()[
+            #                 'len_intersect' + str(chan)]))))
+            #         f.write('chan {} median difference between EFIT and XLOC calc is {} \n'.format(str(chan),
+            #                                                                                             np.median(abs(vars()['LENxloc_a' + str(chan)] - vars()['len_intersect' + str(chan)]))))
+            #     except:
+            #
+            #         logger.warning('skipping channel {}\n'.format(chan))
+            #         f.write('skipping channel {}\n'.format(chan))
+            # # f.close()
+            # plt.savefig('./figures/difference_LEN-{}-{}-{}.png'.format(JPN, EFIT, type_of_ppf))
         except:
             logger.error("\n could not plot data \n")
 
@@ -662,8 +768,8 @@ def main(
     logger.info("--- {}s seconds ---".format((time.time() - code_start_time)))
     logger.info("\n             Finished.\n")
 
-    if plot:
-        plt.show(block=True)
+    # if plot:
+    #     plt.show(block=True)
 
 if __name__ == "__main__":
 
