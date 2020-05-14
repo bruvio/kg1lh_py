@@ -367,13 +367,7 @@ def main(JPN, code, write_uid, plot, test=False):
 
             TIMEM = time_xloc[IT]
 
-            #
-            # iTimeX = np.where(
-            #     np.abs(float(TIMEM) - ctype_t) < 2 * min(np.diff(ctype_t)))  # twice of the min of EFIT delta time
-            # # print(TIMEM,iTimeX)
-            #
-            # iTimeXLOC = iTimeX[0][0]
-            # pdb.set_trace()
+
             if ctype_v[IT] == -3:
                 pass
                 # continue
