@@ -503,15 +503,28 @@ def main(JPN, code, write_uid, plot, test=False):
     LENxloc_a7 = LENxloc7[LENxloc7 != 0]
     LENxloc_a8 = LENxloc8[LENxloc8 != 0]
 
+    # pdb.set_trace()
     # removing from time vector instants where xloc LENx are 0
-    time_xloc1 = np.concatenate(time_xloc[np.argwhere(LENxloc1 != 0)])
-    time_xloc2 = np.concatenate(time_xloc[np.argwhere(LENxloc2 != 0)])
-    time_xloc3 = np.concatenate(time_xloc[np.argwhere(LENxloc3 != 0)])
-    time_xloc4 = np.concatenate(time_xloc[np.argwhere(LENxloc4 != 0)])
-    time_xloc5 = np.concatenate(time_xloc[np.argwhere(LENxloc5 != 0)])
-    time_xloc6 = np.concatenate(time_xloc[np.argwhere(LENxloc6 != 0)])
-    time_xloc7 = np.concatenate(time_xloc[np.argwhere(LENxloc7 != 0)])
-    time_xloc8 = np.concatenate(time_xloc[np.argwhere(LENxloc8 != 0)])
+    for chan in channels:
+        name = 'LENxloc'+str(chan)
+        variable = vars()[name]
+        time_name = 'time_xloc'+str(chan)
+
+
+
+        if np.any(variable):
+            vars()[time_name] = np.concatenate(time_xloc[np.argwhere(variable != 0)])
+        else:
+            vars()[time_name] = None
+    # pdb.set_trace()
+    # time_xloc1 = np.concatenate(time_xloc[np.argwhere(LENxloc1 != 0)])
+    # time_xloc2 = np.concatenate(time_xloc[np.argwhere(LENxloc2 != 0)])
+    # time_xloc3 = np.concatenate(time_xloc[np.argwhere(LENxloc3 != 0)])
+    # time_xloc4 = np.concatenate(time_xloc[np.argwhere(LENxloc4 != 0)])
+    # time_xloc5 = np.concatenate(time_xloc[np.argwhere(LENxloc5 != 0)])
+    # time_xloc6 = np.concatenate(time_xloc[np.argwhere(LENxloc6 != 0)])
+    # time_xloc7 = np.concatenate(time_xloc[np.argwhere(LENxloc7 != 0)])
+    # time_xloc8 = np.concatenate(time_xloc[np.argwhere(LENxloc8 != 0)])
 
     # pdb.set_trace()
 
@@ -534,16 +547,7 @@ def main(JPN, code, write_uid, plot, test=False):
 
     # plt.show()
 
-    # finding values of LENx computed with efit at the same time of the LENx computed using with xloc
 
-    len_intersect1 = LEN1[np.argwhere(np.intersect1d(time_efit, time_xloc1))]
-    len_intersect2 = LEN2[np.argwhere(np.intersect1d(time_efit, time_xloc2))]
-    len_intersect3 = LEN3[np.argwhere(np.intersect1d(time_efit, time_xloc3))]
-    len_intersect4 = LEN4[np.argwhere(np.intersect1d(time_efit, time_xloc4))]
-    len_intersect5 = LEN5[np.argwhere(np.intersect1d(time_efit, time_xloc5))]
-    len_intersect6 = LEN6[np.argwhere(np.intersect1d(time_efit, time_xloc6))]
-    len_intersect7 = LEN7[np.argwhere(np.intersect1d(time_efit, time_xloc7))]
-    len_intersect8 = LEN8[np.argwhere(np.intersect1d(time_efit, time_xloc8))]
 
     # vars()[time_len] = np.asarray(time_xloc)
     # vars()[time_len_a] = vars()[time_len][vars()[name_len_a] != 0]
@@ -572,12 +576,39 @@ def main(JPN, code, write_uid, plot, test=False):
         itref_kg1v = -1
 
         for chan in channels:
+            if vars()["time_xloc" + str(chan)] is not None:
+                dtype_lid = "LEX{}".format(chan)
+                comment = "XLOC CORD LENGTH KG1 CHANNEL {}".format(chan)
+
+                write_err, itref_written = write_ppf(
+                    JPN,
+                    'test',
+                    dtype_lid,
+                    vars()["LENxloc_a" + str(chan)],
+                    time=vars()["time_xloc" + str(chan)],
+                    comment=comment,
+                    unitd="M",
+                    unitt="SEC",
+                    itref=itref_kg1v,
+                    nt=len(vars()["time_xloc" + str(chan)]),
+                    status=vars()["time_xloc" + str(chan)],
+                    global_status=0,
+                )
+                if write_err != 0:
+                    logger.error(
+                        "Failed to write {}/{}. Errorcode {}".format(
+                            DDA, dtype_lid, write_err
+                        )
+                    )
+                    return write_err
+        #
+
             dtype_lid = "LEN{}".format(chan)
             comment = "CORD LENGTH KG1 CHANNEL {}".format(chan)
 
             write_err, itref_written = write_ppf(
                 JPN,
-                DDA,
+                'test',
                 dtype_lid,
                 vars()["LEN" + str(chan)],
                 time=time_efit,
@@ -597,11 +628,13 @@ def main(JPN, code, write_uid, plot, test=False):
                 )
                 return write_err
 
+
+
         comment = "Produced by {}".format(owner)
         dtype_mode = "MODE"
         write_err, itref_written = write_ppf(
             data.pulse,
-            DDA,
+            'test',
             dtype_mode,
             np.array([1]),
             time=np.array([0]),
@@ -624,7 +657,7 @@ def main(JPN, code, write_uid, plot, test=False):
             dtype_mode = "EHTR"
         write_err, itref_written = write_ppf(
             data.pulse,
-            DDA,
+            'test',
             dtype_mode,
             np.array([1]),
             time=np.array([0]),
@@ -644,7 +677,7 @@ def main(JPN, code, write_uid, plot, test=False):
         comment = EFIT + "version"
         write_err, itref_written = write_ppf(
             data.pulse,
-            DDA,
+            'test',
             dtype_mode,
             np.array([data.version]),
             time=np.array([0]),
@@ -663,7 +696,7 @@ def main(JPN, code, write_uid, plot, test=False):
         comment = EFIT + "sequence"
         write_err, itref_written = write_ppf(
             data.pulse,
-            DDA,
+            'test',
             dtype_mode,
             np.array([data.val_seq]),
             time=np.array([0]),
@@ -708,22 +741,26 @@ def main(JPN, code, write_uid, plot, test=False):
                         label="LEN" + str(chan),
                         linewidth=1,
                     )
-                    plt.plot(
-                        vars()["time_xloc" + str(chan)],
-                        vars()["LENxloc_a" + str(chan)],
-                        label="LENxloc" + str(chan),
-                        linewidth=1,
-                    )
+                    try:
+                        plt.plot(
+                            vars()["time_xloc" + str(chan)],
+                            vars()["LENxloc_a" + str(chan)],
+                            label="LENxloc" + str(chan),
+                            linewidth=1,
+                        )
+                        plt.xlim(
+                            min(vars()["time_xloc" + str(chan)]),
+                            max(vars()["time_xloc" + str(chan)]),
+                        )
+                    except:
+                        logger.info('no xloc data for ch.{}'.format(chan))
                     plt.plot(
                         kg1l_len3["time"],
                         kg1l_len3["data"],
                         label="LEN_jetppf_ch" + str(chan),
                         linewidth=1,
                     )
-                    plt.xlim(
-                        min(vars()["time_xloc" + str(chan)]),
-                        max(vars()["time_xloc" + str(chan)]),
-                    )
+
                     plt.legend(loc="best", fontsize=8)
                 else:
                     plt.subplot(8, 1, chan, sharex=ax_1)
@@ -734,22 +771,26 @@ def main(JPN, code, write_uid, plot, test=False):
                         label="LEN" + str(chan),
                         linewidth=1,
                     )
-                    plt.plot(
-                        vars()["time_xloc" + str(chan)],
-                        vars()["LENxloc_a" + str(chan)],
-                        label="LENxloc" + str(chan),
-                        linewidth=1,
-                    )
+                    try:
+                        plt.plot(
+                            vars()["time_xloc" + str(chan)],
+                            vars()["LENxloc_a" + str(chan)],
+                            label="LENxloc" + str(chan),
+                            linewidth=1,
+                        )
+                        plt.xlim(
+                            min(vars()["time_xloc" + str(chan)]),
+                            max(vars()["time_xloc" + str(chan)]),
+                        )
+                    except:
+                        logger.info('no xloc data for ch.{}'.format(chan))
                     plt.plot(
                         kg1l_len3["time"],
                         kg1l_len3["data"],
                         label="LEN_jetppf_ch" + str(chan),
                         linewidth=1,
                     )
-                    plt.xlim(
-                        min(vars()["time_xloc" + str(chan)]),
-                        max(vars()["time_xloc" + str(chan)]),
-                    )
+
                     plt.legend(loc="best", fontsize=8)
             plt.savefig(
                 "./figures/overlay_LEN-{}-{}-{}.png".format(JPN, EFIT, type_of_ppf),
@@ -814,8 +855,8 @@ def main(JPN, code, write_uid, plot, test=False):
                 try:
                     if chan == 1:
                         ax_1 = plt.subplot(8, 1, chan)
-
-                        plt.plot(
+                        try:
+                           plt.plot(
                             list(vars()["time_xloc" + str(chan)]),
                             abs(
                                 vars()["LENxloc_a" + str(chan)]
@@ -826,14 +867,18 @@ def main(JPN, code, write_uid, plot, test=False):
                                 )
                             ),
                             label="diff-LEN" + str(chan),
-                        )
-                        plt.legend(loc="best", fontsize=8)
+                            )
+                           plt.legend(loc="best", fontsize=8)
+                        except:
+                            logger.info('no xloc data for ch.{}'.format(chan))
+
                     else:
                         plt.subplot(8, 1, chan, sharex=ax_1)
                         # plt.plot(vars()['time_xloc' + str(chan)],
                         #          abs(vars()['LENxloc_a' + str(chan)]-np.interp(vars()['time_xloc' + str(chan)], time_efit, vars()['LEN' + str(chan)])),
                         #          label='diff-LEN' + str(chan))
-                        plt.plot(
+                        try:
+                            plt.plot(
                             list(vars()["time_xloc" + str(chan)]),
                             abs(
                                 vars()["LENxloc_a" + str(chan)]
@@ -844,9 +889,12 @@ def main(JPN, code, write_uid, plot, test=False):
                                 )
                             ),
                             label="diff-LEN" + str(chan),
-                        )
+                            )
+                            plt.legend(loc="best", fontsize=8)
+                        except:
+                            logger.info('no xloc data for ch.{}'.format(chan))
 
-                        plt.legend(loc="best", fontsize=8)
+
 
                     # print('chan {} mean difference between flush and geometry calc is {}'.format(str(chan),np.mean(abs(kg1l_len3["data"] - vars()['LEN' + str(chan)]))))
                     # print('chan {} median difference between flush and geometry calc is {} \n'.format(str(chan),np.median(abs(kg1l_len3["data"] - vars()['LEN' + str(chan)]))))
