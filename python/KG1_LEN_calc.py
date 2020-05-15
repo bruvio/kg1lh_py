@@ -469,6 +469,9 @@ def main(JPN, code, write_uid, plot, test=False):
                     #     plt.plot(rG, zG, linewidth=0.1, marker='o', label='time=53.4246s')
                     #     plt.plot([r1, r2], [z1, z2], 'k')
         except:
+            exc_type, exc_obj, exc_tb = sys.exc_info()
+            fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+            logger.log(5,exc_type, fname, exc_tb.tb_lineno)
             for chan in channels:
                 # print(chan)
                 name = "x" + str(chan)
@@ -481,6 +484,8 @@ def main(JPN, code, write_uid, plot, test=False):
             # print('skipping {}'.format(TIMEM))
     logger.info("\n XLOC time loop fineshed in  {}s seconds ---".format((time.time() - xloc_time)))
     logging.disable(logging.NOTSET)
+
+
     LEN1 = np.asarray(LEN1)
     LEN2 = np.asarray(LEN2)
     LEN3 = np.asarray(LEN3)
@@ -919,8 +924,8 @@ def main(JPN, code, write_uid, plot, test=False):
     logger.info("--- {}s seconds ---".format((time.time() - code_start_time)))
     logger.info("\n             Finished.\n")
 
-    if plot:
-        plt.show(block=True)
+    # if plot:
+    #     plt.show(block=True)
 
 
 if __name__ == "__main__":
