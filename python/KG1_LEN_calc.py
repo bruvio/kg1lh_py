@@ -288,6 +288,7 @@ def main(JPN, code, write_uid, plot, test=False):
     # 5. time loop
     # -------------------------------
     logger.info("\n EFIT time loop")
+    efit_time = time.time()
     for IT in range(0, ntefit):
 
         TIMEM = time_efit[IT]
@@ -347,6 +348,8 @@ def main(JPN, code, write_uid, plot, test=False):
                 length.append(0)
 
             print("skipping {}".format(TIMEM))
+    logger.info("\n EFIT time loop fineshed in  {}s seconds ---".format(
+        (time.time() - efit_time)))
 
     # find if diverted or limiter configuration
     ctype_v = expDataDictJPNobj_XLOC["CTYPE"]["v"]
@@ -362,6 +365,7 @@ def main(JPN, code, write_uid, plot, test=False):
     LENxloc8 = []
     time_xloc_real = []
     logger.info("\n XLOC time loop")
+    xloc_time = time.time()
     for IT in range(0, ntxloc):
         try:
 
@@ -421,7 +425,7 @@ def main(JPN, code, write_uid, plot, test=False):
             # plt.figure()
             # plt.plot(rBND_XLOC_smooth,zBND_XLOC_smooth)
             # pdb.set_trace()
-            logging.disabled = True
+            logging.disable(logging.CRITICAL)
             BoundCoordTuple = list(zip(rBND_XLOC_smooth, zBND_XLOC_smooth))
             polygonBound = Polygon(BoundCoordTuple)
             x1 = polygonBound.intersection(LOS1)
@@ -475,6 +479,8 @@ def main(JPN, code, write_uid, plot, test=False):
                 time_xloc_real.append(TIMEM)
 
             # print('skipping {}'.format(TIMEM))
+    logger.info("\n XLOC time loop fineshed in  {}s seconds ---".format((time.time() - xloc_time)))
+    logging.disable(logging.NOTSET)
     LEN1 = np.asarray(LEN1)
     LEN2 = np.asarray(LEN2)
     LEN3 = np.asarray(LEN3)
@@ -729,7 +735,7 @@ def main(JPN, code, write_uid, plot, test=False):
     if plot:
         try:
             # pdb.set_trace()
-            plt.figure(3, figsize=SIZE, dpi=400)  # 1, figsize=(10, 4), dpi=180)
+            plt.figure(3, figsize=SIZE)  # 1, figsize=(10, 4), dpi=180)
             for chan in channels:
                 kg1l_len3, dummy = getdata(JPN, DDA, "LEN" + str(chan))
                 if chan == 1:
@@ -797,7 +803,7 @@ def main(JPN, code, write_uid, plot, test=False):
                 dpi=300,
             )
 
-            plt.figure(4, figsize=SIZE, dpi=400)  # 1, figsize=(10, 4), dpi=180)
+            plt.figure(4, figsize=SIZE)  # 1, figsize=(10, 4), dpi=180)
             f = open("JPN_{}_len_{}-{}".format(JPN, EFIT, type_of_ppf), "w")
             for chan in channels:
                 kg1l_len3, dummy = getdata(JPN, DDA, "LEN" + str(chan))
@@ -848,7 +854,7 @@ def main(JPN, code, write_uid, plot, test=False):
             ###
             # pdb.set_trace()
             #
-            plt.figure(5, figsize=SIZE, dpi=400)  # 1, figsize=(10, 4), dpi=180)
+            plt.figure(5, figsize=SIZE)  # 1, figsize=(10, 4), dpi=180)
             # f = open('JPN_{}_len_{}-{}'.format(JPN, EFIT, type_of_ppf), 'w')
             for chan in channels:
                 # kg1l_len3, dummy = getdata(JPN, DDA, "LEN" + str(chan))
@@ -913,8 +919,8 @@ def main(JPN, code, write_uid, plot, test=False):
     logger.info("--- {}s seconds ---".format((time.time() - code_start_time)))
     logger.info("\n             Finished.\n")
 
-    # if plot:
-    #     plt.show(block=True)
+    if plot:
+        plt.show(block=True)
 
 
 if __name__ == "__main__":
