@@ -283,6 +283,7 @@ def main(JPN, code, write_uid, plot, test=False):
     )
     LOS8 = LineString([(endx1, endy1), (endx2, endy2)])
     plt.plot([endx1, endx2], [endy1, endy2], label="LOS8")
+    plt.legend(loc='best')
 
     # -------------------------------
     # 5. time loop
@@ -365,18 +366,31 @@ def main(JPN, code, write_uid, plot, test=False):
     LENxloc8 = []
     time_xloc_real = []
     logger.info("\n XLOC time loop")
+
+    time_plot = [41.00, 44.00, 49.00, 51.00, 54.00, 60.00]
+    plt.figure()
     xloc_time = time.time()
+    # pdb.set_trace()
+    print('efit \t {} {}'.format(np.mean(np.diff(time_efit)),1/np.mean(np.diff(time_efit))))
+    print('xloc \t {} {}'.format(np.mean(np.diff(time_xloc)),1/np.mean(np.diff(time_xloc))))
+    print('ctype_t \t {} {}'.format(np.mean(np.diff(ctype_t)),1/np.mean(np.diff(ctype_t))))
+
+
     for IT in range(0, ntxloc):
         try:
 
             TIMEM = time_xloc[IT]
+            iTimeX = numpy.where(
+                numpy.abs(float(TIMEM) - ctype_t) < 2 * min(
+                    numpy.diff(ctype_t)))  # twice of the min of EFIT delta time
 
+            iTimeXLOC = iTimeX[0][0]
 
-            if ctype_v[IT] == -3:
-                pass
-                # continue
+            if ctype_v[iTimeXLOC] == -3:
+                # pass
+                continue
             # pdb.set_trace()
-            elif ctype_v[IT] == -1:  # diverted
+            elif ctype_v[iTimeXLOC] == -1:  # diverted
                 flagDiverted = 1
             else:
                 flagDiverted = 0
@@ -422,8 +436,14 @@ def main(JPN, code, write_uid, plot, test=False):
             rBND_XLOC_smooth, zBND_XLOC_smooth = interpolate.splev(
                 np.linspace(0, 1, 1000), tck, der=0
             )
-            # plt.figure()
-            # plt.plot(rBND_XLOC_smooth,zBND_XLOC_smooth)
+            # pdb.set_trace()
+            for i in time_plot:
+                if abs(TIMEM - i)<0.01:
+
+                    plt.plot(rBND_XLOC_smooth,zBND_XLOC_smooth,label =str(TIMEM))
+                    plt.legend(loc=1
+                            )
+
             # pdb.set_trace()
             logging.disable(logging.CRITICAL)
             BoundCoordTuple = list(zip(rBND_XLOC_smooth, zBND_XLOC_smooth))
@@ -462,12 +482,12 @@ def main(JPN, code, write_uid, plot, test=False):
                     else:
                         length.append(0)
                         time_xloc_real.append(TIMEM)
-                    # if np.abs(TIMEM - 51.635) < 0.001:
-                    #     plt.plot(rG, zG, linewidth=0.1, marker='o', label='time=51.635s')
-                    #     plt.plot([r1, r2], [z1, z2], 'k')
-                    # if np.abs(TIMEM - 53.4246) < 0.01:
-                    #     plt.plot(rG, zG, linewidth=0.1, marker='o', label='time=53.4246s')
-                    #     plt.plot([r1, r2], [z1, z2], 'k')
+        #             # if np.abs(TIMEM - 51.635) < 0.001:
+        #             #     plt.plot(rG, zG, linewidth=0.1, marker='o', label='time=51.635s')
+        #             #     plt.plot([r1, r2], [z1, z2], 'k')
+        #             # if np.abs(TIMEM - 53.4246) < 0.01:
+        #             #     plt.plot(rG, zG, linewidth=0.1, marker='o', label='time=53.4246s')
+        #             #     plt.plot([r1, r2], [z1, z2], 'k')
         except:
             exc_type, exc_obj, exc_tb = sys.exc_info()
             fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
@@ -480,11 +500,17 @@ def main(JPN, code, write_uid, plot, test=False):
                 length = vars()[name_len]
                 length.append(0)
                 time_xloc_real.append(TIMEM)
+        #
+        #     # print('skipping {}'.format(TIMEM))
 
-            # print('skipping {}'.format(TIMEM))
-    logger.info("\n XLOC time loop fineshed in  {}s seconds ---".format((time.time() - xloc_time)))
+    # plt.show()
+    plt.savefig(
+        './figures/XLOC_boundary-{}'.format(str(JPN)))
+    # raise SystemExit
+    # pdb.set_trace()
     logging.disable(logging.NOTSET)
-
+    logger.info("\n XLOC time loop fineshed in  {}s seconds ---".format(
+        (time.time() - xloc_time)))
 
     LEN1 = np.asarray(LEN1)
     LEN2 = np.asarray(LEN2)
