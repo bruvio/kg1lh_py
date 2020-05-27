@@ -950,8 +950,8 @@ def main(JPN, code, write_uid, plot, test=False):
     logger.info("--- {}s seconds ---".format((time.time() - code_start_time)))
     logger.info("\n             Finished.\n")
 
-    # if plot:
-    #     plt.show(block=True)
+    if plot:
+        plt.show(block=True)
 
 
 if __name__ == "__main__":

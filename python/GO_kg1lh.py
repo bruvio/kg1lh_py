@@ -1240,7 +1240,7 @@ def main(
                     x6 = polygonBound.intersection(data.LOS6)
                     x7 = polygonBound.intersection(data.LOS7)
                     x8 = polygonBound.intersection(data.LOS8)
-                    for chan in channels:
+                    for chan in np.arange(0, number_of_channels) + 1:
                         # print(chan)
                         name = 'x' + str(chan)
                         name_len = 'LEN' + str(chan)
@@ -1262,7 +1262,7 @@ def main(
                                 )
                             ))
                 except:
-                    for chan in channels:
+                    for chan in np.arange(0, number_of_channels) + 1:
                         # print(chan)
                         name = 'x' + str(chan)
                         name_len = 'LEN' + str(chan)
@@ -1307,6 +1307,7 @@ def main(
     # pdb.set_trace()
     LEN_df =pd.DataFrame({'LEN1':LEN1,
                           'LEN2':LEN2,
+                          'LEN3':LEN3,
                           'LEN3':LEN3,
                           'LEN4':LEN4,
                           'LEN5':LEN5,
