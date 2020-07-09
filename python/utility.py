@@ -730,3 +730,198 @@ def delete_files_in_folder(folder):
         return True
     except:
         return False
+
+
+# def is_empty(structure):
+#     """
+#
+#     :param structure:
+#     :return: check is structure is empty
+#     """
+#     if structure:
+#         return False
+#     else:
+#         return True
+
+
+# def get_seq(shot_no, dda, read_uid="JETPPF"):
+#     """
+#
+#     :param shot_no: pulse number
+#     :param dda:
+#     :param read_uid:
+#     :return: get sequence of a ppf
+#     """
+#     ier = ppf.ppfgo(shot_no, seq=0)
+#     if ier != 0:
+#         return None
+#
+#     ppf.ppfuid(read_uid, rw="R")
+#
+#     iseq, nseq, ier = ppf.ppfdda(shot_no, dda)
+#
+#     if ier != 0:
+#         return None
+#
+#     return iseq
+#
+#
+# def get_min_max_seq(shot_no, dda="KG1V", read_uid="JETPPF"):
+#     """
+#
+#     :param shot_no:
+#     :param dda:
+#     :param read_uid:
+#     :return: return min and max sequence for given pulse, dda and readuid
+#     min is the unvalidated sequence
+#     max is the last validated sequence
+#     """
+#     kg1v_seq = get_seq(shot_no, dda, read_uid)
+#     unval_seq = -1
+#     val_seq = -1
+#     if kg1v_seq is not None:
+#         unval_seq = min(kg1v_seq)
+#         if len(kg1v_seq) > 1:
+#             val_seq = max(kg1v_seq)
+#             return unval_seq, val_seq
+#         else:
+#             val_seq = unval_seq
+#             return unval_seq, val_seq
+
+
+def download(JPN, signalsTable,seq=0,uid='jetppf'):
+    """
+
+    :param JPN:
+    :param signalsTable: read EFIT data from a signal tabe
+    :param seq: sequence, generally reading from public ppf so 0 is default
+    :param uid: userif, generally reading from public ppf so jetppf is default
+    :return: dictionary containing downloaded signals
+    """
+    # pdb.set_trace()
+    ppf.ppfgo(JPN,seq)
+    ppf.ppfuid(uid,'r')
+
+    # return a Dictionary of dictionary with value 'v' and time 't' of the exp signal
+
+    signalsName = signalsTable.keys()
+    signalsPath = signalsTable.values()
+    # _____download signals
+    dictDataExp = {}
+    for signals in signalsName:
+        out_str = '' + signals + ','
+
+        dictDataExpTMP = {}
+        signalsPath = signalsTable[signals]
+
+        if signalsPath[0:3] == 'PPF':  # PPF
+
+            dda = signalsPath[4:8]
+            dtype = signalsPath[9:]
+
+            if dda == 'EFIT':
+                ihdat, iwdat, data, x, t, ier = ppf.ppfget(int(JPN), dda, dtype, fix0=0, reshape=0, no_x=0, no_t=0)
+                # print(' NO RESHAPE of ' + signalsPath + ' WARNING if is BPCA!!!!!!!!!!!')
+            else:
+                ihdat, iwdat, data, x, t, ier = ppf.ppfget(int(JPN), dda, dtype, fix0=0, reshape=1, no_x=0, no_t=0)
+                # print('RESHAPE of ' + signalsPath)
+
+            dataExp = data
+            tExp = t
+            dictDataExpTMP['x'] = x  # nr of columns dor a 2D array
+        elif signalsPath[0:2] == 'DA' or signalsPath[0:2] == 'PF':  # JPF
+            data, tvec, nwds, title, units, ier = getdat.getdat(signalsTable[signals], JPN)
+            dataExp = data
+            tExp = tvec
+        if ier != 0:
+            logger.debug('{} Error to retreive it !!'.format(signals))
+
+        else:
+            dictDataExpTMP['v'] = dataExp  # signal value
+            dictDataExpTMP['t'] = tExp  # signal time
+            logger.debug('{} Downloaded !!'.format(signals))
+
+
+            dictDataExp[signals] = dictDataExpTMP
+
+    return dictDataExp,ier
+
+
+def readEFITFlux(expDataDictJPNobj,timeEquil):
+        # given EFIT exp data it return:
+        #  rC,zC: coordinates of the boundary @ t0=timeEquil ,
+        # psi: flux map @ t0
+        # rGrid,zGrid: coordinates of the EFIT grid where Grad Shafranov Equation is solved
+
+        EFIT = expDataDictJPNobj
+        # PSIR_v = EFIT['PSIR']['v']#data
+        # PSIR_x = EFIT['PSIR']['x']#nr of elements
+        # PSIR_t = EFIT['PSIR']['t']#time
+        #
+        # PSIZ_v = EFIT['PSIZ']['v']
+        # PSIZ_x = EFIT['PSIZ']['x']
+        # PSIZ_t = EFIT['PSIZ']['t']
+        #
+        # rPSI = PSIR_v
+        # zPSI = PSIZ_v
+        # rGrid,zGrid = np.meshgrid(rPSI,zPSI)
+
+
+        # PSI_v = EFIT['PSI']['v']
+        # PSI_x = EFIT['PSI']['x']
+        # PSI_t = EFIT['PSI']['t']
+        # psiEFIT =np.reshape(PSI_v,(len(PSI_t),len(PSI_x)))
+
+        RBND_v = EFIT['RBND']['v']
+        RBND_x = EFIT['RBND']['x']
+        RBND_t = EFIT['RBND']['t']
+        rBND = RBND_v
+        rC=np.reshape(rBND,(len(RBND_t),len(RBND_x)))
+
+        ZBND_v = EFIT['ZBND']['v']
+        ZBND_x = EFIT['ZBND']['x']
+        ZBND_t = EFIT['ZBND']['t']
+        zBND = ZBND_v
+        zC=np.reshape(zBND,(len(ZBND_t),len(ZBND_x)))
+
+        timeEFIT = RBND_t # one of the _t variables
+        iCurrentTime = np.where(np.abs(timeEquil-timeEFIT)<2*min(np.diff(timeEFIT)))# twice of the min of EFIT delta time
+        # print(timeEFIT[iCurrentTime])
+
+        iTEFIT = iCurrentTime[0][0]
+
+        rC0 = rC[iTEFIT,:]
+        zC0 = zC[iTEFIT,:]
+        # psi0 = psiEFIT[iTEFIT,:]
+
+
+        return rC0,zC0,timeEFIT
+
+
+# def getdata(shot, dda, dtype, uid=None, seq=None):
+#     if uid is None:
+#         ppf.ppfuid("jetppf", rw="R")
+#     else:
+#         ppf.ppfuid(uid, rw="R")
+#     if seq is None:
+#         ier = ppf.ppfgo(shot, seq=0)
+#     else:
+#         ier = ppf.ppfgo(shot, seq=seq)
+#
+#     ihdata, iwdata, data, x, time, ier = ppf.ppfget(shot, dda, dtype)
+#     pulse, seq, iwdat, comment, numdda, ddalist, ier = ppf.ppfinf(comlen=50, numdda=50)
+#
+#     name = dict()
+#     name["ihdata"] = ihdata
+#     name["iwdata"] = iwdata
+#     name["data"] = data
+#     name["x"] = x
+#     name["time"] = time
+#     name["ier"] = ier
+#     name["seq"] = seq
+#     name["pulse"] = pulse
+#     name["dda"] = dda
+#     name["dtype"] = dtype
+#     return name, seq
+#
+#

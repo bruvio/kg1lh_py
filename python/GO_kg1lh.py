@@ -142,16 +142,26 @@ def map_kg1_efit_RM_pandas(arg):
             return (data, chan)
 
         if data.code.lower() == "kg1l":
-            ntime_efit = len(data.EFIT_data.rmag.time)
-            time_efit = data.EFIT_data.rmag.time
-            data_efit = data.EFIT_data.rmag.data
-            data.EFIT_data.sampling_time = np.mean(np.diff(data.EFIT_data.rmag.time))
-            ntkg1v = len(data.KG1_data.density[chan].time)
-            tkg1v = data.KG1_data.density[chan].time
-            sampling_time_kg1v = np.mean(np.diff(tkg1v))
-            tsmo = data.KG1LH_data.tsmo
-            rolling_mean = int(round(tsmo / sampling_time_kg1v))
-
+            if data.EFIT.lower() == 'efit':
+                ntime_efit = len(data.EFIT_data.rmag.time)
+                time_efit = data.EFIT_data.rmag.time
+                data_efit = data.EFIT_data.rmag.data
+                data.EFIT_data.sampling_time = np.mean(np.diff(data.EFIT_data.rmag.time))
+                ntkg1v = len(data.KG1_data.density[chan].time)
+                tkg1v = data.KG1_data.density[chan].time
+                sampling_time_kg1v = np.mean(np.diff(tkg1v))
+                tsmo = data.KG1LH_data.tsmo
+                rolling_mean = int(round(tsmo / sampling_time_kg1v))
+            if data.EFIT.lower() == 'eftp':
+                ntime_efit = len(data.EFIT_data.rmag_eftp.time)
+                time_efit = data.EFIT_data.rmag_eftp.time
+                data_efit = data.EFIT_data.rmag_eftp.data
+                data.EFIT_data.sampling_time = np.mean(np.diff(data.EFIT_data.rmag_eftp.time))
+                ntkg1v = len(data.KG1_data.density[chan].time)
+                tkg1v = data.KG1_data.density[chan].time
+                sampling_time_kg1v = np.mean(np.diff(tkg1v))
+                tsmo = data.KG1LH_data.tsmo
+                rolling_mean = int(round(tsmo / sampling_time_kg1v))
         else:
             ntime_efit = len(data.EFIT_data.rmag_fast.time)
             time_efit = data.EFIT_data.rmag_fast.time
@@ -189,8 +199,12 @@ def map_kg1_efit_RM_pandas(arg):
                 data.interp_method, time_efit
             )
 
-        data.KG1LH_data.lid[chan].data = np.empty(ntime_efit, dtype=float)
-        data.KG1LH_data.lid[chan].time = np.empty(ntime_efit, dtype=float)
+        if data.code.lower() == "kg1l":
+            data.KG1LH_data.lid[chan].time = np.empty(ntime_efit, dtype=float)
+            data.KG1LH_data.lid[chan].data = np.empty(ntime_efit, dtype=float)
+        else:
+            data.KG1LH_data.lid[chan].time = np.empty(ntime_efit, dtype=np.float64)
+            data.KG1LH_data.lid[chan].data = np.empty(ntime_efit, dtype=np.float64)
 
         data.KG1LH_data.lid[chan].data = dummy
         data.KG1LH_data.lid[chan].time = dummy_time
@@ -220,16 +234,26 @@ def map_kg1_efit_RM(arg):
 
 
         if data.code.lower() == "kg1l":
-            ntime_efit = len(data.EFIT_data.rmag.time)
-            time_efit = data.EFIT_data.rmag.time
-            data_efit = data.EFIT_data.rmag.data
-            data.EFIT_data.sampling_time = np.mean(np.diff(data.EFIT_data.rmag.time))
-            ntkg1v = len(data.KG1_data.density[chan].time)
-            tkg1v = data.KG1_data.density[chan].time
-            sampling_time_kg1v = np.mean(np.diff(tkg1v))
-            tsmo = data.KG1LH_data.tsmo
-            rolling_mean = int(round(tsmo / sampling_time_kg1v))
-
+            if data.EFIT.lower() == 'efit':
+                ntime_efit = len(data.EFIT_data.rmag.time)
+                time_efit = data.EFIT_data.rmag.time
+                data_efit = data.EFIT_data.rmag.data
+                data.EFIT_data.sampling_time = np.mean(np.diff(data.EFIT_data.rmag.time))
+                ntkg1v = len(data.KG1_data.density[chan].time)
+                tkg1v = data.KG1_data.density[chan].time
+                sampling_time_kg1v = np.mean(np.diff(tkg1v))
+                tsmo = data.KG1LH_data.tsmo
+                rolling_mean = int(round(tsmo / sampling_time_kg1v))
+            if data.EFIT.lower() == 'eftp':
+                ntime_efit = len(data.EFIT_data.rmag_eftp.time)
+                time_efit = data.EFIT_data.rmag_eftp.time
+                data_efit = data.EFIT_data.rmag_eftp.data
+                data.EFIT_data.sampling_time = np.mean(np.diff(data.EFIT_data.rmag_eftp.time))
+                ntkg1v = len(data.KG1_data.density[chan].time)
+                tkg1v = data.KG1_data.density[chan].time
+                sampling_time_kg1v = np.mean(np.diff(tkg1v))
+                tsmo = data.KG1LH_data.tsmo
+                rolling_mean = int(round(tsmo / sampling_time_kg1v))
         else:
             ntime_efit = len(data.EFIT_data.rmag_fast.time)
             time_efit = data.EFIT_data.rmag_fast.time
@@ -267,11 +291,13 @@ def map_kg1_efit_RM(arg):
             dummy, dummy_time = data.KG1LH_data.lid[chan].resample_signal(
                 data.interp_method, time_efit
             )
+
         if data.code.lower() == "kg1l":
             data.KG1LH_data.lid[chan].time = np.empty(ntime_efit, dtype=float)
+            data.KG1LH_data.lid[chan].data = np.empty(ntime_efit, dtype=float)
         else:
             data.KG1LH_data.lid[chan].time = np.empty(ntime_efit, dtype=np.float64)
-
+            data.KG1LH_data.lid[chan].data = np.empty(ntime_efit, dtype=np.float64)
         data.KG1LH_data.lid[chan].data = dummy
         data.KG1LH_data.lid[chan].time = dummy_time
 
@@ -296,12 +322,18 @@ def map_kg1_efit(arg):
             return (data, chan)
 
         if data.code.lower() == "kg1l":
-            ntime_efit = len(data.EFIT_data.rmag.time)
-            time_efit = data.EFIT_data.rmag.time
-            data_efit = data.EFIT_data.rmag.data
-            data.EFIT_data.sampling_time = np.mean(np.diff(data.EFIT_data.rmag.time))
-            density = np.zeros(ntime_efit, dtype=float)
-
+            if data.EFIT.lower() == 'efit':
+                ntime_efit = len(data.EFIT_data.rmag.time)
+                time_efit = data.EFIT_data.rmag.time
+                data_efit = data.EFIT_data.rmag.data
+                data.EFIT_data.sampling_time = np.mean(np.diff(data.EFIT_data.rmag.time))
+                density = np.zeros(ntime_efit, dtype=float)
+            if data.EFIT.lower() == 'eftp':
+                ntime_efit = len(data.EFIT_data.rmag_eftp.time)
+                time_efit = data.EFIT_data.rmag_eftp.time
+                data_efit = data.EFIT_data.rmag_eftp.data
+                data.EFIT_data.sampling_time = np.mean(np.diff(data.EFIT_data.rmag_eftp.time))
+                density = np.zeros(ntime_efit, dtype=float)
         else:
             ntime_efit = len(data.EFIT_data.rmag_fast.time)
             time_efit = data.EFIT_data.rmag_fast.time
@@ -355,8 +387,12 @@ def map_kg1_efit(arg):
             dummy, dummy_time = data.KG1LH_data.lid[chan].resample_signal(
                 data.interp_method, time_efit
             )
-        data.KG1LH_data.lid[chan].time = np.empty(ntime_efit, dtype=float)
-
+        if data.code.lower() == "kg1l":
+            data.KG1LH_data.lid[chan].time = np.empty(ntime_efit, dtype=float)
+            data.KG1LH_data.lid[chan].data = np.empty(ntime_efit, dtype=float)
+        else:
+            data.KG1LH_data.lid[chan].time = np.empty(ntime_efit, dtype=np.float64)
+            data.KG1LH_data.lid[chan].data = np.empty(ntime_efit, dtype=np.float64)
         data.KG1LH_data.lid[chan].data = dummy
         data.KG1LH_data.lid[chan].time = dummy_time
 
@@ -385,19 +421,34 @@ def time_loop(arg):
             return (data, chan)
 
         if data.code.lower() == "kg1l":
-            ntime_efit = len(data.EFIT_data.rmag.time)
-            time_efit = data.KG1LH_data.lid[chan].time
-            data_efit = data.EFIT_data.rmag.data
-            ntefit = len(time_efit)
-            data.EFIT_data.sampling_time = np.mean(np.diff(data.EFIT_data.rmag.time))
-            ntkg1v = len(data.KG1_data.density[chan].time)
-            tkg1v = data.KG1_data.density[chan].time
-            sampling_time_kg1v = np.mean(np.diff(tkg1v))
-            tsmo = data.KG1LH_data.tsmo
-            rolling_mean = int(round(tsmo / sampling_time_kg1v))
-            length = np.zeros(ntefit, dtype=float)
-            xtan = np.zeros(ntefit, dtype=float)
-            lad = np.zeros(ntefit, dtype=float)
+            if data.EFIT.lower() == 'efit':
+                ntime_efit = len(data.EFIT_data.rmag.time)
+                time_efit = data.KG1LH_data.lid[chan].time
+                data_efit = data.EFIT_data.rmag.data
+                ntefit = len(time_efit)
+                data.EFIT_data.sampling_time = np.mean(np.diff(data.EFIT_data.rmag.time))
+                ntkg1v = len(data.KG1_data.density[chan].time)
+                tkg1v = data.KG1_data.density[chan].time
+                sampling_time_kg1v = np.mean(np.diff(tkg1v))
+                tsmo = data.KG1LH_data.tsmo
+                rolling_mean = int(round(tsmo / sampling_time_kg1v))
+                length = np.zeros(ntefit, dtype=float)
+                xtan = np.zeros(ntefit, dtype=float)
+                lad = np.zeros(ntefit, dtype=float)
+            if data.EFIT.lower() == 'eftp':
+                ntime_efit = len(data.EFIT_data.rmag_eftp.time)
+                time_efit = data.KG1LH_data.lid[chan].time
+                data_efit = data.EFIT_data.rmag_eftp.data
+                ntefit = len(time_efit)
+                data.EFIT_data.sampling_time = np.mean(np.diff(data.EFIT_data.rmag_eftp.time))
+                ntkg1v = len(data.KG1_data.density[chan].time)
+                tkg1v = data.KG1_data.density[chan].time
+                sampling_time_kg1v = np.mean(np.diff(tkg1v))
+                tsmo = data.KG1LH_data.tsmo
+                rolling_mean = int(round(tsmo / sampling_time_kg1v))
+                length = np.zeros(ntefit, dtype=float)
+                xtan = np.zeros(ntefit, dtype=float)
+                lad = np.zeros(ntefit, dtype=float)
 
         else:
             ntime_efit = len(data.EFIT_data.rmag_fast.time)
@@ -637,7 +688,9 @@ def main(
     plot,
     test=False,
     force=False,
-    no_multithreading=False
+    no_multithreading=False,
+    efit='EFIT',
+    seq=0,
 ):
     """
     Program to calculate the line averaged density for all channels of
@@ -713,15 +766,37 @@ def main(
         data.EPSDD = 0.1  # accuracy for gettangents
         data.EPSF = 0.00001  # accuracy for getIntersections
         data.ddaefit = "EFIT"
-    else:
+        if efit.lower() == "efit":
+            data.EFIT = "EFIT"
+            nameSignalsTable_EFIT = "signalsTable_EFIT"  #
+
+        elif efit.lower() == 'eftp':
+            data.EFIT = "EFTP"
+            nameSignalsTable_EFIT = "signalsTable_EFTP"  #
+    elif code.lower() == "kg1h":
         logger.info("running KG1H \n")
         tsmo = 1.0e-4
         data.EPSDD = 0.1
         data.EPSF = 0.00001
         data.ddaefit = "EHTR"
+        if efit.lower() == "ehtr":
+            data.EFIT = "EHTR"
+            nameSignalsTable_EFIT = "signalsTable_EHTR"  #
 
-    # ----------------------------
-    #
+    else:
+        logger.error('\n  specify code to run')
+        raise SystemExit
+
+
+
+
+
+
+
+
+
+
+    # pdb.set_trace()
 
     # C-----------------------------------------------------------------------
     # C init
@@ -803,31 +878,13 @@ def main(
         data.code = code
         data.KG1_data = {}
         data.EFIT_data = {}
-        data.JPNobj = MAGTool(data.pulse)
+        # data.JPNobj = MAGTool(data.pulse)
 
 
-        if code.lower() == 'kg1l':
-            data.EFIT = 'EFIT'
-            nameSignalsTable_EFIT = 'signalsTable_EFIT'  #
-        else:
-            data.EFIT = 'EHTR'
-            nameSignalsTable_EFIT = 'signalsTable_EHTR'  #
 
-        try:
-            logging.info('reading {} sequence '.format(data.EFIT))
-            data.unval_seq, data.val_seq = get_min_max_seq(
-                data.pulse, dda=data.EFIT, read_uid=read_uid
-            )
-        except TypeError:
-            logger.error(
-                "impossible to read sequence for user {}".format(read_uid)
-            )
-        try:
-            logging.info('reading {} version '.format(data.EFIT))
-            data.version, dummy = getdata(data.pulse, data.EFIT, "AREA")
-            data.version = 0.1
-        except:
-            logger.error('failed to read {} version'.format(data.EFIT))
+
+
+
 
 
 
@@ -936,26 +993,50 @@ def main(
     # -------------------------------
     try:
         # pdb.set_trace()
+        # reading EFIT signal table
         data.nameSignals_EFIT = STJET.signalsTableJET(nameSignalsTable_EFIT)
-        data.expDataDictJPNobj_EFIT = data.JPNobj.download(data.pulse, nameSignalsTable_EFIT,
-                                                 data.nameSignals_EFIT, 0)
+        seq = 291
+        data.expDataDictJPNobj_EFIT, ier = download(data.pulse, data.nameSignals_EFIT, seq=seq,
+                                               uid='JETPPF')
+
         data.EFIT_data = EFITData(data.constants)
-        ier = data.EFIT_data.read_data(data.pulse, code)
+        ier = data.EFIT_data.read_data(data.pulse, data.EFIT, seq,read_uid='JETPPF')
+        if seq == 0:
+            logger.info("getting {} seq".format(data.EFIT))
+            try:
+
+                data.unval_seq, data.val_seq = get_min_max_seq(data.pulse,
+                                                               dda=data.EFIT,
+                                                               read_uid='JETPPF')
+                seq = data.val_seq
+                logging.info("reading {} sequence {} ".format(data.EFIT, seq))
+            except TypeError:
+                logger.error(
+                    "impossible to read sequence for user {}".format(read_uid))
+                return
     except:
         logger.error("\n could not read EFIT data \n")
         return 30
 
-    if ier != 0:
-        logger.error("\n error reading EFIT data \n")
-        return 30
+
 
     if data.code.lower() == "kg1l":
-        if data.EFIT_data.rmag is None:
-            logger.error("\n no points in Efit \n")
-            return 31
-        if len(data.EFIT_data.rmag.time) == 0:
-            logger.error("no points in Efit")
-            return 31
+        if data.EFIT.lower() == 'efit':
+
+            if data.EFIT_data.rmag is None:
+                logger.error("\n no points in EFIT \n")
+                return 31
+            if len(data.EFIT_data.rmag.time) == 0:
+                logger.error("no points in EFIT")
+                return 31
+        if data.EFIT.lower() == 'eftp':
+
+            if data.EFIT_data.rmag_eftp is None:
+                logger.error("\n no points in EFTP \n")
+                return 31
+            if len(data.EFIT_data.rmag_eftp.time) == 0:
+                logger.error("no points in EFTP")
+                return 31
     if data.code.lower() == "kg1h":
         if data.EFIT_data.rmag_fast is None:
             logger.error("\n no points in Efit \n")
@@ -1145,8 +1226,8 @@ def main(
 
                 TIMEM = time_efit[IT]
                 try:
-                    rC0, zC0, psi0, rGrid, zGrid, iTEFIT, timeEFIT = data.JPNobj.readEFITFlux(
-                        data.expDataDictJPNobj_EFIT, TIMEM)
+                    rC0, zC0, timeEFIT = readEFITFlux(data.expDataDictJPNobj_EFIT,
+                                                      TIMEM)
                     BoundCoordTuple = list(zip(rC0, zC0))
                     polygonBound = Polygon(BoundCoordTuple)
                     x1 = polygonBound.intersection(data.LOS1)
@@ -1217,8 +1298,13 @@ def main(
             logger.info("\n Starting time loop \n")
             start_time = time.time()
             if data.code.lower() == "kg1l":
-                time_efit = data.EFIT_data.rmag.time
-                ntefit = len(time_efit)
+                if data.EFIT.lower() == 'efit':
+                    time_efit = data.EFIT_data.rmag.time
+                    ntefit = len(time_efit)
+                if data.EFIT.lower() == 'eftp':
+                    time_efit = data.EFIT_data.rmag_eftp.time
+                    ntefit = len(time_efit)
+
             else:
                 time_efit = data.EFIT_data.rmag_fast.time
                 ntefit = len(time_efit)
@@ -1228,8 +1314,9 @@ def main(
                 TIMEM = time_efit[IT]
                 try:
                     # pdb.set_trace()
-                    rC0, zC0 = data.JPNobj.readEFITFlux(
-                        data.expDataDictJPNobj_EFIT, TIMEM)
+                    rC0, zC0, timeEFIT = readEFITFlux(
+                        data.expDataDictJPNobj_EFIT,
+                        TIMEM)
                     BoundCoordTuple = list(zip(rC0, zC0))
                     polygonBound = Polygon(BoundCoordTuple)
                     x1 = polygonBound.intersection(data.LOS1)
@@ -1304,7 +1391,7 @@ def main(
         except:
             logger.error("\n could not perform time loop \n")  #
             return 24
-    # pdb.set_trace()
+
     LEN_df =pd.DataFrame({'LEN1':LEN1,
                           'LEN2':LEN2,
                           'LEN3':LEN3,
@@ -1641,22 +1728,37 @@ def main(
 
 
         comment = "EFIT source"
-        if data.EFIT =='EFIT':
-
+        if data.EFIT == "EFIT":
             dtype_mode = "EFIT"
-        if data.EFIT == 'EHTR':
+        if data.EFIT == "EHTR":
             dtype_mode = "EHTR"
-        write_err, itref_written = write_ppf(data.pulse,dda,dtype_mode,np.array([1]),time=np.array([0]),comment=comment,unitd=" ",unitt=" ",itref=-1,nt=1,status=None)
+
+        if data.EFIT == 'EFTP':
+            dtype_mode = 'EFTP'
+
+        write_err, itref_written = write_ppf(
+            data.pulse,
+            dda,
+            dtype_mode,
+            np.array([1]),
+            time=np.array([0]),
+            comment=comment,
+            unitd=" ",
+            unitt=" ",
+            itref=-1,
+            nt=1,
+            status=None,
+        )
         if write_err != 0:
             logger.error("failed to write source ppf")
-            return 67
+            return write_err
 
-        # # writing EFIT seq and version for data provenance
+        # writing EFIT seq and version for data provenance
         # dtype_mode = "VER"
-        # comment = data.EFIT + "version"
+        # comment = EFIT + "version"
         # write_err, itref_written = write_ppf(
         #     data.pulse,
-        #     dda,
+        #     dda_out,
         #     dtype_mode,
         #     np.array([data.version]),
         #     time=np.array([0]),
@@ -1669,15 +1771,15 @@ def main(
         # )
         # if write_err != 0:
         #     logger.error("failed to write version ppf")
-        #     return 67
+        #     return write_err
 
         dtype_mode = "SEQ"
-        comment = data.EFIT + "sequence"
+        comment = data.EFIT + " sequence"
         write_err, itref_written = write_ppf(
             data.pulse,
             dda,
             dtype_mode,
-            np.array([data.val_seq]),
+            np.array([seq]),
             time=np.array([0]),
             comment=comment,
             unitd=" ",
@@ -1688,7 +1790,8 @@ def main(
         )
         if write_err != 0:
             logger.error("failed to write version ppf")
-            return 67
+            return write_err
+
 
 
 
@@ -1718,7 +1821,10 @@ def main(
     if data.code.lower() == "kg1h":
         efit_time = data.EFIT_data.rmag_fast.time
     else:
-        efit_time = data.EFIT_data.rmag.time
+        if data.EFIT.lower() =='efit':
+            efit_time = data.EFIT_data.rmag.time
+        if data.EFIT.lower() == 'eftp':
+                efit_time = data.EFIT_data.rmag_eftp.time
     if 3 in data.KG1LH_data.lid.keys():
         lid3 = data.KG1LH_data.lid[3].data
         lad3 = data.KG1LH_data.lad[3].data
@@ -1758,6 +1864,13 @@ if __name__ == "__main__":
         "-r", "--uid_read", help="UID to read PPFs from.", default="JETPPF"
     )
     parser.add_argument("-u", "--uid_write", help="UID to write PPFs to.", default="")
+
+    parser.add_argument("-s","--seq",help="sequence number of source ppf, default is 0",default = 0)
+
+    parser.add_argument("-so", "--efit",
+                        help="boundary source to be used, default is EFIT",
+                        default="EFIT")
+
     parser.add_argument(
         "-d",
         "--debug",
@@ -1839,4 +1952,6 @@ if __name__ == "__main__":
         args.test,
         args.force,
         args.no_multithreading,
+        args.efit,
+        args.seq,
     )
