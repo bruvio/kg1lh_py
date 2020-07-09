@@ -1,5 +1,5 @@
 import logging
-
+import pdb
 logger = logging.getLogger(__name__)
 import sys
 import os
@@ -229,12 +229,12 @@ def plot_point(point, angle, length):
 
     # unpack the first point
     x, y = point
-
+    # pdb.set_trace()
     # find the end points
-    endy1 = y-length * math.sin(math.radians(angle))
-    endy2 = y+length * math.sin(math.radians(angle))
-    endx1 = x-length * math.cos(math.radians(angle))
-    endx2 = x+length * math.cos(math.radians(angle))
+    endy1 = y-length * math.sin((angle))
+    endy2 = y+length * math.sin((angle))
+    endx1 = x-length * math.cos((angle))
+    endx2 = x+length * math.cos((angle))
     return endx1,endx2,endy1,endy2
     # plt.plot([endx1, endx2], [endy1, endy2])
 

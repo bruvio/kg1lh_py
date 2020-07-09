@@ -135,7 +135,7 @@ def map_kg1_efit_RM_pandas(arg):
     """
     data = arg[0]  # struct containing all data
     chan = arg[1]  # channel to analyse
-    # pdb.set_trace()
+    # ()
     if chan in data.KG1_data.density.keys():
         if data.KG1_data.global_status[chan] > 3:
             logger.warning("channel data is not good - skipping ch. {}!".format(chan))
@@ -265,7 +265,7 @@ def map_kg1_efit_RM(arg):
             tsmo = data.KG1LH_data.tsmo
             rolling_mean = int(round(sampling_time_kg1v / tsmo))
 
-        # pdb.set_trace()
+        # ()
         cumsum_vec = np.cumsum(np.insert(data.KG1_data.density[chan].data, 0, 0))
         density_cms = (
             cumsum_vec[rolling_mean:] - cumsum_vec[:-rolling_mean]
@@ -346,7 +346,7 @@ def map_kg1_efit(arg):
         tsmo = data.KG1LH_data.tsmo
 
         for it in range(0, ntime_efit):
-            # pdb.set_trace()
+            # ()
             sum = np.zeros(8, dtype=float)
 
             nsum = 0
@@ -433,6 +433,7 @@ def time_loop(arg):
                 tsmo = data.KG1LH_data.tsmo
                 rolling_mean = int(round(tsmo / sampling_time_kg1v))
                 length = np.zeros(ntefit, dtype=float)
+                line_so =np.zeros(ntefit, dtype=float)
                 xtan = np.zeros(ntefit, dtype=float)
                 lad = np.zeros(ntefit, dtype=float)
             if data.EFIT.lower() == 'eftp':
@@ -447,6 +448,7 @@ def time_loop(arg):
                 tsmo = data.KG1LH_data.tsmo
                 rolling_mean = int(round(tsmo / sampling_time_kg1v))
                 length = np.zeros(ntefit, dtype=float)
+                line_so = np.zeros(ntefit, dtype=float)
                 xtan = np.zeros(ntefit, dtype=float)
                 lad = np.zeros(ntefit, dtype=float)
 
@@ -462,6 +464,7 @@ def time_loop(arg):
             tsmo = data.KG1LH_data.tsmo
             rolling_mean = int(round(sampling_time_kg1v / tsmo))
             length = np.zeros(ntefit, dtype=np.float64)
+            line_so = np.zeros(ntefit, dtype=np.float64)
             xtan = np.zeros(ntefit, dtype=np.float64)
             lad = np.zeros(ntefit, dtype=np.float64)
 
@@ -477,7 +480,7 @@ def time_loop(arg):
         flush_time = []
 
 
-        # pdb.set_trace()
+        # ()
         for IT in range(0, ntefit):
 
             TIMEM = time_efit[IT]
@@ -621,7 +624,7 @@ def time_loop(arg):
                         xpt, ypt, angle, dtime,  xtan[IT]
                 ),
             )
-                # pdb.set_trace()
+                # ()
 
         if data.code.lower() == "kg1l":
             data.KG1LH_data.lid[chan] = SignalBase(data.constants)
@@ -691,6 +694,7 @@ def main(
     no_multithreading=False,
     efit='EFIT',
     seq=0,
+    efit_user = 'JETPPF'
 ):
     """
     Program to calculate the line averaged density for all channels of
@@ -744,6 +748,7 @@ def main(
 
     data = SimpleNamespace()
     data.pulse = shot_no
+    data.efit_user = efit_user
 
     channels = np.arange(0, number_of_channels) + 1
     data.interp_method = interp_method
@@ -796,7 +801,7 @@ def main(
 
 
 
-    # pdb.set_trace()
+    # ()
 
     # C-----------------------------------------------------------------------
     # C init
@@ -874,7 +879,7 @@ def main(
             if write_uid.lower() == "jetppf":
                 logger.info("switching write_uid to {}\n".format(owner))
                 write_uid = owner
-        # pdb.set_trace()
+        # ()
         data.code = code
         data.KG1_data = {}
         data.EFIT_data = {}
@@ -911,7 +916,7 @@ def main(
     # -------------------------------
     # 0. check if there is already a validated public ppf
     # if there is quit
-    # pdb.set_trace()
+    # ()
     if ((not force) and (write_uid.lower() == 'jetppf')) :
         logger.info('checking SF of public KG1V ppf')
 
@@ -944,7 +949,7 @@ def main(
         return 20
 
     else:
-        # pdb.set_trace()
+        # ()
         # checking if all channels are available
         avail = 0
         for chan in data.KG1_data.density.keys():
@@ -992,28 +997,42 @@ def main(
     # 2. Read in EFIT data
     # -------------------------------
     try:
-        # pdb.set_trace()
+        # ()
         # reading EFIT signal table
         data.nameSignals_EFIT = STJET.signalsTableJET(nameSignalsTable_EFIT)
-        seq = 291
         data.expDataDictJPNobj_EFIT, ier = download(data.pulse, data.nameSignals_EFIT, seq=seq,
-                                               uid='JETPPF')
+                                               uid=data.efit_user)
+
+        fout = "./logFile/boundary_{}-{}-{}-{}.txt".format(data.pulse,data.EFIT,seq,data.efit_user)
+        fo = open(fout, "w")
+
+        for k, v in data.expDataDictJPNobj_EFIT.items():
+            fo.write(str(k) + ' >>> '+ str(v) + '\n\n')
+
+        fo.close()
+
 
         data.EFIT_data = EFITData(data.constants)
-        ier = data.EFIT_data.read_data(data.pulse, data.EFIT, seq,read_uid='JETPPF')
+        ier = data.EFIT_data.read_data(data.pulse, data.EFIT, seq,read_uid=data.efit_user)
         if seq == 0:
             logger.info("getting {} seq".format(data.EFIT))
             try:
 
                 data.unval_seq, data.val_seq = get_min_max_seq(data.pulse,
                                                                dda=data.EFIT,
-                                                               read_uid='JETPPF')
+                                                               read_uid=data.efit_user)
                 seq = data.val_seq
-                logging.info("reading {} sequence {} ".format(data.EFIT, seq))
+                logging.info("reading {} by {} sequence {} ".format(data.EFIT, data.efit_user,seq))
             except TypeError:
                 logger.error(
                     "impossible to read sequence for user {}".format(read_uid))
                 return
+
+        else:
+            logging.info("reading {} by {} sequence {} ".format(data.EFIT,
+                                                                data.efit_user,
+                                                                seq))
+
     except:
         logger.error("\n could not read EFIT data \n")
         return 30
@@ -1058,6 +1077,8 @@ def main(
         data.a_coord, dummy = getdata(shot_no, "KG1V", "A")
         data.a_coord = data.a_coord["data"]
 
+
+
         LEN1 = []
         LEN2 = []
         LEN3 = []
@@ -1067,52 +1088,88 @@ def main(
         LEN7 = []
         LEN8 = []
 
-        print('a ', data.a_coord)
-        print('r ', data.r_coord)
-        print('z ', data.z_coord)
+        LOS1 = []
+        LOS2 = []
+        LOS3 = []
+        LOS4 = []
+        LOS5 = []
+        LOS6= []
+        LOS7 = []
+        LOS8 = []
+
+
+
+
+        # print('a ', data.a_coord)
+        # print('r ', data.r_coord)
+        # print('z ', data.z_coord)
 
         # -------------------------------
         # 4. defining line of sigths as segments
         # -------------------------------
+        # pdb.set_trace()
         logger.info('\n defining line of sigths as segments')
-        data.LOS1 = LineString([(data.r_coord[0], -5), (data.r_coord[0], 3)])
-        data.LOS2 = LineString([(data.r_coord[1], -5), (data.r_coord[1], 3)])
-        data.LOS3 = LineString([(data.r_coord[2], -5), (data.r_coord[2], 3)])
-        data.LOS4 = LineString([(data.r_coord[3], -5), (data.r_coord[3], 3)])
-
-        # plt.figure(1, figsize=SIZE, dpi=90) #1, figsize=(10, 4), dpi=180)
-        # plt.plot(r_ves, z_ves)
-        #
-        # plt.plot([data.r_coord[0],data.r_coord[0]], [-3,3],label='LOS1')
-        # plt.plot([data.r_coord[1],data.r_coord[1]], [-3,3],label='LOS2')
-        # plt.plot([data.r_coord[2],data.r_coord[2]], [-3,3],label='LOS3')
-        # plt.plot([data.r_coord[3],data.r_coord[3]], [-3,3],label='LOS4')
+        plt.figure(1, figsize=(10, 4), dpi=90)  # 1, figsize=(10, 4), dpi=180)
 
         endx1, endx2, endy1, endy2 = plot_point(
-            [data.r_coord[4], data.z_coord[4]], math.degrees(data.a_coord[4]),
+            [data.r_coord[0], data.z_coord[0]], data.a_coord[0],
+            2)
+        data.LOS1 = LineString([(endx1, endy1), (endx2, endy2)])
+        plt.plot([endx1, endx2], [endy1, endy2],label='LOS1')
+
+        endx1, endx2, endy1, endy2 = plot_point(
+            [data.r_coord[1], data.z_coord[1]], data.a_coord[1],
+            2)
+        data.LOS2 = LineString([(endx1, endy1), (endx2, endy2)])
+        plt.plot([endx1, endx2], [endy1, endy2],label='LOS2')
+
+        endx1, endx2, endy1, endy2 = plot_point(
+            [data.r_coord[2], data.z_coord[2]], data.a_coord[2],
+            2)
+        data.LOS3 = LineString([(endx1, endy1), (endx2, endy2)])
+        plt.plot([endx1, endx2], [endy1, endy2],label='LOS3')
+
+        endx1, endx2, endy1, endy2 = plot_point(
+            [data.r_coord[3], data.z_coord[3]], data.a_coord[3],
+            2)
+        data.LOS4 = LineString([(endx1, endy1), (endx2, endy2)])
+        plt.plot([endx1, endx2], [endy1, endy2], label='LOS4')
+
+        endx1, endx2, endy1, endy2 = plot_point(
+            [data.r_coord[4], data.z_coord[4]], data.a_coord[4],
             2)
         data.LOS5 = LineString([(endx1, endy1), (endx2, endy2)])
-        # plt.plot([endx1, endx2], [endy1, endy2],label='LOS5')
+        plt.plot([endx1, endx2], [endy1, endy2],label='LOS5')
 
         endx1, endx2, endy1, endy2 = plot_point(
-            [data.r_coord[5], data.z_coord[5]], math.degrees(data.a_coord[5]),
+            [data.r_coord[5], data.z_coord[5]], data.a_coord[5],
             2)
         data.LOS6 = LineString([(endx1, endy1), (endx2, endy2)])
-        # plt.plot([endx1, endx2], [endy1, endy2],label='LOS6')
+        plt.plot([endx1, endx2], [endy1, endy2],label='LOS6')
 
         endx1, endx2, endy1, endy2 = plot_point(
-            [data.r_coord[6], data.z_coord[6]], math.degrees(data.a_coord[6]),
+            [data.r_coord[6], data.z_coord[6]], data.a_coord[6],
             2)
         data.LOS7 = LineString([(endx1, endy1), (endx2, endy2)])
-        # plt.plot([endx1, endx2], [endy1, endy2],label='LOS7')
+        plt.plot([endx1, endx2], [endy1, endy2],label='LOS7')
 
         endx1, endx2, endy1, endy2 = plot_point(
-            [data.r_coord[7], data.z_coord[7]], math.degrees(data.a_coord[7]),
+            [data.r_coord[7], data.z_coord[7]], data.a_coord[7],
             2)
         data.LOS8 = LineString([(endx1, endy1), (endx2, endy2)])
-
-
-
+        plt.plot([endx1, endx2], [endy1, endy2], label='LOS8')
+        plt.legend()
+        # plt.show()
+        # pdb.set_trace()
+        # for i in range(1,9):
+        # fout = "./logFile/LOS{}-{}-{}-{}-{}.txt".format(i,data.pulse,data.EFIT,seq,data.efit_user)
+        # fo = open(fout, "w")
+        #
+        # for k, v in data.expDataDictJPNobj_EFIT.items():
+        #     fo.write(str(k) + ' >>> '+ str(v) + '\n\n')
+        #
+        # fo.close()
+        # pdb.set_trace()
 
 
     except:
@@ -1130,7 +1187,7 @@ def main(
     f.close()
     # -------------------------------
     # 4. mapping kg1v data onto efit time vector
-    # pdb.set_trace()
+    # ()
     # data,chan = map_kg1_efit_RM_pandas((data,4))
     # -------------------------------
 
@@ -1144,7 +1201,7 @@ def main(
             # with Pool(10) as pool:
             #     results = pool.map(map_kg1_efit, [(data, chan) for chan in channels])
             logger.info("--- {}s seconds ---".format((time.time() - start_time)))
-            # pdb.set_trace()
+            # ()
             for i, re in enumerate(results):
                 if len(re[0].KG1LH_data.lid.keys()) != 0:
                     key = list(re[0].KG1LH_data.lid.keys())[0]
@@ -1169,7 +1226,7 @@ def main(
             # with Pool(10) as pool:
             results = pool.map(map_kg1_efit_RM, [(data, chan) for chan in channels])
             logger.info("--- {}s seconds ---".format((time.time() - start_time)))
-            # pdb.set_trace()
+            # ()
             for i, re in enumerate(results):
                 if len(re[0].KG1LH_data.lid.keys()) != 0:
                     key = list(re[0].KG1LH_data.lid.keys())[0]
@@ -1216,7 +1273,7 @@ def main(
     # -------------------------------
     # pdb.set_trace()
     if no_multithreading:
-        # pdb.set_trace()
+        # ()
         try:
             logger.info("\n Starting time loop \n")
             start_time = time.time()
@@ -1260,14 +1317,14 @@ def main(
                                 )
                             ))
                 except:
-                    print('skipping {}'.format(TIMEM))
+                    logger.log(5, 'skipping {}'.format(TIMEM))
                 logger.log(5, "computing lad/len/xtan \n")
 
-            # pdb.set_trace()
+            # ()
         except:
             logger.error("\n could not calculate LENs using EFIT\n")  #
             return 24
-        # pdb.set_trace()
+        # ()
 
         if 2 in data.KG1_data.density.keys():
             logger.info("\n Starting time loop ch. 2\n")
@@ -1313,7 +1370,7 @@ def main(
 
                 TIMEM = time_efit[IT]
                 try:
-                    # pdb.set_trace()
+                    # ()
                     rC0, zC0, timeEFIT = readEFITFlux(
                         data.expDataDictJPNobj_EFIT,
                         TIMEM)
@@ -1359,14 +1416,14 @@ def main(
                     # print('skipping {}'.format(TIMEM))
                     logger.log(5, "computing lad/len/xtan \n")
 
-            # pdb.set_trace()
+            # ()
 
             # pool = mp.Semaphore(multiprocessing.cpu_count())
             pool = Pool(max(1, mp.cpu_count() // 2))
             #        with Pool(10) as pool:
             results = pool.map(time_loop, [(data, chan) for chan in channels])
             logger.info("--- {}s seconds ---".format((time.time() - start_time)))
-            # pdb.set_trace()
+            # ()
             for i, res in enumerate(results):
                 if len(res[0].KG1LH_data.lad.keys()) != 0:
                     key = list(res[0].KG1LH_data.lad.keys())[0]
@@ -1401,9 +1458,9 @@ def main(
                           'LEN6':LEN6,
                           'LEN7':LEN7,
                           'LEN8':LEN8})
-    # pdb.set_trace()
+    # ()
     for chan in data.KG1LH_data.lid.keys():
-        # pdb.set_trace()
+        # ()
         # print(chan)
         name = 'LEN'+str(chan)
         dummy = []
@@ -1415,10 +1472,10 @@ def main(
                 dummy.append(0.0)
             # data.KG1LH_data.lad[chan].data = [float(data.KG1LH_data.lid[chan].data[i])/LEN_df[name].iloc[i])  if LEN_df[name].iloc[i]) > 0.0 else 0.0 for i in range(0,len(data.KG1LH_data.lid[chan].time)  ]
         data.KG1LH_data.lad[chan].data = dummy
-        # pdb.set_trace()
+        # ()
 
 
-    # pdb.set_trace()
+    # ()
     for chan in data.KG1LH_data.lad.keys():
         if np.all(data.KG1LH_data.lad[chan].data == 0.0):
             logger.error('FLUSH error in ch. {} \n'.format(chan))
@@ -1550,7 +1607,7 @@ def main(
 
     # -------------------------------
     # 7. writing PPFs
-    # pdb.set_trace()
+    # ()
     # -------------------------------
 
     logging.info("\n start writing PPFs \n")
@@ -1863,6 +1920,12 @@ if __name__ == "__main__":
     parser.add_argument(
         "-r", "--uid_read", help="UID to read PPFs from.", default="JETPPF"
     )
+
+
+    parser.add_argument(
+        "-er", "--efit_user", help="UID to read EFIT PPFs from.", default="JETPPF"
+    )
+
     parser.add_argument("-u", "--uid_write", help="UID to write PPFs to.", default="")
 
     parser.add_argument("-s","--seq",help="sequence number of source ppf, default is 0",default = 0)
@@ -1954,4 +2017,5 @@ if __name__ == "__main__":
         args.no_multithreading,
         args.efit,
         args.seq,
+        args.efit_user,
     )
