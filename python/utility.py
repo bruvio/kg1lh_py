@@ -5,6 +5,7 @@ import sys
 import os
 from importlib import import_module
 import shutil
+from shapely.geometry import LineString,Polygon
 
 libnames = ['ppf']
 relative_imports = []
@@ -240,7 +241,59 @@ def plot_point(point, angle, length):
 
 
 
+def define_LOS(data):
+    plt.figure(1, figsize=(10, 4), dpi=90)  # 1, figsize=(10, 4), dpi=180)
 
+    endx1, endx2, endy1, endy2 = plot_point(
+        [data.r_coord[0], data.z_coord[0]], data.a_coord[0],
+        2)
+    data.LOS1 = LineString([(endx1, endy1), (endx2, endy2)])
+    plt.plot([endx1, endx2], [endy1, endy2], label='LOS1')
+
+    endx1, endx2, endy1, endy2 = plot_point(
+        [data.r_coord[1], data.z_coord[1]], data.a_coord[1],
+        2)
+    data.LOS2 = LineString([(endx1, endy1), (endx2, endy2)])
+    plt.plot([endx1, endx2], [endy1, endy2], label='LOS2')
+
+    endx1, endx2, endy1, endy2 = plot_point(
+        [data.r_coord[2], data.z_coord[2]], data.a_coord[2],
+        2)
+    data.LOS3 = LineString([(endx1, endy1), (endx2, endy2)])
+    plt.plot([endx1, endx2], [endy1, endy2], label='LOS3')
+
+    endx1, endx2, endy1, endy2 = plot_point(
+        [data.r_coord[3], data.z_coord[3]], data.a_coord[3],
+        2)
+    data.LOS4 = LineString([(endx1, endy1), (endx2, endy2)])
+    plt.plot([endx1, endx2], [endy1, endy2], label='LOS4')
+
+    endx1, endx2, endy1, endy2 = plot_point(
+        [data.r_coord[4], data.z_coord[4]], data.a_coord[4],
+        2)
+    data.LOS5 = LineString([(endx1, endy1), (endx2, endy2)])
+    plt.plot([endx1, endx2], [endy1, endy2], label='LOS5')
+
+    endx1, endx2, endy1, endy2 = plot_point(
+        [data.r_coord[5], data.z_coord[5]], data.a_coord[5],
+        2)
+    data.LOS6 = LineString([(endx1, endy1), (endx2, endy2)])
+    plt.plot([endx1, endx2], [endy1, endy2], label='LOS6')
+
+    endx1, endx2, endy1, endy2 = plot_point(
+        [data.r_coord[6], data.z_coord[6]], data.a_coord[6],
+        2)
+    data.LOS7 = LineString([(endx1, endy1), (endx2, endy2)])
+    plt.plot([endx1, endx2], [endy1, endy2], label='LOS7')
+
+    endx1, endx2, endy1, endy2 = plot_point(
+        [data.r_coord[7], data.z_coord[7]], data.a_coord[7],
+        2)
+    data.LOS8 = LineString([(endx1, endy1), (endx2, endy2)])
+    plt.plot([endx1, endx2], [endy1, endy2], label='LOS8')
+    plt.legend()
+
+    return data.LOS1,data.LOS2,data.LOS3,data.LOS4,data.LOS5,data.LOS6,data.LOS7,data.LOS8
 
 
 

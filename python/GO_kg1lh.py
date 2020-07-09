@@ -1003,15 +1003,6 @@ def main(
         data.expDataDictJPNobj_EFIT, ier = download(data.pulse, data.nameSignals_EFIT, seq=seq,
                                                uid=data.efit_user)
 
-        fout = "./logFile/boundary_{}-{}-{}-{}.txt".format(data.pulse,data.EFIT,seq,data.efit_user)
-        fo = open(fout, "w")
-
-        for k, v in data.expDataDictJPNobj_EFIT.items():
-            fo.write(str(k) + ' >>> '+ str(v) + '\n\n')
-
-        fo.close()
-
-
         data.EFIT_data = EFITData(data.constants)
         ier = data.EFIT_data.read_data(data.pulse, data.EFIT, seq,read_uid=data.efit_user)
         if seq == 0:
@@ -1056,6 +1047,8 @@ def main(
             if len(data.EFIT_data.rmag_eftp.time) == 0:
                 logger.error("no points in EFTP")
                 return 31
+
+
     if data.code.lower() == "kg1h":
         if data.EFIT_data.rmag_fast is None:
             logger.error("\n no points in Efit \n")
@@ -1088,88 +1081,21 @@ def main(
         LEN7 = []
         LEN8 = []
 
-        LOS1 = []
-        LOS2 = []
-        LOS3 = []
-        LOS4 = []
-        LOS5 = []
-        LOS6= []
-        LOS7 = []
-        LOS8 = []
 
 
 
 
-        # print('a ', data.a_coord)
-        # print('r ', data.r_coord)
-        # print('z ', data.z_coord)
+        logger.log(5,'a ', data.a_coord)
+        logger.log(5,'r ', data.r_coord)
+        logger.log(5,'z ', data.z_coord)
 
         # -------------------------------
         # 4. defining line of sigths as segments
         # -------------------------------
         # pdb.set_trace()
         logger.info('\n defining line of sigths as segments')
-        plt.figure(1, figsize=(10, 4), dpi=90)  # 1, figsize=(10, 4), dpi=180)
+        data.LOS1, data.LOS2, data.LOS3, data.LOS4, data.LOS5, data.LOS6, data.LOS7, data.LOS8 = define_LOS(data)
 
-        endx1, endx2, endy1, endy2 = plot_point(
-            [data.r_coord[0], data.z_coord[0]], data.a_coord[0],
-            2)
-        data.LOS1 = LineString([(endx1, endy1), (endx2, endy2)])
-        plt.plot([endx1, endx2], [endy1, endy2],label='LOS1')
-
-        endx1, endx2, endy1, endy2 = plot_point(
-            [data.r_coord[1], data.z_coord[1]], data.a_coord[1],
-            2)
-        data.LOS2 = LineString([(endx1, endy1), (endx2, endy2)])
-        plt.plot([endx1, endx2], [endy1, endy2],label='LOS2')
-
-        endx1, endx2, endy1, endy2 = plot_point(
-            [data.r_coord[2], data.z_coord[2]], data.a_coord[2],
-            2)
-        data.LOS3 = LineString([(endx1, endy1), (endx2, endy2)])
-        plt.plot([endx1, endx2], [endy1, endy2],label='LOS3')
-
-        endx1, endx2, endy1, endy2 = plot_point(
-            [data.r_coord[3], data.z_coord[3]], data.a_coord[3],
-            2)
-        data.LOS4 = LineString([(endx1, endy1), (endx2, endy2)])
-        plt.plot([endx1, endx2], [endy1, endy2], label='LOS4')
-
-        endx1, endx2, endy1, endy2 = plot_point(
-            [data.r_coord[4], data.z_coord[4]], data.a_coord[4],
-            2)
-        data.LOS5 = LineString([(endx1, endy1), (endx2, endy2)])
-        plt.plot([endx1, endx2], [endy1, endy2],label='LOS5')
-
-        endx1, endx2, endy1, endy2 = plot_point(
-            [data.r_coord[5], data.z_coord[5]], data.a_coord[5],
-            2)
-        data.LOS6 = LineString([(endx1, endy1), (endx2, endy2)])
-        plt.plot([endx1, endx2], [endy1, endy2],label='LOS6')
-
-        endx1, endx2, endy1, endy2 = plot_point(
-            [data.r_coord[6], data.z_coord[6]], data.a_coord[6],
-            2)
-        data.LOS7 = LineString([(endx1, endy1), (endx2, endy2)])
-        plt.plot([endx1, endx2], [endy1, endy2],label='LOS7')
-
-        endx1, endx2, endy1, endy2 = plot_point(
-            [data.r_coord[7], data.z_coord[7]], data.a_coord[7],
-            2)
-        data.LOS8 = LineString([(endx1, endy1), (endx2, endy2)])
-        plt.plot([endx1, endx2], [endy1, endy2], label='LOS8')
-        plt.legend()
-        # plt.show()
-        # pdb.set_trace()
-        # for i in range(1,9):
-        # fout = "./logFile/LOS{}-{}-{}-{}-{}.txt".format(i,data.pulse,data.EFIT,seq,data.efit_user)
-        # fo = open(fout, "w")
-        #
-        # for k, v in data.expDataDictJPNobj_EFIT.items():
-        #     fo.write(str(k) + ' >>> '+ str(v) + '\n\n')
-        #
-        # fo.close()
-        # pdb.set_trace()
 
 
     except:
@@ -1197,7 +1123,7 @@ def main(
             start_time = time.time()
             pool = Pool(max(1, mp.cpu_count() // 2))
             # with Pool(10) as pool:
-            results = pool.map(map_kg1_efit_RM, [(data, chan) for chan in channels])
+            results = pool.map(map_kg1_efit, [(data, chan) for chan in channels])
             # with Pool(10) as pool:
             #     results = pool.map(map_kg1_efit, [(data, chan) for chan in channels])
             logger.info("--- {}s seconds ---".format((time.time() - start_time)))
@@ -1248,7 +1174,7 @@ def main(
             start_time = time.time()
             pool = Pool(max(1, mp.cpu_count() // 2))
             # with Pool(10) as pool:
-            results = pool.map(map_kg1_efit_RM, [(data, chan) for chan in channels])
+            results = pool.map(map_kg1_efit_RM_pandas, [(data, chan) for chan in channels])
             # with Pool(10) as pool:
             #     results = pool.map(map_kg1_efit_RM_pandas,
             #                        [(data, chan) for chan in channels])
@@ -1418,7 +1344,7 @@ def main(
 
             # ()
 
-            # pool = mp.Semaphore(multiprocessing.cpu_count())
+
             pool = Pool(max(1, mp.cpu_count() // 2))
             #        with Pool(10) as pool:
             results = pool.map(time_loop, [(data, chan) for chan in channels])

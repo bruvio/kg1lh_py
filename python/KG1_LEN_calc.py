@@ -247,43 +247,96 @@ def main(JPN, code, write_uid, plot, test=False):
     # 4. defining line of sigths as segments
     # -------------------------------
     logger.info("\n defining line of sigths as segments")
-    LOS1 = LineString([(data.r_coord[0], -5), (data.r_coord[0], 3)])
-    LOS2 = LineString([(data.r_coord[1], -5), (data.r_coord[1], 3)])
-    LOS3 = LineString([(data.r_coord[2], -5), (data.r_coord[2], 3)])
-    LOS4 = LineString([(data.r_coord[3], -5), (data.r_coord[3], 3)])
+    # LOS1 = LineString([(data.r_coord[0], -5), (data.r_coord[0], 3)])
+    # LOS2 = LineString([(data.r_coord[1], -5), (data.r_coord[1], 3)])
+    # LOS3 = LineString([(data.r_coord[2], -5), (data.r_coord[2], 3)])
+    # LOS4 = LineString([(data.r_coord[3], -5), (data.r_coord[3], 3)])
+    #
+    # plt.figure(1, figsize=SIZE, dpi=90)  # 1, figsize=(10, 4), dpi=180)
+    # plt.plot(r_ves, z_ves)
+    #
+    # plt.plot([data.r_coord[0], data.r_coord[0]], [-3, 3], label="LOS1")
+    # plt.plot([data.r_coord[1], data.r_coord[1]], [-3, 3], label="LOS2")
+    # plt.plot([data.r_coord[2], data.r_coord[2]], [-3, 3], label="LOS3")
+    # plt.plot([data.r_coord[3], data.r_coord[3]], [-3, 3], label="LOS4")
+    #
+    # endx1, endx2, endy1, endy2 = plot_point(
+    #     [data.r_coord[4], data.z_coord[4]], math.degrees(data.a_coord[4]), 2
+    # )
+    # LOS5 = LineString([(endx1, endy1), (endx2, endy2)])
+    # plt.plot([endx1, endx2], [endy1, endy2], label="LOS5")
+    #
+    # endx1, endx2, endy1, endy2 = plot_point(
+    #     [data.r_coord[5], data.z_coord[5]], math.degrees(data.a_coord[5]), 2
+    # )
+    # LOS6 = LineString([(endx1, endy1), (endx2, endy2)])
+    # plt.plot([endx1, endx2], [endy1, endy2], label="LOS6")
+    #
+    # endx1, endx2, endy1, endy2 = plot_point(
+    #     [data.r_coord[6], data.z_coord[6]], math.degrees(data.a_coord[6]), 2
+    # )
+    # LOS7 = LineString([(endx1, endy1), (endx2, endy2)])
+    # plt.plot([endx1, endx2], [endy1, endy2], label="LOS7")
+    #
+    # endx1, endx2, endy1, endy2 = plot_point(
+    #     [data.r_coord[7], data.z_coord[7]], math.degrees(data.a_coord[7]), 2
+    # )
+    # LOS8 = LineString([(endx1, endy1), (endx2, endy2)])
+    # plt.plot([endx1, endx2], [endy1, endy2], label="LOS8")
+    # plt.legend(loc='best')
 
-    plt.figure(1, figsize=SIZE, dpi=90)  # 1, figsize=(10, 4), dpi=180)
-    plt.plot(r_ves, z_ves)
-
-    plt.plot([data.r_coord[0], data.r_coord[0]], [-3, 3], label="LOS1")
-    plt.plot([data.r_coord[1], data.r_coord[1]], [-3, 3], label="LOS2")
-    plt.plot([data.r_coord[2], data.r_coord[2]], [-3, 3], label="LOS3")
-    plt.plot([data.r_coord[3], data.r_coord[3]], [-3, 3], label="LOS4")
+    plt.figure(1, figsize=(10, 4), dpi=90)  # 1, figsize=(10, 4), dpi=180)
 
     endx1, endx2, endy1, endy2 = plot_point(
-        [data.r_coord[4], data.z_coord[4]], math.degrees(data.a_coord[4]), 2
-    )
-    LOS5 = LineString([(endx1, endy1), (endx2, endy2)])
-    plt.plot([endx1, endx2], [endy1, endy2], label="LOS5")
+        [data.r_coord[0], data.z_coord[0]], data.a_coord[0],
+        2)
+    data.LOS1 = LineString([(endx1, endy1), (endx2, endy2)])
+    plt.plot([endx1, endx2], [endy1, endy2], label='LOS1')
 
     endx1, endx2, endy1, endy2 = plot_point(
-        [data.r_coord[5], data.z_coord[5]], math.degrees(data.a_coord[5]), 2
-    )
-    LOS6 = LineString([(endx1, endy1), (endx2, endy2)])
-    plt.plot([endx1, endx2], [endy1, endy2], label="LOS6")
+        [data.r_coord[1], data.z_coord[1]], data.a_coord[1],
+        2)
+    data.LOS2 = LineString([(endx1, endy1), (endx2, endy2)])
+    plt.plot([endx1, endx2], [endy1, endy2], label='LOS2')
 
     endx1, endx2, endy1, endy2 = plot_point(
-        [data.r_coord[6], data.z_coord[6]], math.degrees(data.a_coord[6]), 2
-    )
-    LOS7 = LineString([(endx1, endy1), (endx2, endy2)])
-    plt.plot([endx1, endx2], [endy1, endy2], label="LOS7")
+        [data.r_coord[2], data.z_coord[2]], data.a_coord[2],
+        2)
+    data.LOS3 = LineString([(endx1, endy1), (endx2, endy2)])
+    plt.plot([endx1, endx2], [endy1, endy2], label='LOS3')
 
     endx1, endx2, endy1, endy2 = plot_point(
-        [data.r_coord[7], data.z_coord[7]], math.degrees(data.a_coord[7]), 2
-    )
-    LOS8 = LineString([(endx1, endy1), (endx2, endy2)])
-    plt.plot([endx1, endx2], [endy1, endy2], label="LOS8")
-    plt.legend(loc='best')
+        [data.r_coord[3], data.z_coord[3]], data.a_coord[3],
+        2)
+    data.LOS4 = LineString([(endx1, endy1), (endx2, endy2)])
+    plt.plot([endx1, endx2], [endy1, endy2], label='LOS4')
+
+    endx1, endx2, endy1, endy2 = plot_point(
+        [data.r_coord[4], data.z_coord[4]], data.a_coord[4],
+        2)
+    data.LOS5 = LineString([(endx1, endy1), (endx2, endy2)])
+    plt.plot([endx1, endx2], [endy1, endy2], label='LOS5')
+
+    endx1, endx2, endy1, endy2 = plot_point(
+        [data.r_coord[5], data.z_coord[5]], data.a_coord[5],
+        2)
+    data.LOS6 = LineString([(endx1, endy1), (endx2, endy2)])
+    plt.plot([endx1, endx2], [endy1, endy2], label='LOS6')
+
+    endx1, endx2, endy1, endy2 = plot_point(
+        [data.r_coord[6], data.z_coord[6]], data.a_coord[6],
+        2)
+    data.LOS7 = LineString([(endx1, endy1), (endx2, endy2)])
+    plt.plot([endx1, endx2], [endy1, endy2], label='LOS7')
+
+    endx1, endx2, endy1, endy2 = plot_point(
+        [data.r_coord[7], data.z_coord[7]], data.a_coord[7],
+        2)
+    data.LOS8 = LineString([(endx1, endy1), (endx2, endy2)])
+    plt.plot([endx1, endx2], [endy1, endy2], label='LOS8')
+    plt.legend()
+
+
 
     # -------------------------------
     # 5. time loop
