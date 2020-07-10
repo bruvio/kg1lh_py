@@ -779,15 +779,19 @@ def main(
         elif efit.lower() == 'eftp':
             data.EFIT = "EFTP"
             nameSignalsTable_EFIT = "signalsTable_EFTP"  #
+        else:
+            logger.error('wrong EFIT family')
+            return 30
+
     elif code.lower() == "kg1h":
         logger.info("running KG1H \n")
         tsmo = 1.0e-4
         data.EPSDD = 0.1
         data.EPSF = 0.00001
         data.ddaefit = "EHTR"
-        if efit.lower() == "ehtr":
-            data.EFIT = "EHTR"
-            nameSignalsTable_EFIT = "signalsTable_EHTR"  #
+        efit = "EHTR"
+        data.EFIT = "EHTR"
+        nameSignalsTable_EFIT = "signalsTable_EHTR"  #
 
     else:
         logger.error('\n  specify code to run')
@@ -1212,7 +1216,7 @@ def main(
                     time_efit = data.EFIT_data.rmag_eftp.time
                     ntefit = len(time_efit)
 
-             else:
+            else:
                 time_efit = data.EFIT_data.rmag_fast.time
                 ntefit = len(time_efit)
 
@@ -1258,7 +1262,7 @@ def main(
                             ))
                 except:
                     logger.log(5, 'skipping {}'.format(TIMEM))
-                logger.log(5, "computing lad/len/xtan \n")
+                # logger.log(5, "computing lad/len/xtan \n")
 
             # ()
         except:
