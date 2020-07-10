@@ -415,6 +415,8 @@ def time_loop(arg):
     """
     data = arg[0]  # struct containing all data
     chan = arg[1]  # channel to analyse
+
+    # check if channel data is validated
     if chan in data.KG1LH_data.lid.keys():
         if data.KG1_data.global_status[chan] > 3:
             logger.warning("channel data is not good - skipping ch. {}!".format(chan))
@@ -1016,7 +1018,7 @@ def main(
                 logging.info("reading {} by {} sequence {} ".format(data.EFIT, data.efit_user,seq))
             except TypeError:
                 logger.error(
-                    "impossible to read sequence for user {}".format(read_uid))
+                    "impossible to read sequence for user {}".format( data.efit_user))
                 return
 
         else:
@@ -1413,7 +1415,7 @@ def main(
     if plot:
         try:
             logging.info("\n plotting data and comparison with public data\n ")
-            linewidth = 0.5
+            linewidth = 1
             markersize = 1
 
             # logging.info('plotting data')
@@ -1711,12 +1713,12 @@ def main(
 
 
         comment = "EFIT source"
-        if data.EFIT == "EFIT":
+        if data.EFIT.lower() == "efit":
             dtype_mode = "EFIT"
-        if data.EFIT == "EHTR":
+        if data.EFIT.lower() == "ehtr":
             dtype_mode = "EHTR"
 
-        if data.EFIT == 'EFTP':
+        if data.EFIT.lower() == 'eftp':
             dtype_mode = 'EFTP'
 
         write_err, itref_written = write_ppf(
@@ -1797,6 +1799,9 @@ def main(
     logger.info(
         "--- {}s seconds --- \n \n \n \n ".format((time.time() - code_start_time))
     )
+
+
+
     if plot:
         plt.show(block=True)
 
