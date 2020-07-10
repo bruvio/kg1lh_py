@@ -197,6 +197,7 @@ class Consts:
         efit = config["efit"]
         self.efit = efit.get("rmag")
         self.efit_fast = efit.get("rmag_fast")
+        self.efit_eftp = efit.get("rmag_eftp")
         # self.kg1v_mode = self._get_node_channumber_dict(config, "mode")
 
     # ------------------------

@@ -7,7 +7,7 @@ import logging
 import numpy as np
 
 from signal_base import SignalBase
-from make_plots import make_plot
+# from make_plots import make_plot
 import pdb
 
 logger = logging.getLogger(__name__)
@@ -32,11 +32,76 @@ class EFITData(SignalBase):
         # density
         self.rmag = {}
         self.rmag_fast = {}
+        self.rmag_eftp = {}
         self.sampling_time = None
 
         # ------------------------
+    def read_data(self, shot_no, code, seq,read_uid="JETPPF"):
+        """
+        Read in efit (RMAG)
 
-    def read_data(self, shot_no, code, read_uid="JETPPF"):
+
+        :param shot_no: shot number
+        """
+        # Read in efit
+
+        # pdb.set_trace()
+        node_name = self.constants.efit
+        efit_signal = SignalBase(self.constants)
+        dda = node_name[: node_name.find("/")]
+        dtype = node_name[node_name.find("/") + 1 :]
+
+        status = efit_signal.read_data_ppf(
+            dda, dtype, shot_no, read_bad=True, read_uid=read_uid,seq=seq,
+        )
+
+        if efit_signal.data is not None:
+            # Keep points where there is ip
+
+            self.rmag = efit_signal
+        else:
+            if code.lower() == "efit":
+                logger.error("no EFIT/RMAG data!")
+                return 30
+
+        node_name = self.constants.efit_fast
+        efit_signal = SignalBase(self.constants)
+        dda = node_name[: node_name.find("/")]
+        dtype = node_name[node_name.find("/") + 1 :]
+
+        status = efit_signal.read_data_ppf(
+            dda, dtype, shot_no, read_bad=True, read_uid=read_uid, use_64bit=True,seq=seq,
+        )
+
+        if efit_signal.data is not None:
+            # Keep points where there is ip
+
+            self.rmag_fast = efit_signal
+        else:
+            if code.lower() == "ehtr":
+                logger.error("no EHTR/RMAG data!")
+                return 30
+
+        node_name = self.constants.efit_eftp
+        efit_signal = SignalBase(self.constants)
+        dda = node_name[: node_name.find("/")]
+        dtype = node_name[node_name.find("/") + 1 :]
+
+        status = efit_signal.read_data_ppf(
+            dda, dtype, shot_no, read_bad=True, read_uid=read_uid,seq=seq,
+        )
+
+        if efit_signal.data is not None:
+            # Keep points where there is ip
+
+            self.rmag_eftp = efit_signal
+        else:
+            if code.lower() == "eftp":
+                logger.error("no EFTP/RMAG data!")
+                return 30
+
+        return 0
+
         """
         Read in efit (RMAG)
 
@@ -60,7 +125,7 @@ class EFITData(SignalBase):
 
             self.rmag = efit_signal
         else:
-            if code.lower() == "kg1l":
+            if code.lower() == "efit":
                 logger.error("no EFIT/RMAG data!")
                 return 30
 
@@ -78,7 +143,26 @@ class EFITData(SignalBase):
 
             self.rmag_fast = efit_signal
         else:
-            if code.lower() == "kg1h":
+            if code.lower() == "ehtr":
                 logger.error("no EHTR/RMAG data!")
                 return 30
+
+        node_name = self.constants.efit_eftp
+        efit_signal = SignalBase(self.constants)
+        dda = node_name[: node_name.find("/")]
+        dtype = node_name[node_name.find("/") + 1 :]
+
+        status = efit_signal.read_data_ppf(
+            dda, dtype, shot_no, read_bad=True, read_uid=read_uid
+        )
+
+        if efit_signal.data is not None:
+            # Keep points where there is ip
+
+            self.rmag_eftp = efit_signal
+        else:
+            if code.lower() == "eftp":
+                logger.error("no EFTP/RMAG data!")
+                return 30
+
         return 0
