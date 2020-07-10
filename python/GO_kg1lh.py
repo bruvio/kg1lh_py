@@ -642,12 +642,12 @@ def time_loop(arg):
             # data.KG1LH_data.len[chan].data = [float(i) for i in length]
             # data.KG1LH_data.len[chan].data = [float(0) for i in time_efit]
 
-            data.KG1LH_data.len[chan].time = [float(i) for i in flush_time]
+            data.KG1LH_data.len[chan].time = [float(i) for i in time_efit]
             #
             data.KG1LH_data.xta[chan] = SignalBase(data.constants)
             data.KG1LH_data.xta[chan].data = [float(i) for i in xtan]
 
-            data.KG1LH_data.xta[chan].time = [float(i) for i in flush_time]
+            data.KG1LH_data.xta[chan].time = [float(i) for i in time_efit]
         else:
             data.KG1LH_data.lid[chan] = SignalBase(data.constants)
             data.KG1LH_data.lid[chan].data = density
@@ -663,7 +663,7 @@ def time_loop(arg):
             # data.KG1LH_data.len[chan].data = [np.float64(i) for i in length]
             # data.KG1LH_data.len[chan].data = [np.float64(0) for i in time_efit]
 
-            data.KG1LH_data.len[chan].time = [np.float64(i) for i in flush_time]
+            data.KG1LH_data.len[chan].time = [np.float64(i) for i in time_efit]
             #
             data.KG1LH_data.xta[chan] = SignalBase(data.constants)
             data.KG1LH_data.xta[chan].data = [np.float64(i) for i in xtan]
@@ -1203,6 +1203,19 @@ def main(
         # ()
         try:
             logger.info("\n Starting time loop \n")
+            if data.code.lower() == "kg1l":
+                if data.EFIT.lower() == 'efit':
+                    time_efit = data.EFIT_data.rmag.time
+                    ntefit = len(time_efit)
+
+                if data.EFIT.lower() == 'eftp':
+                    time_efit = data.EFIT_data.rmag_eftp.time
+                    ntefit = len(time_efit)
+
+             else:
+                time_efit = data.EFIT_data.rmag_fast.time
+                ntefit = len(time_efit)
+
             start_time = time.time()
             time_efit = data.EFIT_data.rmag.time
             ntefit = len(time_efit)
