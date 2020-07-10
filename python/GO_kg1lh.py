@@ -637,15 +637,19 @@ def main(
         elif efit.lower() == 'eftp':
             data.EFIT = "EFTP"
             nameSignalsTable_EFIT = "signalsTable_EFTP"  #
+        else:
+            logger.error('wrong EFIT family')
+            return 30
+
     elif code.lower() == "kg1h":
         logger.info("running KG1H \n")
         tsmo = 1.0e-4
         data.EPSDD = 0.1
         data.EPSF = 0.00001
         data.ddaefit = "EHTR"
-        if efit.lower() == "ehtr":
-            data.EFIT = "EHTR"
-            nameSignalsTable_EFIT = "signalsTable_EHTR"  #
+        efit = "EHTR"
+        data.EFIT = "EHTR"
+        nameSignalsTable_EFIT = "signalsTable_EHTR"  #
 
     else:
         logger.error('\n  specify code to run')
@@ -855,7 +859,7 @@ def main(
     # -------------------------------
     # 2. Read in EFIT data
     # -------------------------------
-    # pdb.set_trace()
+    pdb.set_trace()
     try:
         # ()
         # reading EFIT signal table
@@ -955,7 +959,7 @@ def main(
 
         logger.info('\n defining line of sigths as segments')
         data.LOS1, data.LOS2, data.LOS3, data.LOS4, data.LOS5, data.LOS6, data.LOS7, data.LOS8 = define_LOS(data)
-        pdb.set_trace()
+        # pdb.set_trace()
 
 
     except:
@@ -1208,8 +1212,7 @@ def main(
                         dummy = vars()[name]
                         length = vars()[name_len]
                         length.append(0)
-                    # print('skipping {}'.format(TIMEM))
-                    logger.log(5, "computing lad/len/xtan \n")
+
 
             # ()
 
