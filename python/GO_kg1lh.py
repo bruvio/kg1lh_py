@@ -56,7 +56,6 @@ import multiprocessing as mp
 import json
 import matplotlib.pyplot as plt
 from shapely.geometry import LineString,Polygon
-from MAGTool import *
 import signalsTableJET_MAG as STJET
 # from scipy.signal import sosfiltfilt, butter
 import pdb
@@ -885,7 +884,7 @@ def main(
         data.code = code
         data.KG1_data = {}
         data.EFIT_data = {}
-        # data.JPNobj = MAGTool(data.pulse)
+
 
 
 
