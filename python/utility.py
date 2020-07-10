@@ -842,7 +842,7 @@ def delete_files_in_folder(folder):
 #             return unval_seq, val_seq
 
 
-def download(JPN, signalsTable,seq=0,uid='jetppf'):
+def download(JPN, signalsTable,seq=0,uid="jetppf"):
     """
 
     :param JPN:
@@ -852,8 +852,11 @@ def download(JPN, signalsTable,seq=0,uid='jetppf'):
     :return: dictionary containing downloaded signals
     """
     # pdb.set_trace()
-    ppf.ppfuid(uid, 'r')
-    ppf.ppfgo(JPN,seq)
+
+    ppf.ppfuid(uid, rw="R")
+
+    ier = ppf.ppfgo(JPN, seq=seq)
+
 
     # return a Dictionary of dictionary with value 'v' and time 't' of the exp signal
 
@@ -940,10 +943,12 @@ def readEFITFlux(expDataDictJPNobj,timeEquil):
         zC=np.reshape(zBND,(len(ZBND_t),len(ZBND_x)))
 
         timeEFIT = RBND_t # one of the _t variables
-        iCurrentTime = np.where(np.abs(timeEquil-timeEFIT)<2*min(np.diff(timeEFIT)))# twice of the min of EFIT delta time
+        # pdb.set_trace()
+        iCurrentTime, = np.where(np.isclose(timeEFIT, timeEquil)) # floating-point
+        # iCurrentTime = np.where(np.abs(timeEquil-timeEFIT)<2*min(np.diff(timeEFIT)))# twice of the min of EFIT delta time
         # print(timeEFIT[iCurrentTime])
 
-        iTEFIT = iCurrentTime[0][0]
+        iTEFIT = iCurrentTime[0]
 
         rC0 = rC[iTEFIT,:]
         zC0 = zC[iTEFIT,:]

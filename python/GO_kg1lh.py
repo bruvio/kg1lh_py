@@ -56,7 +56,7 @@ import multiprocessing as mp
 import json
 import matplotlib.pyplot as plt
 from shapely.geometry import LineString,Polygon
-from MAGTool import *
+
 import signalsTableJET_MAG as STJET
 # from scipy.signal import sosfiltfilt, butter
 import pdb
@@ -859,7 +859,7 @@ def main(
     # -------------------------------
     # 2. Read in EFIT data
     # -------------------------------
-    pdb.set_trace()
+    # pdb.set_trace()
     try:
         # ()
         # reading EFIT signal table
@@ -959,7 +959,6 @@ def main(
 
         logger.info('\n defining line of sigths as segments')
         data.LOS1, data.LOS2, data.LOS3, data.LOS4, data.LOS5, data.LOS6, data.LOS7, data.LOS8 = define_LOS(data)
-        # pdb.set_trace()
 
 
     except:
@@ -1082,8 +1081,7 @@ def main(
 
                 TIMEM = time_efit[IT]
                 try:
-                    rC0, zC0, timeEFIT = readEFITFlux(data.expDataDictJPNobj_EFIT,
-                                                      TIMEM)
+                    rC0, zC0, timeEFIT = readEFITFlux(data.expDataDictJPNobj_EFIT,TIMEM)
                     BoundCoordTuple = list(zip(rC0, zC0))
                     polygonBound = Polygon(BoundCoordTuple)
                     x1 = polygonBound.intersection(data.LOS1)
