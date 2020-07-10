@@ -855,6 +855,7 @@ def main(
     # -------------------------------
     # 2. Read in EFIT data
     # -------------------------------
+    # pdb.set_trace()
     try:
         # ()
         # reading EFIT signal table
@@ -944,9 +945,9 @@ def main(
 
 
 
-        logger.log(5,'a ', data.a_coord)
-        logger.log(5,'r ', data.r_coord)
-        logger.log(5,'z ', data.z_coord)
+        logger.log(5,'a '.format(data.a_coord))
+        logger.log(5,'r '.format( data.r_coord))
+        logger.log(5,'z '.format( data.z_coord))
 
         # -------------------------------
         # 4. defining line of sigths as segments
@@ -1062,8 +1063,17 @@ def main(
         try:
             logger.info("\n Starting time loop \n")
             start_time = time.time()
-            time_efit = data.EFIT_data.rmag.time
-            ntefit = len(time_efit)
+            if data.code.lower() == "kg1l":
+                if data.EFIT.lower() == 'efit':
+                    time_efit = data.EFIT_data.rmag.time
+                    ntefit = len(time_efit)
+                if data.EFIT.lower() == 'eftp':
+                    time_efit = data.EFIT_data.rmag_eftp.time
+                    ntefit = len(time_efit)
+
+            else:
+                time_efit = data.EFIT_data.rmag_fast.time
+                ntefit = len(time_efit)
             for IT in range(0, ntefit):
 
                 TIMEM = time_efit[IT]

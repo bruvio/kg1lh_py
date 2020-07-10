@@ -872,9 +872,11 @@ def download(JPN, signalsTable,seq=0,uid='jetppf'):
             dda = signalsPath[4:8]
             dtype = signalsPath[9:]
 
-            if dda == 'EFIT':
+            if (dda == 'EFIT') | (dda == 'EFTP')  | (dda == 'EHRT'):
                 ihdat, iwdat, data, x, t, ier = ppf.ppfget(int(JPN), dda, dtype, fix0=0, reshape=0, no_x=0, no_t=0)
                 # print(' NO RESHAPE of ' + signalsPath + ' WARNING if is BPCA!!!!!!!!!!!')
+
+
             else:
                 ihdat, iwdat, data, x, t, ier = ppf.ppfget(int(JPN), dda, dtype, fix0=0, reshape=1, no_x=0, no_t=0)
                 # print('RESHAPE of ' + signalsPath)
