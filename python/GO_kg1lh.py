@@ -952,10 +952,10 @@ def main(
         # -------------------------------
         # 4. defining line of sigths as segments
         # -------------------------------
-        # pdb.set_trace()
+
         logger.info('\n defining line of sigths as segments')
         data.LOS1, data.LOS2, data.LOS3, data.LOS4, data.LOS5, data.LOS6, data.LOS7, data.LOS8 = define_LOS(data)
-
+        pdb.set_trace()
 
 
     except:

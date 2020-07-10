@@ -292,7 +292,7 @@ def define_LOS(data):
     data.LOS8 = LineString([(endx1, endy1), (endx2, endy2)])
     plt.plot([endx1, endx2], [endy1, endy2], label='LOS8')
     plt.legend()
-
+    # plt.show(block=True)
     return data.LOS1,data.LOS2,data.LOS3,data.LOS4,data.LOS5,data.LOS6,data.LOS7,data.LOS8
 
 
@@ -852,8 +852,8 @@ def download(JPN, signalsTable,seq=0,uid='jetppf'):
     :return: dictionary containing downloaded signals
     """
     # pdb.set_trace()
+    ppf.ppfuid(uid, 'r')
     ppf.ppfgo(JPN,seq)
-    ppf.ppfuid(uid,'r')
 
     # return a Dictionary of dictionary with value 'v' and time 't' of the exp signal
 
@@ -872,7 +872,7 @@ def download(JPN, signalsTable,seq=0,uid='jetppf'):
             dda = signalsPath[4:8]
             dtype = signalsPath[9:]
 
-            if (dda == 'EFIT') | (dda == 'EFTP')  | (dda == 'EHRT'):
+            if  (dda.lower() == 'efit') | (dda.lower() == 'eftp')  | (dda.lower() == 'ehtr'):
                 ihdat, iwdat, data, x, t, ier = ppf.ppfget(int(JPN), dda, dtype, fix0=0, reshape=0, no_x=0, no_t=0)
                 # print(' NO RESHAPE of ' + signalsPath + ' WARNING if is BPCA!!!!!!!!!!!')
 
