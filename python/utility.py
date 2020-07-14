@@ -785,62 +785,6 @@ def delete_files_in_folder(folder):
         return False
 
 
-# def is_empty(structure):
-#     """
-#
-#     :param structure:
-#     :return: check is structure is empty
-#     """
-#     if structure:
-#         return False
-#     else:
-#         return True
-
-
-# def get_seq(shot_no, dda, read_uid="JETPPF"):
-#     """
-#
-#     :param shot_no: pulse number
-#     :param dda:
-#     :param read_uid:
-#     :return: get sequence of a ppf
-#     """
-#     ier = ppf.ppfgo(shot_no, seq=0)
-#     if ier != 0:
-#         return None
-#
-#     ppf.ppfuid(read_uid, rw="R")
-#
-#     iseq, nseq, ier = ppf.ppfdda(shot_no, dda)
-#
-#     if ier != 0:
-#         return None
-#
-#     return iseq
-#
-#
-# def get_min_max_seq(shot_no, dda="KG1V", read_uid="JETPPF"):
-#     """
-#
-#     :param shot_no:
-#     :param dda:
-#     :param read_uid:
-#     :return: return min and max sequence for given pulse, dda and readuid
-#     min is the unvalidated sequence
-#     max is the last validated sequence
-#     """
-#     kg1v_seq = get_seq(shot_no, dda, read_uid)
-#     unval_seq = -1
-#     val_seq = -1
-#     if kg1v_seq is not None:
-#         unval_seq = min(kg1v_seq)
-#         if len(kg1v_seq) > 1:
-#             val_seq = max(kg1v_seq)
-#             return unval_seq, val_seq
-#         else:
-#             val_seq = unval_seq
-#             return unval_seq, val_seq
-
 
 def download(JPN, signalsTable,seq=0,uid='jetppf'):
     """
@@ -955,30 +899,4 @@ def readEFITFlux(expDataDictJPNobj,timeEquil):
         return rC0,zC0,timeEFIT
 
 
-# def getdata(shot, dda, dtype, uid=None, seq=None):
-#     if uid is None:
-#         ppf.ppfuid("jetppf", rw="R")
-#     else:
-#         ppf.ppfuid(uid, rw="R")
-#     if seq is None:
-#         ier = ppf.ppfgo(shot, seq=0)
-#     else:
-#         ier = ppf.ppfgo(shot, seq=seq)
-#
-#     ihdata, iwdata, data, x, time, ier = ppf.ppfget(shot, dda, dtype)
-#     pulse, seq, iwdat, comment, numdda, ddalist, ier = ppf.ppfinf(comlen=50, numdda=50)
-#
-#     name = dict()
-#     name["ihdata"] = ihdata
-#     name["iwdata"] = iwdata
-#     name["data"] = data
-#     name["x"] = x
-#     name["time"] = time
-#     name["ier"] = ier
-#     name["seq"] = seq
-#     name["pulse"] = pulse
-#     name["dda"] = dda
-#     name["dtype"] = dtype
-#     return name, seq
-#
-#
+
