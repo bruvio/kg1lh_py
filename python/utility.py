@@ -888,8 +888,8 @@ def readEFITFlux(expDataDictJPNobj,timeEquil):
             np.isclose(timeEFIT, timeEquil))  # floating-point
         # iCurrentTime = np.where(np.abs(timeEquil-timeEFIT)<2*min(np.diff(timeEFIT)))# twice of the min of EFIT delta time
         # print(timeEFIT[iCurrentTime])
-
-        iTEFIT = iCurrentTime[0][
+        # pdb.set_trace()
+        iTEFIT = iCurrentTime[0]
 
         rC0 = rC[iTEFIT,:]
         zC0 = zC[iTEFIT,:]

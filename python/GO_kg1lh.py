@@ -923,7 +923,7 @@ def main(
     # if there is quit
     # ()
     if ((not force) and (write_uid.lower() == 'jetppf')) :
-        logger.info('checking SF of public KG1V ppf')
+        logger.info('checking SF of public {} ppf'.format(code.lower()))
 
         SF_list_public = check_SF("jetppf", shot_no, 0,dda=code.lower())
         if bool(set(SF_list_public) & set([1, 2, 3])):
