@@ -482,150 +482,7 @@ def time_loop(arg):
 
 
         # ()
-        for IT in range(0, ntefit):
 
-            TIMEM = time_efit[IT]
-            logger.log(5, "computing lad/len/xtan \n")
-            if data.code.lower() == "kg1l":
-                dtime = float(TIMEM)
-            else:
-                dtime = np.float64(TIMEM)
-
-            t, ier = flushinit(
-                15,
-                data.pulse,
-                dtime,
-                lunget=12,
-                iseq=0,
-                uid="JETPPF",
-                dda=data.ddaefit,
-                lunmsg=0,
-            )
-
-            #
-            if ier != 0:
-                logger.debug("flush error {} in flushinit".format(ier))
-            #     pass
-            # else:
-
-            # t,ier = flushquickinit(data.pulse, dtime)
-            flush_time.append(t)
-
-
-                # return ier
-
-            logger.log(5, "************* Time = {}s".format(TIMEM))
-
-            # look for xpoint
-            iflsep, rx, zx, fx, ier = flush_getXpoint()
-
-            if ier != 0:
-                logger.debug("flush error {} in flush_getXpoint".format(ier))
-
-                if logging.getLogger().getEffectiveLevel() == 5:
-                    reason = Flush_getError(ier)
-                    logger.log(5,"reason is \n{}\n".format(reason))
-                # return ier
-            logger.log(
-                5,
-                "Time {}s; iflsep {}; rx {}; zx {}; fx {}; ier {} ".format(
-                    TIMEM, iflsep, rx, zx, fx, ier
-                ),
-            )
-
-            if int(iflsep) == 0:
-                logger.log(5, "iflsep is {}".format(iflsep))
-                if IT == 0:
-                    logger.debug("index {} - Time {}s; NO X-point found".format(IT, TIMEM))
-                elif IT % (1 / tsmo) == 0:
-                    logger.debug("index {} - Time {}s; NO X-point found".format(IT, TIMEM))
-                else:
-                    logger.log(5, "Time {}s; NO X-point found".format(TIMEM))
-
-                psimax = data.psim1
-                logger.log(5, "psimax is {}".format(psimax))
-                iskb = 1
-                logger.log(5, "psimax is {}".format(psimax))
-            else:
-                if IT == 0:
-                    logger.debug("index {} - Time {}s; X-point plasma".format(IT, TIMEM))
-
-                elif IT % (1 / tsmo) == 0:
-                    logger.debug("index {} - Time {}s; X-point plasma".format(IT, TIMEM))
-                else:
-                    logger.log(5, "Time {}s; X-point plasma".format(TIMEM))
-
-            # -----------------------------------------------------------------------
-            # FIND PSI AT TANGENT FLUX SURFACE (to make FLUL2 quicker)
-            # -----------------------------------------------------------------------
-            rTan1, zTan1, fTan1, ier = Flush_GetTangentFlux(xpt, ypt, angle, data.EPSDD)
-            if ier != 0:
-                logger.debug("flush error {} in Flush_GetTangentFlux".format(ier))
-                # return ier
-
-            logger.log(
-                5,
-                "get tangent flux output is rTan {}, zTan {}, fTan {}".format(
-                    rTan1, zTan1, fTan1
-                ),
-            )
-
-            #
-            # ----------------------------------------------------------------------
-            # FIND INTERSECTION POINTS WITH PLASMA BOUNDARY
-            # ----------------------------------------------------------------------
-
-            NPSI = 1  # look for one surface
-            psimax = 1  # value of psi at the last closed surface
-
-            # nfound, r1, z1, r2, z2, r3, z3, r4, z4, ier = Flush_getIntersections(
-            #     xpt, ypt, angle, data.EPSF, NPSI, psimax
-            # )
-            # if ier != 0:
-            #     logger.debug("flush error {}  in Flush_getIntersections".format(ier))
-            #     # return ier
-            # if data.code.lower() == "kg1l":
-            #     cord = float(math.hypot(float(r2) - float(r1), float(z2) - float(z1)))
-            # else:
-            #     cord = np.float64(
-            #         math.hypot(
-            #             np.float64(r2) - np.float64(r1), np.float64(z2) - np.float64(z1)
-            #         )
-            #     )
-            # logger.log(5, "found {} intersection/s".format(nfound))
-
-            # -----------------------------------------------------------------------
-            # final results
-            # -----------------------------------------------------------------------
-            # if cord < 0:
-            #     cord = abs(cord)
-            # if data.code.lower() == "kg1l":
-            #     length[IT] = float(cord / 100.0)  # conversion from cm to m
-            # else:
-            #     length[IT] = np.float64(cord / 100.0)  # conversion from cm to m
-            # logger.log(5, "cord length for channel {} is {}".format(chan, length[IT]))
-            # # length[IT] = cord # conversion from cm to m
-            # if length[IT] > 0.0:
-            #     if data.code.lower() == "kg1l":
-            #         lad[IT] = float(density[IT] / length[IT])
-            #     else:
-            #         lad[IT] = np.float64(density[IT] / length[IT])
-            #
-            # else:
-            #     lad[IT] = 0.0
-            if data.code.lower() == "kg1l":
-                xtan[IT] = fTan1
-            else:
-                xtan[IT] = np.float64(fTan1)
-            if int(iflsep) != 0:
-                logger.log(5, "efit time {}s".format(t))
-                logger.log(
-                    5,
-                    "xpt {} ypt {} angle {} dtime {}   xtan[IT] {}".format(
-                        xpt, ypt, angle, dtime,  xtan[IT]
-                ),
-            )
-                # ()
 
         if data.code.lower() == "kg1l":
             data.KG1LH_data.lid[chan] = SignalBase(data.constants)
@@ -645,7 +502,7 @@ def time_loop(arg):
             data.KG1LH_data.len[chan].time = [float(i) for i in time_efit]
             #
             data.KG1LH_data.xta[chan] = SignalBase(data.constants)
-            data.KG1LH_data.xta[chan].data = [float(i) for i in xtan]
+            data.KG1LH_data.xta[chan].data = [float(i) for i in time_efit]
 
             data.KG1LH_data.xta[chan].time = [float(i) for i in time_efit]
         else:
@@ -666,9 +523,9 @@ def time_loop(arg):
             data.KG1LH_data.len[chan].time = [np.float64(i) for i in time_efit]
             #
             data.KG1LH_data.xta[chan] = SignalBase(data.constants)
-            data.KG1LH_data.xta[chan].data = [np.float64(i) for i in xtan]
+            data.KG1LH_data.xta[chan].data = [np.float64(0) for i in time_efit]
 
-            data.KG1LH_data.xta[chan].time = [np.float64(i) for i in flush_time]
+            data.KG1LH_data.xta[chan].time = [np.float64(i) for i in time_efit]
 
         return (data, chan)
     else:
@@ -1090,17 +947,16 @@ def main(
 
 
 
-        logger.log(5,'a ', data.a_coord)
-        logger.log(5,'r ', data.r_coord)
-        logger.log(5,'z ', data.z_coord)
+        logger.log(5,'a '.format(data.a_coord))
+        logger.log(5,'r '.format( data.r_coord))
+        logger.log(5,'z '.format( data.z_coord))
 
         # -------------------------------
         # 4. defining line of sigths as segments
         # -------------------------------
-        # pdb.set_trace()
+
         logger.info('\n defining line of sigths as segments')
         data.LOS1, data.LOS2, data.LOS3, data.LOS4, data.LOS5, data.LOS6, data.LOS7, data.LOS8 = define_LOS(data)
-
 
 
     except:
@@ -1221,14 +1077,22 @@ def main(
                 ntefit = len(time_efit)
 
             start_time = time.time()
-            time_efit = data.EFIT_data.rmag.time
-            ntefit = len(time_efit)
+            if data.code.lower() == "kg1l":
+                if data.EFIT.lower() == 'efit':
+                    time_efit = data.EFIT_data.rmag.time
+                    ntefit = len(time_efit)
+                if data.EFIT.lower() == 'eftp':
+                    time_efit = data.EFIT_data.rmag_eftp.time
+                    ntefit = len(time_efit)
+
+            else:
+                time_efit = data.EFIT_data.rmag_fast.time
+                ntefit = len(time_efit)
             for IT in range(0, ntefit):
 
                 TIMEM = time_efit[IT]
                 try:
-                    rC0, zC0, timeEFIT = readEFITFlux(data.expDataDictJPNobj_EFIT,
-                                                      TIMEM)
+                    rC0, zC0, timeEFIT = readEFITFlux(data.expDataDictJPNobj_EFIT,TIMEM)
                     BoundCoordTuple = list(zip(rC0, zC0))
                     polygonBound = Polygon(BoundCoordTuple)
                     x1 = polygonBound.intersection(data.LOS1)
@@ -1357,8 +1221,7 @@ def main(
                         dummy = vars()[name]
                         length = vars()[name_len]
                         length.append(0)
-                    # print('skipping {}'.format(TIMEM))
-                    logger.log(5, "computing lad/len/xtan \n")
+
 
             # ()
 
@@ -1445,11 +1308,10 @@ def main(
                     kg1l_lid3, dummy = getdata(shot_no, dda, "LID" + str(chan))
                     kg1l_lad3, dummy = getdata(shot_no, dda, "LAD" + str(chan))
                     kg1l_len3, dummy = getdata(shot_no, dda, "LEN" + str(chan))
-                    kg1l_xtan3, dummy = getdata(shot_no, dda, "xta" + str(chan))
 
                     plt.figure()
 
-                    ax_1 = plt.subplot(4, 1, 1)
+                    ax_1 = plt.subplot(3, 1, 1)
                     plt.plot(
                         kg1l_lid3["time"],
                         kg1l_lid3["data"],
@@ -1478,7 +1340,7 @@ def main(
                     #                          markersize=markersize)
                     plt.legend(loc=0, prop={"size": 8})
 
-                    plt.subplot(4, 1, 2, sharex=ax_1)
+                    plt.subplot(3, 1, 2, sharex=ax_1)
                     plt.plot(
                         kg1l_lad3["time"],
                         kg1l_lad3["data"],
@@ -1495,25 +1357,8 @@ def main(
                     )
                     plt.legend(loc=0, prop={"size": 8})
 
-                    plt.subplot(4, 1, 3, sharex=ax_1)
-                    plt.plot(
-                        kg1l_xtan3["time"],
-                        kg1l_xtan3["data"],
-                        label="xtan_jetppf_ch" + str(chan),
-                    )
-                    plt.plot(
-                        data.KG1LH_data.xta[chan].time,
-                        data.KG1LH_data.xta[chan].data,
-                        label=dda + "_xtan_original_MT_ch" + str(chan),
-                        marker="o",
-                        linestyle="-.",
-                        linewidth=linewidth,
-                        markersize=markersize,
-                    )
 
-                    plt.legend(loc=0, prop={"size": 8})
-
-                    plt.subplot(4, 1, 4, sharex=ax_1)
+                    plt.subplot(3, 1, 3, sharex=ax_1)
                     plt.plot(
                         kg1l_len3["time"],
                         kg1l_len3["data"],
@@ -1648,33 +1493,7 @@ def main(
                 )
                 return 67
 
-        for chan in data.KG1LH_data.xta.keys():
-            dtype_lid = "XTA{}".format(chan)
 
-            comment = "Tangent flux lid{} ".format(chan)
-
-            write_err, itref_written = write_ppf(
-                data.pulse,
-                dda,
-                dtype_lid,
-                data.KG1LH_data.xta[chan].data,
-                time=data.KG1LH_data.xta[chan].time,
-                comment=comment,
-                unitd="  ",
-                unitt="SEC",
-                itref=itref_kg1v,
-                nt=len(data.KG1LH_data.xta[chan].time),
-                status=data.KG1_data.status[chan],
-                global_status=data.KG1_data.global_status[chan],
-            )
-
-            if write_err != 0:
-                logger.error(
-                    "\n Failed to write {}/{}. Errorcode {} \n".format(
-                        dda, dtype_lid, write_err
-                    )
-                )
-                return 67
 
         mode = "smoothing time  kg1 {}".format(data.KG1LH_data.tsmo)
         dtype_mode = "TSMO"
@@ -1790,7 +1609,7 @@ def main(
             status=None,
         )
         if write_err != 0:
-            logger.error("failed to write version ppf")
+            logger.error("failed to write sequence ppf")
             return write_err
 
 
@@ -1833,7 +1652,7 @@ def main(
         lid3 = data.KG1LH_data.lid[3].data
         lad3 = data.KG1LH_data.lad[3].data
         len3 = data.KG1LH_data.len[3].data
-        xta3 = data.KG1LH_data.xta[3].data
+
 
         df = pd.DataFrame(
             {
@@ -1841,7 +1660,7 @@ def main(
                 "lid3": lid3,
                 "lad3": lad3,
                 "len3": len3,
-                "xta3": xta3,
+
             }
         )
         df.to_csv(

@@ -292,7 +292,7 @@ def define_LOS(data):
     data.LOS8 = LineString([(endx1, endy1), (endx2, endy2)])
     plt.plot([endx1, endx2], [endy1, endy2], label='LOS8')
     plt.legend()
-
+    # plt.show(block=True)
     return data.LOS1,data.LOS2,data.LOS3,data.LOS4,data.LOS5,data.LOS6,data.LOS7,data.LOS8
 
 
@@ -786,7 +786,7 @@ def delete_files_in_folder(folder):
 
 
 
-def download(JPN, signalsTable,seq=0,uid='jetppf'):
+def download(JPN, signalsTable,seq=0,uid="jetppf"):
     """
 
     :param JPN:
@@ -799,6 +799,7 @@ def download(JPN, signalsTable,seq=0,uid='jetppf'):
     ppf.ppfuid(uid, rw="R")
 
     ier = ppf.ppfgo(JPN, seq=seq)
+
 
 
     # return a Dictionary of dictionary with value 'v' and time 't' of the exp signal
@@ -818,9 +819,11 @@ def download(JPN, signalsTable,seq=0,uid='jetppf'):
             dda = signalsPath[4:8]
             dtype = signalsPath[9:]
 
-            if (dda.lower() == 'efit') | (dda.lower() == 'eftp') | (dda.lower() == 'ehtr') :
+            if  (dda.lower() == 'efit') | (dda.lower() == 'eftp')  | (dda.lower() == 'ehtr'):
                 ihdat, iwdat, data, x, t, ier = ppf.ppfget(int(JPN), dda, dtype, fix0=0, reshape=0, no_x=0, no_t=0)
                 # print(' NO RESHAPE of ' + signalsPath + ' WARNING if is BPCA!!!!!!!!!!!')
+
+
             else:
                 ihdat, iwdat, data, x, t, ier = ppf.ppfget(int(JPN), dda, dtype, fix0=0, reshape=1, no_x=0, no_t=0)
                 # print('RESHAPE of ' + signalsPath)
@@ -884,8 +887,8 @@ def readEFITFlux(expDataDictJPNobj,timeEquil):
         zC=np.reshape(zBND,(len(ZBND_t),len(ZBND_x)))
 
         timeEFIT = RBND_t # one of the _t variables
-        iCurrentTime, = np.where(
-            np.isclose(timeEFIT, timeEquil))  # floating-point
+        # pdb.set_trace()
+        iCurrentTime, = np.where(np.isclose(timeEFIT, timeEquil)) # floating-point
         # iCurrentTime = np.where(np.abs(timeEquil-timeEFIT)<2*min(np.diff(timeEFIT)))# twice of the min of EFIT delta time
         # print(timeEFIT[iCurrentTime])
         # pdb.set_trace()
