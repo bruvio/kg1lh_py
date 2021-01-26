@@ -44,11 +44,11 @@ def make_scripts(shots, code, suffix, write_uid=None):
         for shot in shots:
             f_out.write("echo {}\n".format(shot))
             if code.lower() == "kg1l":
-                call_command = "python /u/bviola/work/Python/KG1L-KG1H/python/GO_kg1lh.py -p {} -r JETPPF -u {} -c {} -a rolling_mean \n\n".format(
+                call_command = "python /u/bviola/work/Python/KG1L-KG1H/python/GO_kg1lh.py -p {} -r JETPPF -u {} -c {} -a rolling_mean -fo yes \n\n".format(
                     shot, write_uid, code
                 )
             else:
-                call_command = "python /u/bviola/work/Python/KG1L-KG1H/python/GO_kg1lh.py -p {} -r JETPPF -u {} -c {} -a rolling_mean \n\n".format(
+                call_command = "python /u/bviola/work/Python/KG1L-KG1H/python/GO_kg1lh.py -p {} -r JETPPF -u {} -c {} -a rolling_mean -fo yes\n\n".format(
                     shot, write_uid, code
                 )
 
@@ -336,3 +336,16 @@ if __name__ == "__main__":
         make_scripts([97714, 97796, 97742, 97893, 97892, 97739, 97605, 97736],code,'today')
 
 
+        make_scripts([97122,97123,97125],code,'hrts')
+        make_scripts([96193,
+97730,
+96872,
+96048,
+96179,
+96788,
+96190,
+95703,
+95707,
+95708,
+95710,
+95711],code,'epfl')

@@ -449,7 +449,7 @@ def pyqt_set_trace():
     :return:
     """
 
-    from PyQt4.QtCore import pyqtRemoveInputHook
+    from PyQt5.QtCore import pyqtRemoveInputHook
     import pdb
     import sys
 
@@ -737,7 +737,7 @@ def equalsFile(firstFile, secondFile, blocksize=65536):
 # =============================================================================
 def pyqt_set_trace():
     """Set a tracepoint in the Python debugger that works with Qt"""
-    from PyQt4.QtCore import pyqtRemoveInputHook
+    from PyQt5.QtCore import pyqtRemoveInputHook
     import pdb
     import sys
 
